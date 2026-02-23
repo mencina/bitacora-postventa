@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import jsPDF from 'jspdf'
 import './App.css'
 
-var API_URL = 'http://localhost:3001'
+var API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://bitacora-postventa-production.up.railway.app'
 
 var CATEGORIES = {
   estructural: { label: 'Estructural', icon: '🏗️', color: '#E74C3C' },
