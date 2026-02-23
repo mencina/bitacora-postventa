@@ -2,7 +2,9 @@ var express = require('express')
 var cors = require('cors')
 var path = require('path')
 var fs = require('fs')
-require('dotenv').config()
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config()
+}
 var Anthropic = require('@anthropic-ai/sdk').default
 var Database = require('better-sqlite3')
 var multer = require('multer')
