@@ -78,7 +78,12 @@ db.exec(
 
 var app = express()
 app.use(cors({
-  origin: ['https://bitacora-postventa.vercel.app', 'http://localhost:5173'],
+  origin: [
+    'https://bitacora-postventa.vercel.app',
+    'https://bitacorapro.cl',
+    'https://www.bitacorapro.cl',
+    'http://localhost:5173'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }))
