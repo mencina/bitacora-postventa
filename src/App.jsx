@@ -2,6 +2,199 @@ import { useState, useRef, useEffect } from 'react'
 import jsPDF from 'jspdf'
 import './App.css'
 
+// === PANTALLA HOME ===
+function HomeScreen({ onGoLogin, onGoRegister }) {
+  useEffect(function() {
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry, i) {
+        if (entry.isIntersecting) {
+          setTimeout(function() { entry.target.classList.add('hp-visible') }, i * 60)
+          observer.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.12 })
+    document.querySelectorAll('.hp-reveal').forEach(function(el) { observer.observe(el) })
+    return function() { observer.disconnect() }
+  }, [])
+
+  return (
+    <div className="hp-root">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        .hp-root{--bg:#F7F5F0;--ink:#1A1814;--muted:#6B6760;--accent:#2D5A3D;--accent-light:#EAF1EC;--line:#E2DDD6;--white:#FFFFFF;--serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',sans-serif;font-family:var(--sans);background:var(--bg);color:var(--ink);overflow-x:hidden;font-weight:300;line-height:1.6;min-height:100vh;}
+        .hp-nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.25rem 5vw;background:rgba(247,245,240,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
+        .hp-logo{font-family:var(--serif);font-size:1.2rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:-0.02em;}
+        .hp-logo span{color:var(--accent);}
+        .hp-nav-links{display:flex;align-items:center;gap:1.5rem;}
+        .hp-nav-link{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.875rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
+        .hp-nav-link:hover{color:var(--ink);}
+        .hp-btn-nav{background:var(--ink)!important;color:var(--white)!important;padding:0.55rem 1.25rem;border-radius:6px;font-weight:500!important;font-size:0.875rem;font-family:var(--sans);border:none;cursor:pointer;transition:background 0.2s,transform 0.15s;}
+        .hp-btn-nav:hover{background:var(--accent)!important;transform:translateY(-1px);}
+        .hp-hero{min-height:90vh;display:flex;flex-direction:column;justify-content:center;padding:6rem 5vw 5rem;position:relative;overflow:hidden;}
+        .hp-hero::before{content:'';position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(45,90,61,0.07) 0%,transparent 70%);pointer-events:none;}
+        .hp-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent-light);color:var(--accent);font-size:0.78rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.4rem 1rem;border-radius:100px;margin-bottom:2rem;width:fit-content;animation:hp-fadeUp 0.7s 0.1s both;}
+        .hp-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);}
+        .hp-hero-title{font-family:var(--serif);font-size:clamp(2.8rem,6vw,5.5rem);line-height:1.05;font-weight:700;letter-spacing:-0.03em;max-width:14ch;margin-bottom:1.5rem;animation:hp-fadeUp 0.8s 0.2s both;}
+        .hp-hero-title em{font-style:italic;color:var(--accent);}
+        .hp-hero-sub{font-size:1.05rem;color:var(--muted);max-width:48ch;line-height:1.75;margin-bottom:2.5rem;animation:hp-fadeUp 0.8s 0.35s both;}
+        .hp-hero-actions{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;animation:hp-fadeUp 0.8s 0.5s both;}
+        .hp-btn-primary{background:var(--ink);color:var(--white);padding:0.875rem 2rem;border-radius:8px;font-weight:500;font-size:0.95rem;font-family:var(--sans);border:none;cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;display:inline-flex;align-items:center;gap:0.5rem;}
+        .hp-btn-primary:hover{background:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(45,90,61,0.2);}
+        .hp-btn-ghost{background:none;border:none;color:var(--ink);font-size:0.9rem;font-family:var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;padding:0.875rem 0;transition:gap 0.2s;}
+        .hp-btn-ghost:hover{gap:0.75rem;}
+        .hp-stats{margin-top:5rem;padding-top:2.5rem;border-top:1px solid var(--line);display:flex;gap:3rem;animation:hp-fadeUp 0.8s 0.65s both;flex-wrap:wrap;}
+        .hp-stat strong{display:block;font-family:var(--serif);font-size:2rem;font-weight:700;line-height:1;}
+        .hp-stat span{font-size:0.8rem;color:var(--muted);font-weight:400;letter-spacing:0.03em;}
+        .hp-section{padding:6rem 5vw;}
+        .hp-label{font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:1rem;display:block;}
+        .hp-section-title{font-family:var(--serif);font-size:clamp(1.8rem,3.5vw,3rem);font-weight:700;line-height:1.1;letter-spacing:-0.02em;margin-bottom:1.25rem;max-width:20ch;}
+        .hp-section-body{font-size:1rem;color:var(--muted);max-width:48ch;line-height:1.75;}
+        .hp-how{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+        .hp-how-inner{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;}
+        .hp-steps{display:flex;flex-direction:column;gap:2rem;margin-top:3rem;}
+        .hp-step{display:flex;gap:1.25rem;align-items:flex-start;}
+        .hp-step-num{flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-family:var(--serif);font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
+        .hp-step h4{font-weight:500;font-size:0.95rem;margin-bottom:0.25rem;}
+        .hp-step p{font-size:0.875rem;color:var(--muted);line-height:1.6;}
+        .hp-flow{display:flex;flex-direction:column;gap:1rem;}
+        .hp-flow-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem;transition:box-shadow 0.2s,transform 0.2s;}
+        .hp-flow-card:hover{box-shadow:0 4px 20px rgba(26,24,20,0.06);transform:translateX(4px);}
+        .hp-flow-icon{font-size:1.5rem;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--white);border-radius:10px;border:1px solid var(--line);flex-shrink:0;}
+        .hp-flow-card h5{font-weight:500;font-size:0.9rem;margin-bottom:0.15rem;}
+        .hp-flow-card p{font-size:0.78rem;color:var(--muted);}
+        .hp-flow-arrow{text-align:center;color:var(--line);font-size:1.2rem;padding:0.1rem 0;}
+        .hp-feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;background:var(--line);border:1.5px solid var(--line);border-radius:16px;overflow:hidden;margin-top:4rem;}
+        .hp-feat-card{background:var(--white);padding:2.5rem 2rem;transition:background 0.2s;}
+        .hp-feat-card:hover{background:#FAFAF7;}
+        .hp-feat-icon{font-size:1.75rem;margin-bottom:1.25rem;display:block;}
+        .hp-feat-card h3{font-family:var(--serif);font-size:1.1rem;font-weight:700;margin-bottom:0.6rem;line-height:1.2;}
+        .hp-feat-card p{font-size:0.875rem;color:var(--muted);line-height:1.65;}
+        .hp-dark{background:var(--ink);color:var(--white);}
+        .hp-dark .hp-label{color:#7CB891;}
+        .hp-dark .hp-section-title{color:var(--white);max-width:none;}
+        .hp-dark .hp-section-body{color:rgba(255,255,255,0.55);}
+        .hp-personas{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:4rem;}
+        .hp-persona{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:2rem;transition:background 0.2s,border-color 0.2s;}
+        .hp-persona:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);}
+        .hp-persona-role{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:#7CB891;font-weight:500;margin-bottom:0.75rem;}
+        .hp-persona h3{font-family:var(--serif);font-size:1.2rem;font-weight:700;margin-bottom:0.75rem;color:var(--white);}
+        .hp-persona p{font-size:0.875rem;color:rgba(255,255,255,0.5);line-height:1.65;}
+        .hp-cta{text-align:center;padding:9rem 5vw;position:relative;overflow:hidden;}
+        .hp-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(45,90,61,0.06) 0%,transparent 65%);pointer-events:none;}
+        .hp-cta-title{font-family:var(--serif);font-size:clamp(2rem,4.5vw,4.5rem);font-weight:700;letter-spacing:-0.03em;line-height:1.05;margin-bottom:1.5rem;}
+        .hp-cta-sub{font-size:1rem;color:var(--muted);max-width:44ch;margin:0 auto 2.5rem;line-height:1.7;}
+        .hp-footer{border-top:1px solid var(--line);padding:2rem 5vw;display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;color:var(--muted);flex-wrap:wrap;gap:0.75rem;}
+        .hp-footer-logo{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:1rem;}
+        .hp-footer-link{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
+        .hp-footer-link:hover{color:var(--ink);}
+        .hp-reveal{opacity:0;transform:translateY(28px);transition:opacity 0.7s ease,transform 0.7s ease;}
+        .hp-visible{opacity:1!important;transform:none!important;}
+        @keyframes hp-fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+        @media(max-width:1024px){.hp-how-inner{grid-template-columns:1fr;gap:3rem;}.hp-feat-grid{grid-template-columns:repeat(2,1fr);}.hp-personas{grid-template-columns:1fr 1fr;}}
+        @media(max-width:640px){.hp-nav-links{gap:0.75rem;}.hp-feat-grid{grid-template-columns:1fr;}.hp-personas{grid-template-columns:1fr;}.hp-stats{gap:1.5rem;}.hp-footer{flex-direction:column;text-align:center;}.hp-how-inner{grid-template-columns:1fr;}}
+      `}</style>
+
+      {/* NAV */}
+      <nav className="hp-nav">
+        <div className="hp-logo">Bitácora<span>.</span></div>
+        <div className="hp-nav-links">
+          <button className="hp-nav-link" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
+          <button className="hp-nav-link" onClick={function() { document.getElementById('hp-feat').scrollIntoView({ behavior: 'smooth' }) }}>Funcionalidades</button>
+          <button className="hp-btn-nav" onClick={onGoLogin}>Iniciar sesión →</button>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="hp-hero">
+        <div className="hp-eyebrow">Post venta inmobiliaria con IA</div>
+        <h1 className="hp-hero-title">Del hallazgo al informe, <em>en segundos.</em></h1>
+        <p className="hp-hero-sub">Bitácora convierte las fotos y notas de voz de tus inspectores en reportes técnicos completos. Menos papeleo, más tiempo en terreno.</p>
+        <div className="hp-hero-actions">
+          <button className="hp-btn-primary" onClick={onGoRegister}>Comenzar gratis →</button>
+          <button className="hp-btn-ghost" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Ver cómo funciona ↓</button>
+        </div>
+        <div className="hp-stats">
+          <div className="hp-stat"><strong>10×</strong><span>más rápido que a mano</span></div>
+          <div className="hp-stat"><strong>100%</strong><span>registro fotográfico</span></div>
+          <div className="hp-stat"><strong>PDF</strong><span>profesional al instante</span></div>
+        </div>
+      </section>
+
+      {/* CÓMO FUNCIONA */}
+      <section className="hp-section hp-how" id="hp-como">
+        <div className="hp-how-inner">
+          <div>
+            <span className="hp-label hp-reveal">Proceso</span>
+            <h2 className="hp-section-title hp-reveal">Así funciona en la práctica</h2>
+            <p className="hp-section-body hp-reveal">Diseñado para inspectores que trabajan en terreno, no frente a un computador.</p>
+            <div className="hp-steps">
+              <div className="hp-step hp-reveal"><div className="hp-step-num">1</div><div><h4>El inspector llega a la propiedad</h4><p>Abre la app, selecciona la unidad y comienza la inspección desde su teléfono.</p></div></div>
+              <div className="hp-step hp-reveal"><div className="hp-step-num">2</div><div><h4>Foto + nota de voz del hallazgo</h4><p>Fotografía el problema y graba una nota de voz. Sin formularios, sin escribir.</p></div></div>
+              <div className="hp-step hp-reveal"><div className="hp-step-num">3</div><div><h4>La IA genera el reporte</h4><p>Claude analiza imagen y audio, y produce título, descripción técnica, categoría, severidad y recomendación.</p></div></div>
+              <div className="hp-step hp-reveal"><div className="hp-step-num">4</div><div><h4>PDF listo para entregar</h4><p>Un informe profesional descargable, listo para el propietario o el equipo de constructora.</p></div></div>
+            </div>
+          </div>
+          <div className="hp-flow hp-reveal">
+            <div className="hp-flow-card"><div className="hp-flow-icon">📸</div><div><h5>Subida de fotos múltiples</h5><p>Registra todos los ángulos del hallazgo</p></div></div>
+            <div className="hp-flow-arrow">↓</div>
+            <div className="hp-flow-card"><div className="hp-flow-icon">🎙️</div><div><h5>Grabación de audio</h5><p>Transcripción en tiempo real mientras hablas</p></div></div>
+            <div className="hp-flow-arrow">↓</div>
+            <div className="hp-flow-card"><div className="hp-flow-icon">✦</div><div><h5>Análisis con IA</h5><p>Claude genera el contenido técnico completo</p></div></div>
+            <div className="hp-flow-arrow">↓</div>
+            <div className="hp-flow-card"><div className="hp-flow-icon">📄</div><div><h5>PDF profesional</h5><p>Informe listo para descargar y entregar</p></div></div>
+          </div>
+        </div>
+      </section>
+
+      {/* FUNCIONALIDADES */}
+      <section className="hp-section" id="hp-feat">
+        <span className="hp-label hp-reveal">Funcionalidades</span>
+        <h2 className="hp-section-title hp-reveal">Todo lo que necesita un equipo de post venta</h2>
+        <div className="hp-feat-grid">
+          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">🏢</span><h3>Multi-proyecto</h3><p>Organiza por proyecto, propiedad e inspector. Cada empresa ve solo sus propios datos.</p></div>
+          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">✦</span><h3>IA integrada</h3><p>Claude analiza fotos y audio para generar descripciones técnicas, categorías y recomendaciones.</p></div>
+          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">📄</span><h3>PDF automático</h3><p>Informe profesional descargable con todos los hallazgos, fotos y datos del propietario.</p></div>
+          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">👥</span><h3>Roles y permisos</h3><p>Administradores gestionan proyectos. Inspectores registran hallazgos. Cada uno ve lo suyo.</p></div>
+          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">🎙️</span><h3>Notas de voz</h3><p>Graba mientras inspeccionas. Transcripción en tiempo real, sin teclear nada en terreno.</p></div>
+          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">📊</span><h3>Fichas de propiedades</h3><p>Gestiona nombre, RUT, email y teléfono de cada propietario en un solo lugar.</p></div>
+        </div>
+      </section>
+
+      {/* PARA QUIÉN */}
+      <section className="hp-section hp-dark">
+        <span className="hp-label hp-reveal">Para quién</span>
+        <h2 className="hp-section-title hp-reveal">Hecho para la industria inmobiliaria</h2>
+        <div className="hp-personas">
+          <div className="hp-persona hp-reveal"><div className="hp-persona-role">Inmobiliaria</div><h3>Gerente de Post Venta</h3><p>Supervisa el trabajo de todos los inspectores. Informes consistentes y bien documentados en cada entrega.</p></div>
+          <div className="hp-persona hp-reveal"><div className="hp-persona-role">Terreno</div><h3>Inspector de Viviendas</h3><p>Trabaja desde el teléfono. Sin formularios manuales. La IA hace el informe mientras tú sigues inspeccionando.</p></div>
+          <div className="hp-persona hp-reveal"><div className="hp-persona-role">Constructora</div><h3>Equipo de Calidad</h3><p>Registra todos los hallazgos con evidencia fotográfica. Trazabilidad completa de cada defecto y su resolución.</p></div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="hp-cta">
+        <span className="hp-label hp-reveal">Comenzar</span>
+        <h2 className="hp-cta-title hp-reveal">¿Listo para modernizar<br/>tu post venta?</h2>
+        <p className="hp-cta-sub hp-reveal">Crea tu cuenta gratis y empieza a registrar hallazgos en minutos. Sin tarjeta de crédito.</p>
+        <div className="hp-reveal">
+          <button className="hp-btn-primary" style={{ fontSize: '1rem', padding: '1rem 2.25rem' }} onClick={onGoRegister}>Crear cuenta gratis →</button>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="hp-footer">
+        <span className="hp-footer-logo">Bitácora.</span>
+        <span>© 2025 Bitácora. Hecho con ✦ y Claude.</span>
+        <span>
+          <button className="hp-footer-link" onClick={onGoLogin}>Iniciar sesión</button>
+          {' · '}
+          <button className="hp-footer-link" onClick={onGoRegister}>Registrarse</button>
+        </span>
+      </footer>
+    </div>
+  )
+}
+
 var API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://bitacora-postventa-production.up.railway.app'
 
 var CATEGORIES = {
@@ -323,7 +516,7 @@ function App() {
   // Auth
   var [token, setToken] = useState(null)
   var [currentUser, setCurrentUser] = useState(null)
-  var [authScreen, setAuthScreen] = useState('login') // 'login' | 'register'
+  var [authScreen, setAuthScreen] = useState('home') // 'home' | 'login' | 'register'
 
   // App state
   var [projects, setProjects] = useState([])
@@ -365,6 +558,7 @@ function App() {
   var handleLogout = function() {
     setToken(null)
     setCurrentUser(null)
+    setAuthScreen('home')
     setProjects([])
     setCurrentProject(null)
     setProperties([])
@@ -493,6 +687,7 @@ function App() {
 
   // === PANTALLAS DE AUTH ===
   if (!token) {
+    if (authScreen === 'home') return <HomeScreen onGoLogin={function() { setAuthScreen('login') }} onGoRegister={function() { setAuthScreen('register') }} />
     if (authScreen === 'register') return <RegisterScreen onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
     return <LoginScreen onLogin={handleLogin} onGoRegister={function() { setAuthScreen('register') }} />
   }
