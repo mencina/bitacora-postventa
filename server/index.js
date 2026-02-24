@@ -10,6 +10,7 @@ var { Pool } = require('pg')
 var multer = require('multer')
 var bcrypt = require('bcryptjs')
 var jwt = require('jsonwebtoken')
+var { Resend } = require('resend')
 
 var uploadsDir = path.join(__dirname, 'uploads')
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir)
@@ -109,6 +110,18 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Invitaciones
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS invitations (
+      id SERIAL PRIMARY KEY,
+      email TEXT NOT NULL,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      company_id INTEGER NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
   console.log('Base de datos lista')
 }
 
@@ -128,6 +141,8 @@ app.use('/uploads', express.static(uploadsDir))
 
 var anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 var JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta_temporal'
+var resend = new Resend(process.env.RESEND_API_KEY)
+var APP_URL = process.env.NODE_ENV === 'production' ? 'https://bitacora-postventa.vercel.app' : 'http://localhost:5173'
 
 // Middleware para verificar token
 function authMiddleware(req, res, next) {
@@ -219,7 +234,16 @@ app.get('/auth/me', authMiddleware, async function(req, res) {
 // === PROYECTOS ===
 app.get('/projects', authMiddleware, async function(req, res) {
   try {
-    var result = await pool.query('SELECT * FROM projects WHERE company_id = $1 ORDER BY created_at DESC', [req.user.company_id])
+    var result
+    if (req.user.role === 'admin') {
+      result = await pool.query('SELECT * FROM projects WHERE company_id = $1 ORDER BY created_at DESC', [req.user.company_id])
+    } else {
+      // Inspectores solo ven proyectos donde fueron invitados
+      result = await pool.query(
+        'SELECT p.* FROM projects p JOIN project_members pm ON p.id = pm.project_id WHERE pm.user_id = $1 ORDER BY p.created_at DESC',
+        [req.user.id]
+      )
+    }
     var projects = result.rows
     for (var i = 0; i < projects.length; i++) {
       var count = await pool.query('SELECT COUNT(*) as count FROM properties WHERE project_id = $1', [projects[i].id])
@@ -419,6 +443,175 @@ app.delete('/entries/:id', authMiddleware, async function(req, res) {
     })
     await pool.query('DELETE FROM images WHERE entry_id = $1', [entryId])
     await pool.query('DELETE FROM entries WHERE id = $1', [entryId])
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// === INVITACIONES ===
+
+// GET /projects/:id/team — listar miembros e invitaciones pendientes del proyecto
+app.get('/projects/:id/team', authMiddleware, adminMiddleware, async function(req, res) {
+  try {
+    var projectId = req.params.id
+    var members = await pool.query(
+      'SELECT u.id, u.name, u.email, u.role, pm.created_at as joined_at FROM users u JOIN project_members pm ON u.id = pm.user_id WHERE pm.project_id = $1',
+      [projectId]
+    )
+    var pending = await pool.query(
+      'SELECT id, email, created_at FROM invitations WHERE project_id = $1 AND status = $2',
+      [projectId, 'pending']
+    )
+    res.json({ members: members.rows, pending_invitations: pending.rows })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /projects/:id/invite — enviar invitación
+app.post('/projects/:id/invite', authMiddleware, adminMiddleware, async function(req, res) {
+  try {
+    var projectId = req.params.id
+    var { email } = req.body
+    if (!email || !email.trim()) return res.status(400).json({ error: 'Email requerido' })
+    var emailNorm = email.trim().toLowerCase()
+
+    // Verificar que el proyecto pertenece a la empresa del admin
+    var project = await pool.query('SELECT * FROM projects WHERE id = $1 AND company_id = $2', [projectId, req.user.company_id])
+    if (project.rows.length === 0) return res.status(403).json({ error: 'No autorizado' })
+
+    // Ver si ya es miembro
+    var existing = await pool.query(
+      'SELECT u.id FROM users u JOIN project_members pm ON u.id = pm.user_id WHERE u.email = $1 AND pm.project_id = $2',
+      [emailNorm, projectId]
+    )
+    if (existing.rows.length > 0) return res.status(400).json({ error: 'Ese usuario ya es miembro del proyecto' })
+
+    // Ver si ya hay invitación pendiente
+    var existingInv = await pool.query(
+      'SELECT id FROM invitations WHERE email = $1 AND project_id = $2 AND status = $3',
+      [emailNorm, projectId, 'pending']
+    )
+    if (existingInv.rows.length > 0) return res.status(400).json({ error: 'Ya hay una invitación pendiente para ese email' })
+
+    // Crear token único
+    var invToken = require('crypto').randomBytes(32).toString('hex')
+    await pool.query(
+      'INSERT INTO invitations (email, project_id, company_id, token, status) VALUES ($1, $2, $3, $4, $5)',
+      [emailNorm, projectId, req.user.company_id, invToken, 'pending']
+    )
+
+    var inviteUrl = APP_URL + '?invite=' + invToken
+    var projectName = project.rows[0].name
+
+    // Obtener nombre de la empresa
+    var companyResult = await pool.query('SELECT name FROM companies WHERE id = $1', [req.user.company_id])
+    var companyName = companyResult.rows[0].name
+
+    // Enviar email con Resend
+    await resend.emails.send({
+      from: 'Bitácora <onboarding@resend.dev>',
+      to: emailNorm,
+      subject: 'Te invitaron a unirte a ' + projectName + ' en Bitácora',
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+          <h2 style="color: #1A1814; font-size: 24px; margin-bottom: 8px;">Te invitaron a Bitácora</h2>
+          <p style="color: #6B6760; margin-bottom: 24px;">
+            <strong>${req.user.name}</strong> de <strong>${companyName}</strong> te invita a colaborar en el proyecto <strong>${projectName}</strong>.
+          </p>
+          <a href="${inviteUrl}" style="display:inline-block;background:#1A1814;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:500;font-size:15px;">
+            Aceptar invitación →
+          </a>
+          <p style="color:#aaa;font-size:12px;margin-top:32px;">Si no esperabas esta invitación, puedes ignorar este email.</p>
+        </div>
+      `
+    })
+
+    res.json({ success: true, message: 'Invitación enviada a ' + emailNorm })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /invitations/:token — validar token de invitación (pantalla de registro)
+app.get('/invitations/:token', async function(req, res) {
+  try {
+    var result = await pool.query(
+      'SELECT i.*, p.name as project_name, c.name as company_name FROM invitations i JOIN projects p ON i.project_id = p.id JOIN companies c ON i.company_id = c.id WHERE i.token = $1',
+      [req.params.token]
+    )
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Invitación no encontrada' })
+    var inv = result.rows[0]
+    if (inv.status !== 'pending') return res.status(400).json({ error: 'Esta invitación ya fue utilizada' })
+    res.json({ email: inv.email, project_name: inv.project_name, company_name: inv.company_name, company_id: inv.company_id, project_id: inv.project_id })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /invitations/:token/accept — el inspector se registra via invitación
+app.post('/invitations/:token/accept', async function(req, res) {
+  try {
+    var { name, password } = req.body
+    if (!name || !password) return res.status(400).json({ error: 'Nombre y contraseña requeridos' })
+    if (password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' })
+
+    var invResult = await pool.query(
+      'SELECT i.*, p.name as project_name, c.name as company_name FROM invitations i JOIN projects p ON i.project_id = p.id JOIN companies c ON i.company_id = c.id WHERE i.token = $1',
+      [req.params.token]
+    )
+    if (invResult.rows.length === 0) return res.status(404).json({ error: 'Invitación no encontrada' })
+    var inv = invResult.rows[0]
+    if (inv.status !== 'pending') return res.status(400).json({ error: 'Esta invitación ya fue utilizada' })
+
+    // Ver si ya existe usuario con ese email
+    var existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [inv.email])
+    var user
+    if (existingUser.rows.length > 0) {
+      // El usuario ya existe, solo lo agregamos al proyecto
+      user = existingUser.rows[0]
+    } else {
+      // Crear usuario nuevo como inspector
+      var hash = await bcrypt.hash(password, 10)
+      var userResult = await pool.query(
+        'INSERT INTO users (company_id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+        [inv.company_id, name.trim(), inv.email, hash, 'inspector']
+      )
+      user = userResult.rows[0]
+    }
+
+    // Agregar al proyecto (ignorar si ya es miembro)
+    await pool.query(
+      'INSERT INTO project_members (project_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+      [inv.project_id, user.id]
+    )
+
+    // Marcar invitación como aceptada
+    await pool.query('UPDATE invitations SET status = $1 WHERE token = $2', ['accepted', req.params.token])
+
+    var token = jwt.sign({ id: user.id, email: user.email, role: user.role, company_id: user.company_id }, JWT_SECRET, { expiresIn: '7d' })
+    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role, company_id: user.company_id, company_name: inv.company_name } })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// DELETE /projects/:projectId/members/:userId — eliminar inspector del proyecto
+app.delete('/projects/:projectId/members/:userId', authMiddleware, adminMiddleware, async function(req, res) {
+  try {
+    await pool.query('DELETE FROM project_members WHERE project_id = $1 AND user_id = $2', [req.params.projectId, req.params.userId])
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// DELETE /invitations/:id — cancelar invitación pendiente
+app.delete('/invitations/:id', authMiddleware, adminMiddleware, async function(req, res) {
+  try {
+    await pool.query('DELETE FROM invitations WHERE id = $1 AND company_id = $2', [req.params.id, req.user.company_id])
     res.json({ success: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
