@@ -511,7 +511,7 @@ app.post('/projects/:id/invite', authMiddleware, adminMiddleware, async function
 
     // Enviar email con Resend
     await resend.emails.send({
-      from: 'Bitácora <onboarding@resend.dev>',
+      from: 'Bitácora <noreply@contacto.bitacorapro.cl>',
       to: emailNorm,
       subject: 'Te invitaron a unirte a ' + projectName + ' en Bitácora',
       html: `
