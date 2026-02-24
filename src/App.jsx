@@ -59,7 +59,6 @@ async function generatePDF(projectName, property, entries) {
   var margin = 20
   var contentWidth = pageWidth - margin * 2
 
-  // PORTADA
   doc.setFillColor(26, 26, 46)
   doc.rect(0, 0, pageWidth, pageHeight, 'F')
   doc.setFillColor(233, 69, 96)
@@ -207,8 +206,126 @@ async function generatePDF(projectName, property, entries) {
   doc.save(fileName)
 }
 
+// === PANTALLA LOGIN ===
+function LoginScreen({ onLogin, onGoRegister }) {
+  var [email, setEmail] = useState('')
+  var [password, setPassword] = useState('')
+  var [error, setError] = useState('')
+  var [loading, setLoading] = useState(false)
+
+  var handleLogin = async function() {
+    if (!email || !password) { setError('Completa todos los campos'); return }
+    setLoading(true); setError('')
+    try {
+      var response = await fetch(API_URL + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password })
+      })
+      var data = await response.json()
+      if (!response.ok) { setError(data.error || 'Error al iniciar sesion'); setLoading(false); return }
+      onLogin(data.token, data.user)
+    } catch (err) { setError('No se pudo conectar con el servidor') }
+    setLoading(false)
+  }
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <span className="header-icon">📋</span>
+          <h1>Bitacora Post Venta</h1>
+          <p>Ingresa a tu cuenta</p>
+        </div>
+        {error && <div className="auth-error">{error}</div>}
+        <div className="form-field">
+          <label>Correo electronico</label>
+          <input type="email" className="text-input" placeholder="correo@empresa.com" value={email} onChange={function(e) { setEmail(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }} autoFocus />
+        </div>
+        <div className="form-field">
+          <label>Contraseña</label>
+          <input type="password" className="text-input" placeholder="Tu contraseña" value={password} onChange={function(e) { setPassword(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }} />
+        </div>
+        <button className="submit-button" onClick={handleLogin} disabled={loading}>
+          {loading ? 'Ingresando...' : 'Ingresar'}
+        </button>
+        <p className="auth-switch">¿No tienes cuenta? <span className="auth-link" onClick={onGoRegister}>Regístrate aqui</span></p>
+      </div>
+    </div>
+  )
+}
+
+// === PANTALLA REGISTRO ===
+function RegisterScreen({ onLogin, onGoLogin }) {
+  var [form, setForm] = useState({ company_name: '', name: '', email: '', password: '', password2: '' })
+  var [error, setError] = useState('')
+  var [loading, setLoading] = useState(false)
+
+  var handleRegister = async function() {
+    if (!form.company_name || !form.name || !form.email || !form.password) { setError('Completa todos los campos'); return }
+    if (form.password !== form.password2) { setError('Las contraseñas no coinciden'); return }
+    if (form.password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
+    setLoading(true); setError('')
+    try {
+      var response = await fetch(API_URL + '/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company_name: form.company_name, name: form.name, email: form.email, password: form.password })
+      })
+      var data = await response.json()
+      if (!response.ok) { setError(data.error || 'Error al registrarse'); setLoading(false); return }
+      onLogin(data.token, data.user)
+    } catch (err) { setError('No se pudo conectar con el servidor') }
+    setLoading(false)
+  }
+
+  var set = function(field) { return function(e) { setForm(Object.assign({}, form, { [field]: e.target.value })) } }
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <span className="header-icon">📋</span>
+          <h1>Bitacora Post Venta</h1>
+          <p>Crea tu cuenta de empresa</p>
+        </div>
+        {error && <div className="auth-error">{error}</div>}
+        <div className="form-field">
+          <label>🏢 Nombre de la empresa</label>
+          <input type="text" className="text-input" placeholder="Ej: Inmobiliaria Aconcagua" value={form.company_name} onChange={set('company_name')} autoFocus />
+        </div>
+        <div className="form-field">
+          <label>👤 Tu nombre</label>
+          <input type="text" className="text-input" placeholder="Nombre completo" value={form.name} onChange={set('name')} />
+        </div>
+        <div className="form-field">
+          <label>📧 Correo electronico</label>
+          <input type="email" className="text-input" placeholder="correo@empresa.com" value={form.email} onChange={set('email')} />
+        </div>
+        <div className="form-field">
+          <label>🔒 Contraseña</label>
+          <input type="password" className="text-input" placeholder="Minimo 6 caracteres" value={form.password} onChange={set('password')} />
+        </div>
+        <div className="form-field">
+          <label>🔒 Confirmar contraseña</label>
+          <input type="password" className="text-input" placeholder="Repite la contraseña" value={form.password2} onChange={set('password2')} onKeyDown={function(e) { if (e.key === 'Enter') handleRegister() }} />
+        </div>
+        <button className="submit-button" onClick={handleRegister} disabled={loading}>
+          {loading ? 'Creando cuenta...' : 'Crear Cuenta'}
+        </button>
+        <p className="auth-switch">¿Ya tienes cuenta? <span className="auth-link" onClick={onGoLogin}>Ingresa aqui</span></p>
+      </div>
+    </div>
+  )
+}
+
 function App() {
-  // State
+  // Auth
+  var [token, setToken] = useState(null)
+  var [currentUser, setCurrentUser] = useState(null)
+  var [authScreen, setAuthScreen] = useState('login') // 'login' | 'register'
+
+  // App state
   var [projects, setProjects] = useState([])
   var [currentProject, setCurrentProject] = useState(null)
   var [properties, setProperties] = useState([])
@@ -231,36 +348,61 @@ function App() {
   var fileInputRef = useRef(null)
   var recognitionRef = useRef(null)
 
+  // Helper: fetch con token
+  var authFetch = function(url, options) {
+    var opts = options || {}
+    var headers = opts.headers || {}
+    headers['Authorization'] = 'Bearer ' + token
+    opts.headers = headers
+    return fetch(url, opts)
+  }
+
+  var handleLogin = function(newToken, user) {
+    setToken(newToken)
+    setCurrentUser(user)
+  }
+
+  var handleLogout = function() {
+    setToken(null)
+    setCurrentUser(null)
+    setProjects([])
+    setCurrentProject(null)
+    setProperties([])
+    setCurrentProperty(null)
+    setEntries([])
+  }
+
   // Load projects
   useEffect(function() {
-    fetch(API_URL + '/projects').then(function(r) { return r.json() }).then(setProjects).catch(console.error)
-  }, [])
+    if (!token) return
+    authFetch(API_URL + '/projects').then(function(r) { return r.json() }).then(setProjects).catch(console.error)
+  }, [token])
 
   // Load properties when project changes
   useEffect(function() {
-    if (currentProject) {
-      fetch(API_URL + '/projects/' + currentProject.id + '/properties').then(function(r) { return r.json() }).then(setProperties).catch(console.error)
+    if (currentProject && token) {
+      authFetch(API_URL + '/projects/' + currentProject.id + '/properties').then(function(r) { return r.json() }).then(setProperties).catch(console.error)
     } else { setProperties([]); setCurrentProperty(null) }
   }, [currentProject])
 
   // Load entries when property changes
   useEffect(function() {
-    if (currentProperty) {
-      fetch(API_URL + '/properties/' + currentProperty.id + '/entries').then(function(r) { return r.json() }).then(setEntries).catch(console.error)
+    if (currentProperty && token) {
+      authFetch(API_URL + '/properties/' + currentProperty.id + '/entries').then(function(r) { return r.json() }).then(setEntries).catch(console.error)
     } else { setEntries([]) }
   }, [currentProperty])
 
   // Project handlers
   var handleCreateProject = function() {
     if (!newProjectName.trim()) return
-    fetch(API_URL + '/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProjectName.trim() }) })
+    authFetch(API_URL + '/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProjectName.trim() }) })
       .then(function(r) { return r.json() })
       .then(function(p) { setProjects(function(prev) { return [p].concat(prev) }); setCurrentProject(p); setNewProjectName(''); setShowNewProject(false) })
   }
 
   var handleDeleteProject = function(id) {
     if (!window.confirm('Eliminar este proyecto y todo su contenido?')) return
-    fetch(API_URL + '/projects/' + id, { method: 'DELETE' }).then(function() {
+    authFetch(API_URL + '/projects/' + id, { method: 'DELETE' }).then(function() {
       setProjects(function(prev) { return prev.filter(function(p) { return p.id !== id }) })
       if (currentProject && currentProject.id === id) { setCurrentProject(null) }
     })
@@ -269,14 +411,14 @@ function App() {
   // Property handlers
   var handleCreateProperty = function() {
     if (!propForm.unit_number.trim()) { alert('El numero de propiedad es requerido'); return }
-    fetch(API_URL + '/projects/' + currentProject.id + '/properties', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(propForm) })
+    authFetch(API_URL + '/projects/' + currentProject.id + '/properties', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(propForm) })
       .then(function(r) { return r.json() })
       .then(function(p) { setProperties(function(prev) { return prev.concat([p]) }); setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' }); setShowNewProperty(false) })
   }
 
   var handleDeleteProperty = function(id) {
     if (!window.confirm('Eliminar esta propiedad y todos sus hallazgos?')) return
-    fetch(API_URL + '/properties/' + id, { method: 'DELETE' }).then(function() {
+    authFetch(API_URL + '/properties/' + id, { method: 'DELETE' }).then(function() {
       setProperties(function(prev) { return prev.filter(function(p) { return p.id !== id }) })
       if (currentProperty && currentProperty.id === id) { setCurrentProperty(null) }
     })
@@ -327,7 +469,7 @@ function App() {
       formData.append('project_name', currentProject.name)
       formData.append('unit_number', currentProperty.unit_number)
 
-      var response = await fetch(API_URL + '/properties/' + currentProperty.id + '/entries', { method: 'POST', body: formData })
+      var response = await authFetch(API_URL + '/properties/' + currentProperty.id + '/entries', { method: 'POST', body: formData })
       var data = await response.json()
       if (data.success) {
         setEntries(function(prev) { return [data.entry].concat(prev) })
@@ -339,7 +481,7 @@ function App() {
 
   var handleDeleteEntry = function(id) {
     if (!window.confirm('Eliminar este hallazgo?')) return
-    fetch(API_URL + '/entries/' + id, { method: 'DELETE' }).then(function() {
+    authFetch(API_URL + '/entries/' + id, { method: 'DELETE' }).then(function() {
       setEntries(function(prev) { return prev.filter(function(e) { return e.id !== id }) })
     })
   }
@@ -347,6 +489,12 @@ function App() {
   var handleExportPDF = function() {
     if (entries.length === 0) { alert('No hay hallazgos para exportar'); return }
     generatePDF(currentProject.name, currentProperty, entries)
+  }
+
+  // === PANTALLAS DE AUTH ===
+  if (!token) {
+    if (authScreen === 'register') return <RegisterScreen onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
+    return <LoginScreen onLogin={handleLogin} onGoRegister={function() { setAuthScreen('register') }} />
   }
 
   // === VISTA 1: PROYECTOS ===
@@ -357,7 +505,11 @@ function App() {
           <div className="header-content">
             <div className="header-title">
               <span className="header-icon">📋</span>
-              <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">Sistema inteligente de registro de hallazgos</p></div>
+              <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
+            </div>
+            <div className="header-info">
+              <span className="user-name">👤 {currentUser && currentUser.name}</span>
+              <button className="logout-button" onClick={handleLogout}>Cerrar sesion</button>
             </div>
           </div>
         </header>
@@ -375,7 +527,7 @@ function App() {
             </div>
           )}
           {projects.length === 0 && !showNewProject && (
-            <div className="welcome-message"><h2>👋 Bienvenido</h2><p>Crea tu primer proyecto para comenzar.</p></div>
+            <div className="welcome-message"><h2>👋 Bienvenido, {currentUser && currentUser.name}</h2><p>Crea tu primer proyecto para comenzar.</p></div>
           )}
           <div className="projects-grid">
             {projects.map(function(project) {
@@ -403,11 +555,12 @@ function App() {
           <div className="header-content">
             <div className="header-title">
               <span className="header-icon">📋</span>
-              <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">Sistema inteligente de registro de hallazgos</p></div>
+              <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
             </div>
             <div className="header-info">
               <button className="back-button" onClick={function() { setCurrentProject(null) }}>← Proyectos</button>
               <div className="project-name-display">{currentProject.name}</div>
+              <button className="logout-button" onClick={handleLogout}>Cerrar sesion</button>
             </div>
           </div>
         </header>
@@ -481,6 +634,7 @@ function App() {
             <button className="back-button" onClick={function() { setCurrentProperty(null); setShowForm(false) }}>← Propiedades</button>
             <div className="project-name-display">{currentProperty.unit_number} — {currentProperty.owner_name || 'Sin propietario'}</div>
             <div className="entry-count">{entries.length} hallazgo{entries.length !== 1 ? 's' : ''}</div>
+            <button className="logout-button" onClick={handleLogout}>Cerrar sesion</button>
           </div>
         </div>
       </header>

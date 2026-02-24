@@ -8,6 +8,8 @@ if (process.env.NODE_ENV !== 'production') {
 var Anthropic = require('@anthropic-ai/sdk').default
 var { Pool } = require('pg')
 var multer = require('multer')
+var bcrypt = require('bcryptjs')
+var jwt = require('jsonwebtoken')
 
 var uploadsDir = path.join(__dirname, 'uploads')
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir)
@@ -27,13 +29,46 @@ var pool = new Pool({
 })
 
 async function initDB() {
+  // Empresas
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS projects (
+    CREATE TABLE IF NOT EXISTS companies (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Usuarios
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      company_id INTEGER REFERENCES companies(id),
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'inspector',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+  // Proyectos
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id SERIAL PRIMARY KEY,
+      company_id INTEGER REFERENCES companies(id),
+      name TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+  // Miembros de proyecto
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS project_members (
+      id SERIAL PRIMARY KEY,
+      project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(project_id, user_id)
+    )
+  `)
+  // Propiedades
   await pool.query(`
     CREATE TABLE IF NOT EXISTS properties (
       id SERIAL PRIMARY KEY,
@@ -46,10 +81,12 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Hallazgos
   await pool.query(`
     CREATE TABLE IF NOT EXISTS entries (
       id SERIAL PRIMARY KEY,
       property_id INTEGER NOT NULL REFERENCES properties(id),
+      created_by INTEGER REFERENCES users(id),
       title TEXT,
       description TEXT,
       inspector_note TEXT,
@@ -62,6 +99,7 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Imágenes
   await pool.query(`
     CREATE TABLE IF NOT EXISTS images (
       id SERIAL PRIMARY KEY,
@@ -89,11 +127,99 @@ app.use(express.json({ limit: '50mb' }))
 app.use('/uploads', express.static(uploadsDir))
 
 var anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+var JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta_temporal'
+
+// Middleware para verificar token
+function authMiddleware(req, res, next) {
+  var authHeader = req.headers['authorization']
+  if (!authHeader) return res.status(401).json({ error: 'No autorizado' })
+  var token = authHeader.split(' ')[1]
+  if (!token) return res.status(401).json({ error: 'No autorizado' })
+  try {
+    var decoded = jwt.verify(token, JWT_SECRET)
+    req.user = decoded
+    next()
+  } catch (err) {
+    return res.status(401).json({ error: 'Token inválido' })
+  }
+}
+
+// Middleware solo para admin
+function adminMiddleware(req, res, next) {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Solo el administrador puede hacer esto' })
+  next()
+}
+
+// === AUTENTICACIÓN ===
+
+app.post('/auth/register', async function(req, res) {
+  try {
+    var { company_name, name, email, password } = req.body
+    if (!company_name || !name || !email || !password) return res.status(400).json({ error: 'Todos los campos son requeridos' })
+
+    var existing = await pool.query('SELECT id FROM users WHERE email = $1', [email])
+    if (existing.rows.length > 0) return res.status(400).json({ error: 'Ya existe una cuenta con ese email' })
+
+    var companyResult = await pool.query('INSERT INTO companies (name) VALUES ($1) RETURNING *', [company_name.trim()])
+    var company = companyResult.rows[0]
+
+    var hash = await bcrypt.hash(password, 10)
+    var userResult = await pool.query(
+      'INSERT INTO users (company_id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, company_id',
+      [company.id, name.trim(), email.trim().toLowerCase(), hash, 'admin']
+    )
+    var user = userResult.rows[0]
+    user.company_name = company.name
+
+    var token = jwt.sign({ id: user.id, email: user.email, role: user.role, company_id: user.company_id }, JWT_SECRET, { expiresIn: '7d' })
+    res.json({ token, user })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/auth/login', async function(req, res) {
+  try {
+    var { email, password } = req.body
+    if (!email || !password) return res.status(400).json({ error: 'Email y contraseña requeridos' })
+
+    var result = await pool.query(
+      'SELECT u.*, c.name as company_name FROM users u JOIN companies c ON u.company_id = c.id WHERE u.email = $1',
+      [email.trim().toLowerCase()]
+    )
+    if (result.rows.length === 0) return res.status(400).json({ error: 'Email o contraseña incorrectos' })
+
+    var user = result.rows[0]
+    var valid = await bcrypt.compare(password, user.password_hash)
+    if (!valid) return res.status(400).json({ error: 'Email o contraseña incorrectos' })
+
+    var token = jwt.sign({ id: user.id, email: user.email, role: user.role, company_id: user.company_id }, JWT_SECRET, { expiresIn: '7d' })
+    res.json({
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, company_id: user.company_id, company_name: user.company_name }
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.get('/auth/me', authMiddleware, async function(req, res) {
+  try {
+    var result = await pool.query(
+      'SELECT u.id, u.name, u.email, u.role, u.company_id, c.name as company_name FROM users u JOIN companies c ON u.company_id = c.id WHERE u.id = $1',
+      [req.user.id]
+    )
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' })
+    res.json(result.rows[0])
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 // === PROYECTOS ===
-app.get('/projects', async function(req, res) {
+app.get('/projects', authMiddleware, async function(req, res) {
   try {
-    var result = await pool.query('SELECT * FROM projects ORDER BY created_at DESC')
+    var result = await pool.query('SELECT * FROM projects WHERE company_id = $1 ORDER BY created_at DESC', [req.user.company_id])
     var projects = result.rows
     for (var i = 0; i < projects.length; i++) {
       var count = await pool.query('SELECT COUNT(*) as count FROM properties WHERE project_id = $1', [projects[i].id])
@@ -105,11 +231,11 @@ app.get('/projects', async function(req, res) {
   }
 })
 
-app.post('/projects', async function(req, res) {
+app.post('/projects', authMiddleware, adminMiddleware, async function(req, res) {
   try {
     var name = req.body.name
     if (!name || !name.trim()) return res.status(400).json({ error: 'Nombre requerido' })
-    var result = await pool.query('INSERT INTO projects (name) VALUES ($1) RETURNING *', [name.trim()])
+    var result = await pool.query('INSERT INTO projects (name, company_id) VALUES ($1, $2) RETURNING *', [name.trim(), req.user.company_id])
     var project = result.rows[0]
     project.property_count = 0
     res.json(project)
@@ -118,7 +244,7 @@ app.post('/projects', async function(req, res) {
   }
 })
 
-app.delete('/projects/:id', async function(req, res) {
+app.delete('/projects/:id', authMiddleware, adminMiddleware, async function(req, res) {
   try {
     var projectId = req.params.id
     var props = await pool.query('SELECT id FROM properties WHERE project_id = $1', [projectId])
@@ -144,7 +270,7 @@ app.delete('/projects/:id', async function(req, res) {
 })
 
 // === PROPIEDADES ===
-app.get('/projects/:projectId/properties', async function(req, res) {
+app.get('/projects/:projectId/properties', authMiddleware, async function(req, res) {
   try {
     var result = await pool.query('SELECT * FROM properties WHERE project_id = $1 ORDER BY unit_number ASC', [req.params.projectId])
     var properties = result.rows
@@ -158,7 +284,7 @@ app.get('/projects/:projectId/properties', async function(req, res) {
   }
 })
 
-app.post('/projects/:projectId/properties', async function(req, res) {
+app.post('/projects/:projectId/properties', authMiddleware, async function(req, res) {
   try {
     var b = req.body
     if (!b.unit_number || !b.unit_number.trim()) return res.status(400).json({ error: 'Numero de propiedad requerido' })
@@ -174,7 +300,7 @@ app.post('/projects/:projectId/properties', async function(req, res) {
   }
 })
 
-app.put('/properties/:id', async function(req, res) {
+app.put('/properties/:id', authMiddleware, async function(req, res) {
   try {
     var b = req.body
     await pool.query(
@@ -191,7 +317,7 @@ app.put('/properties/:id', async function(req, res) {
   }
 })
 
-app.delete('/properties/:id', async function(req, res) {
+app.delete('/properties/:id', authMiddleware, async function(req, res) {
   try {
     var propId = req.params.id
     var images = await pool.query(
@@ -212,7 +338,7 @@ app.delete('/properties/:id', async function(req, res) {
 })
 
 // === HALLAZGOS ===
-app.get('/properties/:propertyId/entries', async function(req, res) {
+app.get('/properties/:propertyId/entries', authMiddleware, async function(req, res) {
   try {
     var result = await pool.query('SELECT * FROM entries WHERE property_id = $1 ORDER BY created_at DESC', [req.params.propertyId])
     var entries = result.rows
@@ -227,7 +353,7 @@ app.get('/properties/:propertyId/entries', async function(req, res) {
   }
 })
 
-app.post('/properties/:propertyId/entries', upload.array('photos', 10), async function(req, res) {
+app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos', 10), async function(req, res) {
   try {
     var propertyId = req.params.propertyId
     var inspectorNote = req.body.inspector_note || ''
@@ -263,8 +389,8 @@ app.post('/properties/:propertyId/entries', upload.array('photos', 10), async fu
     var analysis = JSON.parse(responseText)
 
     var entryResult = await pool.query(
-      'INSERT INTO entries (property_id, title, description, inspector_note, category, severity, location, recommendation, affected_elements, ai_generated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1) RETURNING *',
-      [propertyId, analysis.titulo, analysis.descripcion, inspectorNote, analysis.categoria, analysis.severidad, analysis.ubicacion_sugerida, analysis.recomendacion, JSON.stringify(analysis.elementos_afectados)]
+      'INSERT INTO entries (property_id, created_by, title, description, inspector_note, category, severity, location, recommendation, affected_elements, ai_generated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1) RETURNING *',
+      [propertyId, req.user.id, analysis.titulo, analysis.descripcion, inspectorNote, analysis.categoria, analysis.severidad, analysis.ubicacion_sugerida, analysis.recomendacion, JSON.stringify(analysis.elementos_afectados)]
     )
     var entry = entryResult.rows[0]
 
@@ -283,7 +409,7 @@ app.post('/properties/:propertyId/entries', upload.array('photos', 10), async fu
   }
 })
 
-app.delete('/entries/:id', async function(req, res) {
+app.delete('/entries/:id', authMiddleware, async function(req, res) {
   try {
     var entryId = req.params.id
     var images = await pool.query('SELECT filename FROM images WHERE entry_id = $1', [entryId])

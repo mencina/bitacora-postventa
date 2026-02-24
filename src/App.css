@@ -707,3 +707,94 @@
 .form-field-half {
   flex: 1;
 }
+
+/* ===== AUTH SCREENS ===== */
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  padding: 20px;
+}
+
+.auth-card {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-logo .header-icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.auth-logo h1 {
+  font-size: 22px;
+  color: #1a1a2e;
+  margin: 0 0 6px 0;
+}
+
+.auth-logo p {
+  color: #7f8c8d;
+  margin: 0;
+  font-size: 14px;
+}
+
+.auth-error {
+  background: #FDEDEC;
+  color: #E74C3C;
+  border: 1px solid #E74C3C33;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 20px;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.auth-link {
+  color: #E9455F;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+/* ===== USER INFO IN HEADER ===== */
+.user-name {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  margin-right: 8px;
+}
+
+.logout-button {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-button:hover {
+  background: rgba(255,255,255,0.25);
+}
