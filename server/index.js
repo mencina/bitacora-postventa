@@ -6,7 +6,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config()
 }
 var Anthropic = require('@anthropic-ai/sdk').default
-var Database = require('better-sqlite3')
+var { Pool } = require('pg')
 var multer = require('multer')
 
 var uploadsDir = path.join(__dirname, 'uploads')
@@ -21,60 +21,58 @@ var storage = multer.diskStorage({
 })
 var upload = multer({ storage: storage, limits: { fileSize: 20 * 1024 * 1024 } })
 
-var db = new Database(path.join(__dirname, 'bitacora.db'))
-db.pragma('journal_mode = WAL')
+var pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+})
 
-// TABLAS
-db.exec(
-  'CREATE TABLE IF NOT EXISTS projects (' +
-  '  id INTEGER PRIMARY KEY AUTOINCREMENT,' +
-  '  name TEXT NOT NULL,' +
-  '  created_at TEXT DEFAULT (datetime(\'now\', \'localtime\'))' +
-  ')'
-)
-
-db.exec(
-  'CREATE TABLE IF NOT EXISTS properties (' +
-  '  id INTEGER PRIMARY KEY AUTOINCREMENT,' +
-  '  project_id INTEGER NOT NULL,' +
-  '  unit_number TEXT NOT NULL,' +
-  '  owner_name TEXT,' +
-  '  owner_rut TEXT,' +
-  '  owner_email TEXT,' +
-  '  owner_phone TEXT,' +
-  '  created_at TEXT DEFAULT (datetime(\'now\', \'localtime\')),' +
-  '  FOREIGN KEY (project_id) REFERENCES projects(id)' +
-  ')'
-)
-
-db.exec(
-  'CREATE TABLE IF NOT EXISTS entries (' +
-  '  id INTEGER PRIMARY KEY AUTOINCREMENT,' +
-  '  property_id INTEGER NOT NULL,' +
-  '  title TEXT,' +
-  '  description TEXT,' +
-  '  inspector_note TEXT,' +
-  '  category TEXT DEFAULT \'otro\',' +
-  '  severity TEXT DEFAULT \'leve\',' +
-  '  location TEXT,' +
-  '  recommendation TEXT,' +
-  '  affected_elements TEXT,' +
-  '  ai_generated INTEGER DEFAULT 0,' +
-  '  created_at TEXT DEFAULT (datetime(\'now\', \'localtime\')),' +
-  '  FOREIGN KEY (property_id) REFERENCES properties(id)' +
-  ')'
-)
-
-db.exec(
-  'CREATE TABLE IF NOT EXISTS images (' +
-  '  id INTEGER PRIMARY KEY AUTOINCREMENT,' +
-  '  entry_id INTEGER NOT NULL,' +
-  '  filename TEXT NOT NULL,' +
-  '  original_name TEXT,' +
-  '  created_at TEXT DEFAULT (datetime(\'now\', \'localtime\')),' +
-  '  FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE' +
-  ')'
-)
+async function initDB() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS projects (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS properties (
+      id SERIAL PRIMARY KEY,
+      project_id INTEGER NOT NULL REFERENCES projects(id),
+      unit_number TEXT NOT NULL,
+      owner_name TEXT,
+      owner_rut TEXT,
+      owner_email TEXT,
+      owner_phone TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS entries (
+      id SERIAL PRIMARY KEY,
+      property_id INTEGER NOT NULL REFERENCES properties(id),
+      title TEXT,
+      description TEXT,
+      inspector_note TEXT,
+      category TEXT DEFAULT 'otro',
+      severity TEXT DEFAULT 'leve',
+      location TEXT,
+      recommendation TEXT,
+      affected_elements TEXT,
+      ai_generated INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS images (
+      id SERIAL PRIMARY KEY,
+      entry_id INTEGER NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
+      filename TEXT NOT NULL,
+      original_name TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+  console.log('Base de datos lista')
+}
 
 var app = express()
 app.use(cors({
@@ -93,92 +91,140 @@ app.use('/uploads', express.static(uploadsDir))
 var anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // === PROYECTOS ===
-app.get('/projects', function(req, res) {
-  var projects = db.prepare('SELECT * FROM projects ORDER BY created_at DESC').all()
-  // Agregar conteo de propiedades
-  var countProps = db.prepare('SELECT COUNT(*) as count FROM properties WHERE project_id = ?')
-  projects.forEach(function(p) { p.property_count = countProps.get(p.id).count })
-  res.json(projects)
+app.get('/projects', async function(req, res) {
+  try {
+    var result = await pool.query('SELECT * FROM projects ORDER BY created_at DESC')
+    var projects = result.rows
+    for (var i = 0; i < projects.length; i++) {
+      var count = await pool.query('SELECT COUNT(*) as count FROM properties WHERE project_id = $1', [projects[i].id])
+      projects[i].property_count = parseInt(count.rows[0].count)
+    }
+    res.json(projects)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.post('/projects', function(req, res) {
-  var name = req.body.name
-  if (!name || !name.trim()) return res.status(400).json({ error: 'Nombre requerido' })
-  var result = db.prepare('INSERT INTO projects (name) VALUES (?)').run(name.trim())
-  var project = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid)
-  project.property_count = 0
-  res.json(project)
+app.post('/projects', async function(req, res) {
+  try {
+    var name = req.body.name
+    if (!name || !name.trim()) return res.status(400).json({ error: 'Nombre requerido' })
+    var result = await pool.query('INSERT INTO projects (name) VALUES ($1) RETURNING *', [name.trim()])
+    var project = result.rows[0]
+    project.property_count = 0
+    res.json(project)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.delete('/projects/:id', function(req, res) {
-  var projectId = req.params.id
-  var properties = db.prepare('SELECT id FROM properties WHERE project_id = ?').all(projectId)
-  properties.forEach(function(prop) {
-    var images = db.prepare('SELECT i.filename FROM images i JOIN entries e ON i.entry_id = e.id WHERE e.property_id = ?').all(prop.id)
-    images.forEach(function(img) {
-      var filepath = path.join(uploadsDir, img.filename)
-      if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
-    })
-    db.prepare('DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE property_id = ?)').run(prop.id)
-    db.prepare('DELETE FROM entries WHERE property_id = ?').run(prop.id)
-  })
-  db.prepare('DELETE FROM properties WHERE project_id = ?').run(projectId)
-  db.prepare('DELETE FROM projects WHERE id = ?').run(projectId)
-  res.json({ success: true })
+app.delete('/projects/:id', async function(req, res) {
+  try {
+    var projectId = req.params.id
+    var props = await pool.query('SELECT id FROM properties WHERE project_id = $1', [projectId])
+    for (var i = 0; i < props.rows.length; i++) {
+      var propId = props.rows[i].id
+      var images = await pool.query(
+        'SELECT i.filename FROM images i JOIN entries e ON i.entry_id = e.id WHERE e.property_id = $1',
+        [propId]
+      )
+      images.rows.forEach(function(img) {
+        var filepath = path.join(uploadsDir, img.filename)
+        if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
+      })
+      await pool.query('DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE property_id = $1)', [propId])
+      await pool.query('DELETE FROM entries WHERE property_id = $1', [propId])
+    }
+    await pool.query('DELETE FROM properties WHERE project_id = $1', [projectId])
+    await pool.query('DELETE FROM projects WHERE id = $1', [projectId])
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // === PROPIEDADES ===
-app.get('/projects/:projectId/properties', function(req, res) {
-  var properties = db.prepare('SELECT * FROM properties WHERE project_id = ? ORDER BY unit_number ASC').all(req.params.projectId)
-  var countEntries = db.prepare('SELECT COUNT(*) as count FROM entries WHERE property_id = ?')
-  properties.forEach(function(p) { p.entry_count = countEntries.get(p.id).count })
-  res.json(properties)
+app.get('/projects/:projectId/properties', async function(req, res) {
+  try {
+    var result = await pool.query('SELECT * FROM properties WHERE project_id = $1 ORDER BY unit_number ASC', [req.params.projectId])
+    var properties = result.rows
+    for (var i = 0; i < properties.length; i++) {
+      var count = await pool.query('SELECT COUNT(*) as count FROM entries WHERE property_id = $1', [properties[i].id])
+      properties[i].entry_count = parseInt(count.rows[0].count)
+    }
+    res.json(properties)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.post('/projects/:projectId/properties', function(req, res) {
-  var b = req.body
-  if (!b.unit_number || !b.unit_number.trim()) return res.status(400).json({ error: 'Numero de propiedad requerido' })
-  var result = db.prepare(
-    'INSERT INTO properties (project_id, unit_number, owner_name, owner_rut, owner_email, owner_phone) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(req.params.projectId, b.unit_number.trim(), b.owner_name || '', b.owner_rut || '', b.owner_email || '', b.owner_phone || '')
-  var property = db.prepare('SELECT * FROM properties WHERE id = ?').get(result.lastInsertRowid)
-  property.entry_count = 0
-  res.json(property)
+app.post('/projects/:projectId/properties', async function(req, res) {
+  try {
+    var b = req.body
+    if (!b.unit_number || !b.unit_number.trim()) return res.status(400).json({ error: 'Numero de propiedad requerido' })
+    var result = await pool.query(
+      'INSERT INTO properties (project_id, unit_number, owner_name, owner_rut, owner_email, owner_phone) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [req.params.projectId, b.unit_number.trim(), b.owner_name || '', b.owner_rut || '', b.owner_email || '', b.owner_phone || '']
+    )
+    var property = result.rows[0]
+    property.entry_count = 0
+    res.json(property)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.put('/properties/:id', function(req, res) {
-  var b = req.body
-  db.prepare(
-    'UPDATE properties SET unit_number = ?, owner_name = ?, owner_rut = ?, owner_email = ?, owner_phone = ? WHERE id = ?'
-  ).run(b.unit_number || '', b.owner_name || '', b.owner_rut || '', b.owner_email || '', b.owner_phone || '', req.params.id)
-  var property = db.prepare('SELECT * FROM properties WHERE id = ?').get(req.params.id)
-  var countEntries = db.prepare('SELECT COUNT(*) as count FROM entries WHERE property_id = ?')
-  property.entry_count = countEntries.get(property.id).count
-  res.json(property)
+app.put('/properties/:id', async function(req, res) {
+  try {
+    var b = req.body
+    await pool.query(
+      'UPDATE properties SET unit_number = $1, owner_name = $2, owner_rut = $3, owner_email = $4, owner_phone = $5 WHERE id = $6',
+      [b.unit_number || '', b.owner_name || '', b.owner_rut || '', b.owner_email || '', b.owner_phone || '', req.params.id]
+    )
+    var result = await pool.query('SELECT * FROM properties WHERE id = $1', [req.params.id])
+    var property = result.rows[0]
+    var count = await pool.query('SELECT COUNT(*) as count FROM entries WHERE property_id = $1', [property.id])
+    property.entry_count = parseInt(count.rows[0].count)
+    res.json(property)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
-app.delete('/properties/:id', function(req, res) {
-  var propId = req.params.id
-  var images = db.prepare('SELECT i.filename FROM images i JOIN entries e ON i.entry_id = e.id WHERE e.property_id = ?').all(propId)
-  images.forEach(function(img) {
-    var filepath = path.join(uploadsDir, img.filename)
-    if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
-  })
-  db.prepare('DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE property_id = ?)').run(propId)
-  db.prepare('DELETE FROM entries WHERE property_id = ?').run(propId)
-  db.prepare('DELETE FROM properties WHERE id = ?').run(propId)
-  res.json({ success: true })
+app.delete('/properties/:id', async function(req, res) {
+  try {
+    var propId = req.params.id
+    var images = await pool.query(
+      'SELECT i.filename FROM images i JOIN entries e ON i.entry_id = e.id WHERE e.property_id = $1',
+      [propId]
+    )
+    images.rows.forEach(function(img) {
+      var filepath = path.join(uploadsDir, img.filename)
+      if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
+    })
+    await pool.query('DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE property_id = $1)', [propId])
+    await pool.query('DELETE FROM entries WHERE property_id = $1', [propId])
+    await pool.query('DELETE FROM properties WHERE id = $1', [propId])
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 // === HALLAZGOS ===
-app.get('/properties/:propertyId/entries', function(req, res) {
-  var entries = db.prepare('SELECT * FROM entries WHERE property_id = ? ORDER BY created_at DESC').all(req.params.propertyId)
-  var getImages = db.prepare('SELECT * FROM images WHERE entry_id = ?')
-  entries.forEach(function(entry) {
-    entry.images = getImages.all(entry.id)
-    entry.affected_elements = entry.affected_elements ? JSON.parse(entry.affected_elements) : []
-  })
-  res.json(entries)
+app.get('/properties/:propertyId/entries', async function(req, res) {
+  try {
+    var result = await pool.query('SELECT * FROM entries WHERE property_id = $1 ORDER BY created_at DESC', [req.params.propertyId])
+    var entries = result.rows
+    for (var i = 0; i < entries.length; i++) {
+      var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entries[i].id])
+      entries[i].images = imgs.rows
+      entries[i].affected_elements = entries[i].affected_elements ? JSON.parse(entries[i].affected_elements) : []
+    }
+    res.json(entries)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 app.post('/properties/:propertyId/entries', upload.array('photos', 10), async function(req, res) {
@@ -216,18 +262,18 @@ app.post('/properties/:propertyId/entries', upload.array('photos', 10), async fu
     var responseText = message.content.filter(function(b) { return b.type === 'text' }).map(function(b) { return b.text }).join('')
     var analysis = JSON.parse(responseText)
 
-    var result = db.prepare(
-      'INSERT INTO entries (property_id, title, description, inspector_note, category, severity, location, recommendation, affected_elements, ai_generated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)'
-    ).run(propertyId, analysis.titulo, analysis.descripcion, inspectorNote, analysis.categoria, analysis.severidad, analysis.ubicacion_sugerida, analysis.recomendacion, JSON.stringify(analysis.elementos_afectados))
+    var entryResult = await pool.query(
+      'INSERT INTO entries (property_id, title, description, inspector_note, category, severity, location, recommendation, affected_elements, ai_generated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 1) RETURNING *',
+      [propertyId, analysis.titulo, analysis.descripcion, inspectorNote, analysis.categoria, analysis.severidad, analysis.ubicacion_sugerida, analysis.recomendacion, JSON.stringify(analysis.elementos_afectados)]
+    )
+    var entry = entryResult.rows[0]
 
-    var entryId = result.lastInsertRowid
-    var insertImage = db.prepare('INSERT INTO images (entry_id, filename, original_name) VALUES (?, ?, ?)')
     for (var k = 0; k < req.files.length; k++) {
-      insertImage.run(entryId, req.files[k].filename, req.files[k].originalname)
+      await pool.query('INSERT INTO images (entry_id, filename, original_name) VALUES ($1, $2, $3)', [entry.id, req.files[k].filename, req.files[k].originalname])
     }
 
-    var entry = db.prepare('SELECT * FROM entries WHERE id = ?').get(entryId)
-    entry.images = db.prepare('SELECT * FROM images WHERE entry_id = ?').all(entryId)
+    var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
+    entry.images = imgs.rows
     entry.affected_elements = JSON.parse(entry.affected_elements)
 
     res.json({ success: true, entry: entry })
@@ -237,17 +283,26 @@ app.post('/properties/:propertyId/entries', upload.array('photos', 10), async fu
   }
 })
 
-app.delete('/entries/:id', function(req, res) {
-  var entryId = req.params.id
-  var images = db.prepare('SELECT filename FROM images WHERE entry_id = ?').all(entryId)
-  images.forEach(function(img) {
-    var filepath = path.join(uploadsDir, img.filename)
-    if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
-  })
-  db.prepare('DELETE FROM images WHERE entry_id = ?').run(entryId)
-  db.prepare('DELETE FROM entries WHERE id = ?').run(entryId)
-  res.json({ success: true })
+app.delete('/entries/:id', async function(req, res) {
+  try {
+    var entryId = req.params.id
+    var images = await pool.query('SELECT filename FROM images WHERE entry_id = $1', [entryId])
+    images.rows.forEach(function(img) {
+      var filepath = path.join(uploadsDir, img.filename)
+      if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
+    })
+    await pool.query('DELETE FROM images WHERE entry_id = $1', [entryId])
+    await pool.query('DELETE FROM entries WHERE id = $1', [entryId])
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 var PORT = process.env.PORT || 3001
-app.listen(PORT, function() { console.log('Servidor corriendo en puerto ' + PORT) })
+initDB().then(function() {
+  app.listen(PORT, function() { console.log('Servidor corriendo en puerto ' + PORT) })
+}).catch(function(err) {
+  console.error('Error iniciando base de datos:', err)
+  process.exit(1)
+})
