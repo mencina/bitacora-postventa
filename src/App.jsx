@@ -96,7 +96,7 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
 
       {/* NAV */}
       <nav className="hp-nav">
-        <div className="hp-logo">Bitácora<span>.</span></div>
+        <div className="hp-logo">BitácoraPro<span>.</span></div>
         <div className="hp-nav-links">
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-feat').scrollIntoView({ behavior: 'smooth' }) }}>Funcionalidades</button>
@@ -106,17 +106,16 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
 
       {/* HERO */}
       <section className="hp-hero">
-        <div className="hp-eyebrow">Post venta inmobiliaria con IA</div>
+        <div className="hp-eyebrow">Post venta inmobiliaria automatizada con IA</div>
         <h1 className="hp-hero-title">Del hallazgo al informe, <em>en segundos.</em></h1>
-        <p className="hp-hero-sub">Bitácora convierte las fotos y notas de voz de tus inspectores en reportes técnicos completos. Menos papeleo, más tiempo en terreno.</p>
+        <p className="hp-hero-sub">Deja atrás WhatsApp y los informes manuales. Convierte fotos y notas de voz en informes técnicos estructurados, trazables y listos para respaldar cada entrega.</p>
         <div className="hp-hero-actions">
           <button className="hp-btn-primary" onClick={onGoRegister}>Comenzar gratis →</button>
           <button className="hp-btn-ghost" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Ver cómo funciona ↓</button>
         </div>
         <div className="hp-stats">
-          <div className="hp-stat"><strong>10×</strong><span>más rápido que a mano</span></div>
-          <div className="hp-stat"><strong>100%</strong><span>registro fotográfico</span></div>
-          <div className="hp-stat"><strong>PDF</strong><span>profesional al instante</span></div>
+          <div className="hp-stat"><strong>No más fotos sueltas en WhatsApp</strong><span>Cada hallazgo queda registrado, asignado y trazable.</span></div>
+          <div className="hp-stat"><strong>Nunca más "te lo mando después"</strong><span>La IA construye el informe en tiempo real mientras inspeccionas. Sin retrabajo posterior.</span></div>
         </div>
       </section>
 
@@ -124,14 +123,14 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
       <section className="hp-section hp-how" id="hp-como">
         <div className="hp-how-inner">
           <div>
-            <span className="hp-label hp-reveal">Proceso</span>
-            <h2 className="hp-section-title hp-reveal">Así funciona en la práctica</h2>
-            <p className="hp-section-body hp-reveal">Diseñado para inspectores que trabajan en terreno, no frente a un computador.</p>
+            <span className="hp-label hp-reveal">Operación</span>
+            <h2 className="hp-section-title hp-reveal">Así opera BitacoraPro</h2>
+            <p className="hp-section-body hp-reveal">Diseñado para trabajar en terreno. No en Word.</p>
             <div className="hp-steps">
-              <div className="hp-step hp-reveal"><div className="hp-step-num">1</div><div><h4>El inspector llega a la propiedad</h4><p>Abre la app, selecciona la unidad y comienza la inspección desde su teléfono.</p></div></div>
-              <div className="hp-step hp-reveal"><div className="hp-step-num">2</div><div><h4>Foto + nota de voz del hallazgo</h4><p>Fotografía el problema y graba una nota de voz. Sin formularios, sin escribir.</p></div></div>
-              <div className="hp-step hp-reveal"><div className="hp-step-num">3</div><div><h4>La IA genera el reporte</h4><p>Claude analiza imagen y audio, y produce título, descripción técnica, categoría, severidad y recomendación.</p></div></div>
-              <div className="hp-step hp-reveal"><div className="hp-step-num">4</div><div><h4>PDF listo para entregar</h4><p>Un informe profesional descargable, listo para el propietario o el equipo de constructora.</p></div></div>
+              <div className="hp-step hp-reveal"><div className="hp-step-num">1</div><div><h4>Llegas a terreno y abres BitacoraPro</h4><p>Empieza la inspección desde su teléfono.</p></div></div>
+              <div className="hp-step hp-reveal"><div className="hp-step-num">2</div><div><h4>Toma fotos y hablas del hallazgo</h4><p>Sin formularios, sin escribir.</p></div></div>
+              <div className="hp-step hp-reveal"><div className="hp-step-num">3</div><div><h4>La IA arma el informe</h4><p>Diagnóstico, severidad y recomendación. En segundos.</p></div></div>
+              <div className="hp-step hp-reveal"><div className="hp-step-num">4</div><div><h4>Sales con el reporte listo</h4><p>Informe profesional en tiempo real. Sin retrabajo. Sin espera.</p></div></div>
             </div>
           </div>
           <div className="hp-flow hp-reveal">
@@ -139,20 +138,20 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
             <div className="hp-flow-arrow">↓</div>
             <div className="hp-flow-card"><div className="hp-flow-icon">🎙️</div><div><h5>Grabación de audio</h5><p>Transcripción en tiempo real mientras hablas</p></div></div>
             <div className="hp-flow-arrow">↓</div>
-            <div className="hp-flow-card"><div className="hp-flow-icon">✦</div><div><h5>Análisis con IA</h5><p>Claude genera el contenido técnico completo</p></div></div>
+            <div className="hp-flow-card"><div className="hp-flow-icon">✦</div><div><h5>Análisis con IA</h5><p>Convierte evidencia en informe técnico estructurado</p></div></div>
             <div className="hp-flow-arrow">↓</div>
-            <div className="hp-flow-card"><div className="hp-flow-icon">📄</div><div><h5>PDF profesional</h5><p>Informe listo para descargar y entregar</p></div></div>
+            <div className="hp-flow-card"><div className="hp-flow-icon">📄</div><div><h5>Informes en tiempo real</h5><p>Reporte listo para descargar y entregar</p></div></div>
           </div>
         </div>
       </section>
 
       {/* FUNCIONALIDADES */}
       <section className="hp-section" id="hp-feat">
-        <span className="hp-label hp-reveal">Funcionalidades</span>
-        <h2 className="hp-section-title hp-reveal">Todo lo que necesita un equipo de post venta</h2>
+        <span className="hp-label hp-reveal">Plataforma</span>
+        <h2 className="hp-section-title hp-reveal">Infraestructura completa para postventa</h2>
         <div className="hp-feat-grid">
           <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">🏢</span><h3>Multi-proyecto</h3><p>Organiza por proyecto, propiedad e inspector. Cada empresa ve solo sus propios datos.</p></div>
-          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">✦</span><h3>IA integrada</h3><p>Claude analiza fotos y audio para generar descripciones técnicas, categorías y recomendaciones.</p></div>
+          <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">✦</span><h3>IA integrada</h3><p>Nuestro motor de IA analiza fotos y audio para generar descripciones técnicas, categorías y recomendaciones.</p></div>
           <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">📄</span><h3>PDF automático</h3><p>Informe profesional descargable con todos los hallazgos, fotos y datos del propietario.</p></div>
           <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">👥</span><h3>Roles y permisos</h3><p>Administradores gestionan proyectos. Inspectores registran hallazgos. Cada uno ve lo suyo.</p></div>
           <div className="hp-feat-card hp-reveal"><span className="hp-feat-icon">🎙️</span><h3>Notas de voz</h3><p>Graba mientras inspeccionas. Transcripción en tiempo real, sin teclear nada en terreno.</p></div>
@@ -162,12 +161,12 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
 
       {/* PARA QUIÉN */}
       <section className="hp-section hp-dark">
-        <span className="hp-label hp-reveal">Para quién</span>
+        <span className="hp-label hp-reveal">Nuestros Clientes</span>
         <h2 className="hp-section-title hp-reveal">Hecho para la industria inmobiliaria</h2>
         <div className="hp-personas">
-          <div className="hp-persona hp-reveal"><div className="hp-persona-role">Inmobiliaria</div><h3>Gerente de Post Venta</h3><p>Supervisa el trabajo de todos los inspectores. Informes consistentes y bien documentados en cada entrega.</p></div>
+          <div className="hp-persona hp-reveal"><div className="hp-persona-role">Corredoras</div><h3>Corredor de Propiedades</h3><p>Controla cada visita y entrega sin depender de WhatsApp. Bitácoras claras, con evidencia, responsables y seguimiento.</p></div>
+          <div className="hp-persona hp-reveal"><div className="hp-persona-role">Inmobiliarias</div><h3>Equipo de Post Venta</h3><p>Controla la postventa con datos, no con llamadas. Cada entrega documentada, cada hallazgo trazado.</p></div>
           <div className="hp-persona hp-reveal"><div className="hp-persona-role">Terreno</div><h3>Inspector de Viviendas</h3><p>Trabaja desde el teléfono. Sin formularios manuales. La IA hace el informe mientras tú sigues inspeccionando.</p></div>
-          <div className="hp-persona hp-reveal"><div className="hp-persona-role">Constructora</div><h3>Equipo de Calidad</h3><p>Registra todos los hallazgos con evidencia fotográfica. Trazabilidad completa de cada defecto y su resolución.</p></div>
         </div>
       </section>
 
@@ -183,8 +182,8 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
 
       {/* FOOTER */}
       <footer className="hp-footer">
-        <span className="hp-footer-logo">Bitácora.</span>
-        <span>© 2025 Bitácora. Hecho con ✦ y Claude.</span>
+        <span className="hp-footer-logo">BitácoraPro.</span>
+        <span>© 2025 BitácoraPro. Hecho en Chile.</span>
         <span>
           <button className="hp-footer-link" onClick={onGoLogin}>Iniciar sesión</button>
           {' · '}
