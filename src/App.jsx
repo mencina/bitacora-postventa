@@ -698,13 +698,15 @@ function App() {
       <div className="app">
         <header className="header">
           <div className="header-content">
-            <div className="header-title">
-              <span className="header-icon">📋</span>
-              <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
-            </div>
-            <div className="header-info">
-              <span className="user-name">👤 {currentUser && currentUser.name}</span>
-              <button className="logout-button" onClick={handleLogout}>Cerrar sesion</button>
+            <div className="header-row-top">
+              <div className="header-title">
+                <span className="header-icon">📋</span>
+                <div><h1>Bitácora</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
+              </div>
+              <div className="header-info">
+                <span className="user-name">👤 {currentUser && currentUser.name}</span>
+                <button className="logout-button" onClick={handleLogout}>Cerrar sesión</button>
+              </div>
             </div>
           </div>
         </header>
@@ -748,14 +750,18 @@ function App() {
       <div className="app">
         <header className="header">
           <div className="header-content">
-            <div className="header-title">
-              <span className="header-icon">📋</span>
-              <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
+            <div className="header-row-top">
+              <div className="header-title">
+                <span className="header-icon">📋</span>
+                <div><h1>Bitácora</h1></div>
+              </div>
+              <div className="header-info">
+                <button className="logout-button" onClick={handleLogout}>Cerrar sesión</button>
+              </div>
             </div>
-            <div className="header-info">
+            <div className="header-row-nav">
               <button className="back-button" onClick={function() { setCurrentProject(null) }}>← Proyectos</button>
               <div className="project-name-display">{currentProject.name}</div>
-              <button className="logout-button" onClick={handleLogout}>Cerrar sesion</button>
             </div>
           </div>
         </header>
@@ -821,15 +827,19 @@ function App() {
     <div className="app">
       <header className="header">
         <div className="header-content">
-          <div className="header-title">
-            <span className="header-icon">📋</span>
-            <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">Sistema inteligente de registro de hallazgos</p></div>
+          <div className="header-row-top">
+            <div className="header-title">
+              <span className="header-icon">📋</span>
+              <div><h1>Bitácora</h1></div>
+            </div>
+            <div className="header-info">
+              <div className="entry-count">{entries.length} hallazgo{entries.length !== 1 ? 's' : ''}</div>
+              <button className="logout-button" onClick={handleLogout}>Cerrar sesión</button>
+            </div>
           </div>
-          <div className="header-info">
+          <div className="header-row-nav">
             <button className="back-button" onClick={function() { setCurrentProperty(null); setShowForm(false) }}>← Propiedades</button>
-            <div className="project-name-display">{currentProperty.unit_number} — {currentProperty.owner_name || 'Sin propietario'}</div>
-            <div className="entry-count">{entries.length} hallazgo{entries.length !== 1 ? 's' : ''}</div>
-            <button className="logout-button" onClick={handleLogout}>Cerrar sesion</button>
+            <div className="project-name-display">{currentProperty.unit_number}{currentProperty.owner_name ? ' — ' + currentProperty.owner_name : ''}</div>
           </div>
         </div>
       </header>
