@@ -87,11 +87,33 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         .hp-footer-logo{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:1rem;}
         .hp-footer-link{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
         .hp-footer-link:hover{color:var(--ink);}
+        .hp-pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:4rem;align-items:start;}
+        .hp-plan{background:var(--white);border:1.5px solid var(--line);border-radius:16px;padding:2rem;position:relative;transition:box-shadow 0.2s,transform 0.2s;}
+        .hp-plan:hover{box-shadow:0 8px 32px rgba(26,24,20,0.09);transform:translateY(-2px);}
+        .hp-plan-featured{border-color:var(--accent);box-shadow:0 4px 24px rgba(45,90,61,0.12);}
+        .hp-plan-featured:hover{box-shadow:0 12px 40px rgba(45,90,61,0.18);}
+        .hp-plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:white;font-size:0.7rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:0.3rem 1rem;border-radius:100px;white-space:nowrap;}
+        .hp-plan-header{margin-bottom:1.75rem;padding-bottom:1.5rem;border-bottom:1px solid var(--line);}
+        .hp-plan-name{display:block;font-size:0.75rem;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:0.75rem;}
+        .hp-plan-price{margin-bottom:0.5rem;line-height:1;}
+        .hp-plan-price strong{font-family:var(--serif);font-size:2rem;font-weight:700;color:var(--ink);}
+        .hp-plan-price span{font-size:0.875rem;color:var(--muted);margin-left:0.2rem;}
+        .hp-plan-for{font-size:0.8rem;color:var(--muted);margin-top:0.4rem;}
+        .hp-plan-features{list-style:none;margin:0 0 2rem;padding:0;display:flex;flex-direction:column;gap:0.625rem;}
+        .hp-plan-features li{display:flex;align-items:center;gap:0.6rem;font-size:0.875rem;color:var(--ink);}
+        .hp-feat-check{color:var(--accent);font-size:0.85rem;font-weight:700;flex-shrink:0;}
+        .hp-feat-x{color:var(--line);font-size:0.85rem;font-weight:700;flex-shrink:0;}
+        .hp-plan-features li:has(.hp-feat-x){color:var(--muted);}
+        .hp-plan-btn{width:100%;padding:0.875rem;border-radius:8px;font-size:0.9rem;font-weight:500;font-family:var(--sans);cursor:pointer;transition:all 0.2s;border:none;}
+        .hp-plan-btn-primary{background:var(--accent);color:white;}
+        .hp-plan-btn-primary:hover{background:var(--ink);transform:translateY(-1px);}
+        .hp-plan-btn-ghost{background:none;border:1.5px solid var(--ink)!important;color:var(--ink);}
+        .hp-plan-btn-ghost:hover{background:var(--ink);color:white;}
         .hp-reveal{opacity:0;transform:translateY(28px);transition:opacity 0.7s ease,transform 0.7s ease;}
         .hp-visible{opacity:1!important;transform:none!important;}
         @keyframes hp-fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
-        @media(max-width:1024px){.hp-how-inner{grid-template-columns:1fr;gap:3rem;}.hp-feat-grid{grid-template-columns:repeat(2,1fr);}.hp-personas{grid-template-columns:1fr 1fr;}}
-        @media(max-width:640px){.hp-nav-links{gap:0.75rem;}.hp-feat-grid{grid-template-columns:1fr;}.hp-personas{grid-template-columns:1fr;}.hp-stats{gap:1.5rem;}.hp-footer{flex-direction:column;text-align:center;}.hp-how-inner{grid-template-columns:1fr;}}
+        @media(max-width:1024px){.hp-how-inner{grid-template-columns:1fr;gap:3rem;}.hp-feat-grid{grid-template-columns:repeat(2,1fr);}.hp-personas{grid-template-columns:1fr 1fr;}.hp-pricing-grid{grid-template-columns:1fr 1fr;}}
+        @media(max-width:640px){.hp-nav-links{gap:0.75rem;}.hp-feat-grid{grid-template-columns:1fr;}.hp-personas{grid-template-columns:1fr;}.hp-stats{gap:1.5rem;}.hp-footer{flex-direction:column;text-align:center;}.hp-how-inner{grid-template-columns:1fr;}.hp-pricing-grid{grid-template-columns:1fr;}.hp-plan-featured{order:-1;}}
       `}</style>
 
       {/* NAV */}
@@ -100,6 +122,7 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         <div className="hp-nav-links">
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-feat').scrollIntoView({ behavior: 'smooth' }) }}>Funcionalidades</button>
+          <button className="hp-nav-link" onClick={function() { document.getElementById('hp-precios').scrollIntoView({ behavior: 'smooth' }) }}>Precios</button>
           <button className="hp-btn-nav" onClick={onGoLogin}>Iniciar sesión →</button>
         </div>
       </nav>
@@ -170,6 +193,83 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         </div>
       </section>
 
+      {/* PRECIOS */}
+      <section className="hp-section" id="hp-precios">
+        <span className="hp-label hp-reveal">Planes</span>
+        <h2 className="hp-section-title hp-reveal">Elige el plan que se adapta a ti</h2>
+        <p className="hp-section-body hp-reveal">Sin contratos, sin letra chica. Cancela cuando quieras.</p>
+        <div className="hp-pricing-grid">
+
+          {/* BÁSICO */}
+          <div className="hp-plan hp-reveal">
+            <div className="hp-plan-header">
+              <span className="hp-plan-name">Básico</span>
+              <div className="hp-plan-price"><strong>Gratis</strong></div>
+              <p className="hp-plan-for">Para persona natural</p>
+            </div>
+            <ul className="hp-plan-features">
+              <li><span className="hp-feat-check">✓</span> 1 usuario</li>
+              <li><span className="hp-feat-check">✓</span> Hasta 3 propiedades activas</li>
+              <li><span className="hp-feat-check">✓</span> Proyectos ilimitados</li>
+              <li><span className="hp-feat-check">✓</span> Hallazgos ilimitados</li>
+              <li><span className="hp-feat-check">✓</span> IA ilimitada</li>
+              <li><span className="hp-feat-check">✓</span> Fotos múltiples</li>
+              <li><span className="hp-feat-check">✓</span> Notas de voz</li>
+              <li><span className="hp-feat-check">✓</span> PDF profesional</li>
+              <li><span className="hp-feat-x">✗</span> Roles y permisos</li>
+              <li><span className="hp-feat-x">✗</span> Multi-inspector</li>
+            </ul>
+            <button className="hp-plan-btn hp-plan-btn-ghost" onClick={onGoRegister}>Comenzar gratis</button>
+          </div>
+
+          {/* PRO — destacado */}
+          <div className="hp-plan hp-plan-featured hp-reveal">
+            <div className="hp-plan-badge">Más popular</div>
+            <div className="hp-plan-header">
+              <span className="hp-plan-name">Pro</span>
+              <div className="hp-plan-price"><strong>$29.990</strong><span>/mes</span></div>
+              <p className="hp-plan-for">Para corredores de propiedades</p>
+            </div>
+            <ul className="hp-plan-features">
+              <li><span className="hp-feat-check">✓</span> Hasta 3 usuarios</li>
+              <li><span className="hp-feat-check">✓</span> Hasta 50 propiedades activas</li>
+              <li><span className="hp-feat-check">✓</span> Proyectos ilimitados</li>
+              <li><span className="hp-feat-check">✓</span> Hallazgos ilimitados</li>
+              <li><span className="hp-feat-check">✓</span> IA ilimitada</li>
+              <li><span className="hp-feat-check">✓</span> Fotos múltiples</li>
+              <li><span className="hp-feat-check">✓</span> Notas de voz</li>
+              <li><span className="hp-feat-check">✓</span> PDF profesional</li>
+              <li><span className="hp-feat-check">✓</span> Admin + Inspectores</li>
+              <li><span className="hp-feat-check">✓</span> Soporte prioritario</li>
+            </ul>
+            <button className="hp-plan-btn hp-plan-btn-primary" onClick={onGoRegister}>Comenzar ahora</button>
+          </div>
+
+          {/* ENTERPRISE */}
+          <div className="hp-plan hp-reveal">
+            <div className="hp-plan-header">
+              <span className="hp-plan-name">Enterprise</span>
+              <div className="hp-plan-price"><strong>Desde $149.000</strong><span>/mes</span></div>
+              <p className="hp-plan-for">Para inmobiliarias multiproyecto</p>
+            </div>
+            <ul className="hp-plan-features">
+              <li><span className="hp-feat-check">✓</span> Usuarios ilimitados</li>
+              <li><span className="hp-feat-check">✓</span> Propiedades ilimitadas</li>
+              <li><span className="hp-feat-check">✓</span> Proyectos ilimitados</li>
+              <li><span className="hp-feat-check">✓</span> Hallazgos ilimitados</li>
+              <li><span className="hp-feat-check">✓</span> IA ilimitada + prioridad</li>
+              <li><span className="hp-feat-check">✓</span> Fotos múltiples</li>
+              <li><span className="hp-feat-check">✓</span> Notas de voz</li>
+              <li><span className="hp-feat-check">✓</span> PDF profesional</li>
+              <li><span className="hp-feat-check">✓</span> Admin + Inspectores</li>
+              <li><span className="hp-feat-check">✓</span> Soporte dedicado</li>
+            </ul>
+            <button className="hp-plan-btn hp-plan-btn-ghost" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Consulta%20Enterprise', '_blank') }}>Contactar ventas</button>
+          </div>
+
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="hp-cta">
         <span className="hp-label hp-reveal">Comenzar</span>
@@ -188,6 +288,8 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           <button className="hp-footer-link" onClick={onGoLogin}>Iniciar sesión</button>
           {' · '}
           <button className="hp-footer-link" onClick={onGoRegister}>Registrarse</button>
+          {' · '}
+          <button className="hp-footer-link" onClick={function() { document.getElementById('hp-precios').scrollIntoView({ behavior: 'smooth' }) }}>Precios</button>
         </span>
       </footer>
     </div>
