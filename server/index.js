@@ -150,7 +150,6 @@ app.use(cors({
   credentials: true
 }))
 app.use(express.json({ limit: '50mb' }))
-app.use('/uploads', express.static(uploadsDir))
 
 var anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 var JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta_temporal'
