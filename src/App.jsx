@@ -221,7 +221,7 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         <div className="hp-how-inner">
           <div>
             <span className="hp-label hp-reveal">Operación</span>
-            <h2 className="hp-section-title hp-reveal">Así opera BitacoraPro</h2>
+            <h2 className="hp-section-title hp-reveal">Así opera BitácoraPro</h2>
             <p className="hp-section-body hp-reveal">Diseñado para trabajar en terreno. No en Word.</p>
             <div className="hp-steps">
               <div className="hp-step hp-reveal"><div className="hp-step-num">1</div><div><h4>Llegas a terreno y abres BitacoraPro</h4><p>Empieza la inspección desde su teléfono.</p></div></div>
@@ -347,7 +347,7 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
       {/* CTA */}
       <section className="hp-cta">
         <span className="hp-label hp-reveal">Comenzar</span>
-        <h2 className="hp-cta-title hp-reveal">¿Listo para modernizar<br/>tu post venta?</h2>
+        <h2 className="hp-cta-title hp-reveal">¿Listo para automatizar<br/>tu post venta?</h2>
         <p className="hp-cta-sub hp-reveal">Crea tu cuenta gratis y empieza a registrar hallazgos en minutos. Sin tarjeta de crédito.</p>
         <div className="hp-reveal">
           <button className="hp-btn-primary" style={{ fontSize: '1rem', padding: '1rem 2.25rem' }} onClick={onGoRegister}>Crear cuenta gratis →</button>
