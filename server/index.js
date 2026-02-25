@@ -429,6 +429,29 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
   }
 })
 
+app.put('/entries/:id', authMiddleware, async function(req, res) {
+  try {
+    var b = req.body
+    await pool.query(
+      'UPDATE entries SET title = $1, description = $2, recommendation = $3, category = $4, severity = $5, location = $6 WHERE id = $7',
+      [b.title || '', b.description || '', b.recommendation || '', b.category || 'otro', b.severity || 'leve', b.location || '', req.params.id]
+    )
+    var result = await pool.query(
+      'SELECT e.*, array_to_json(array(SELECT row_to_json(i) FROM images i WHERE i.entry_id = e.id)) as images_raw FROM entries e WHERE e.id = $1',
+      [req.params.id]
+    )
+    var entry = result.rows[0]
+    entry.affected_elements = entry.affected_elements ? JSON.parse(entry.affected_elements) : []
+    // Re-fetch images properly
+    var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
+    entry.images = imgs.rows
+    delete entry.images_raw
+    res.json(entry)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 app.delete('/entries/:id', authMiddleware, async function(req, res) {
   try {
     var entryId = req.params.id

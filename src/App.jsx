@@ -640,6 +640,14 @@ function App() {
     if (inv) { setInviteToken(inv); setAuthScreen('invite') }
   }, [])
 
+  // Editar propiedad
+  var [editingProperty, setEditingProperty] = useState(null) // prop object siendo editado
+  var [editPropForm, setEditPropForm] = useState({})
+
+  // Editar hallazgo
+  var [editingEntry, setEditingEntry] = useState(null) // entry id siendo editado
+  var [editEntryForm, setEditEntryForm] = useState({})
+
   // Lightbox
   var [lightbox, setLightbox] = useState(null) // { images: [], index: 0 }
 
@@ -802,6 +810,37 @@ function App() {
   var handleExportPDF = function() {
     if (entries.length === 0) { alert('No hay hallazgos para exportar'); return }
     generatePDF(currentProject.name, currentProperty, entries)
+  }
+
+  // Guardar edición de propiedad
+  var handleSaveProperty = function() {
+    if (!editPropForm.unit_number || !editPropForm.unit_number.trim()) { alert('El número de propiedad es requerido'); return }
+    authFetch(API_URL + '/properties/' + editingProperty.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editPropForm)
+    })
+      .then(function(r) { return r.json() })
+      .then(function(updated) {
+        setProperties(function(prev) { return prev.map(function(p) { return p.id === updated.id ? Object.assign({}, p, updated) : p }) })
+        setEditingProperty(null)
+      })
+      .catch(function() { alert('Error al guardar') })
+  }
+
+  // Guardar edición de hallazgo
+  var handleSaveEntry = function() {
+    authFetch(API_URL + '/entries/' + editingEntry, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editEntryForm)
+    })
+      .then(function(r) { return r.json() })
+      .then(function(updated) {
+        setEntries(function(prev) { return prev.map(function(e) { return e.id === updated.id ? Object.assign({}, e, updated) : e }) })
+        setEditingEntry(null)
+      })
+      .catch(function() { alert('Error al guardar') })
   }
 
   // Cargar equipo del proyecto
@@ -1022,6 +1061,43 @@ function App() {
           )}
           <div className="projects-grid">
             {properties.map(function(prop) {
+              // Modo edición inline
+              if (editingProperty && editingProperty.id === prop.id) {
+                return (
+                  <div key={prop.id} className="form-card" style={{marginBottom:'0'}}>
+                    <div className="form-header">
+                      <h3>✏️ Editar propiedad</h3>
+                      <button className="close-button" onClick={function() { setEditingProperty(null) }}>X</button>
+                    </div>
+                    <div className="form-field">
+                      <label>🏠 Número / Identificador *</label>
+                      <input type="text" className="text-input" value={editPropForm.unit_number} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { unit_number: e.target.value })) }} autoFocus />
+                    </div>
+                    <div className="form-field">
+                      <label>👤 Nombre del propietario</label>
+                      <input type="text" className="text-input" value={editPropForm.owner_name} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_name: e.target.value })) }} />
+                    </div>
+                    <div className="form-field">
+                      <label>🪪 RUT</label>
+                      <input type="text" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
+                    </div>
+                    <div className="form-row">
+                      <div className="form-field form-field-half">
+                        <label>📧 Correo</label>
+                        <input type="email" className="text-input" value={editPropForm.owner_email} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_email: e.target.value })) }} />
+                      </div>
+                      <div className="form-field form-field-half">
+                        <label>📱 Teléfono</label>
+                        <input type="tel" className="text-input" value={editPropForm.owner_phone} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_phone: e.target.value })) }} />
+                      </div>
+                    </div>
+                    <div style={{display:'flex', gap:'0.75rem'}}>
+                      <button className="submit-button" onClick={handleSaveProperty}>Guardar cambios</button>
+                      <button className="cancel-button" onClick={function() { setEditingProperty(null) }}>Cancelar</button>
+                    </div>
+                  </div>
+                )
+              }
               return (
                 <div key={prop.id} className="project-card property-card">
                   <div className="project-card-content" onClick={function() { setCurrentProperty(prop) }}>
@@ -1029,6 +1105,7 @@ function App() {
                     <p className="property-owner">{prop.owner_name || 'Sin propietario asignado'}</p>
                     <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
                   </div>
+                  <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
                   <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
                 </div>
               )
@@ -1110,9 +1187,59 @@ function App() {
             {entries.map(function(entry) {
               var cat = CATEGORIES[entry.category] || CATEGORIES.otro
               var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
+
+              // Modo edición inline del hallazgo
+              if (editingEntry === entry.id) {
+                return (
+                  <div key={entry.id} className="form-card" style={{marginBottom:'0.875rem'}}>
+                    <div className="form-header">
+                      <h3>✏️ Editar hallazgo</h3>
+                      <button className="close-button" onClick={function() { setEditingEntry(null) }}>X</button>
+                    </div>
+                    <div className="form-field">
+                      <label>Título</label>
+                      <input type="text" className="text-input" value={editEntryForm.title || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { title: e.target.value })) }} autoFocus />
+                    </div>
+                    <div className="form-row">
+                      <div className="form-field form-field-half">
+                        <label>Categoría</label>
+                        <select className="text-input" value={editEntryForm.category || 'otro'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { category: e.target.value })) }}>
+                          {Object.entries(CATEGORIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].icon} {pair[1].label}</option> })}
+                        </select>
+                      </div>
+                      <div className="form-field form-field-half">
+                        <label>Severidad</label>
+                        <select className="text-input" value={editEntryForm.severity || 'leve'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { severity: e.target.value })) }}>
+                          {Object.entries(SEVERITIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].label}</option> })}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-field">
+                      <label>📍 Ubicación</label>
+                      <input type="text" className="text-input" value={editEntryForm.location || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { location: e.target.value })) }} />
+                    </div>
+                    <div className="form-field">
+                      <label>Descripción técnica</label>
+                      <textarea className="text-area" rows={4} value={editEntryForm.description || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { description: e.target.value })) }} />
+                    </div>
+                    <div className="form-field">
+                      <label>💡 Recomendación</label>
+                      <textarea className="text-area" rows={3} value={editEntryForm.recommendation || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { recommendation: e.target.value })) }} />
+                    </div>
+                    <div style={{display:'flex', gap:'0.75rem'}}>
+                      <button className="submit-button" onClick={handleSaveEntry}>Guardar cambios</button>
+                      <button className="cancel-button" onClick={function() { setEditingEntry(null) }}>Cancelar</button>
+                    </div>
+                  </div>
+                )
+              }
+
               return (
                 <div key={entry.id} className="entry-card">
-                  <button className="delete-button" onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
+                  <div style={{position:'absolute', top:'0.875rem', right:'0.875rem', display:'flex', gap:'0.25rem'}}>
+                    <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}>✏️</button>
+                    <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
+                  </div>
                   <div className="entry-tags">
                     <span className="tag category-tag" style={{ background: cat.color + '18', color: cat.color, border: '1px solid ' + cat.color + '33' }}>{cat.icon} {cat.label}</span>
                     <span className="tag severity-tag" style={{ background: sev.bg, color: sev.color, border: '1px solid ' + sev.color + '33' }}>{sev.label}</span>
