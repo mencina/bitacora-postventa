@@ -343,7 +343,7 @@ async function generatePDF(projectName, property, entries) {
       var imgHeight = imgWidth * 0.7
       for (var ii = 0; ii < imgCount; ii++) {
         try {
-          var imgData = await loadImageAsBase64(API_URL + '/uploads/' + entry.images[ii].filename)
+          var imgData = await loadImageAsBase64(entry.images[ii].filename)
           if (imgData) doc.addImage(imgData, 'JPEG', margin + ii * (imgWidth + 5), y, imgWidth, imgHeight)
         } catch (err) {}
       }
@@ -512,97 +512,11 @@ function RegisterScreen({ onLogin, onGoLogin }) {
   )
 }
 
-// === PANTALLA REGISTRO POR INVITACIÓN ===
-function InviteRegisterScreen({ inviteToken, onLogin, onGoLogin }) {
-  var [inviteData, setInviteData] = useState(null)
-  var [error, setError] = useState('')
-  var [loading, setLoading] = useState(true)
-  var [form, setForm] = useState({ name: '', password: '', password2: '' })
-  var [submitting, setSubmitting] = useState(false)
-
-  useEffect(function() {
-    fetch(API_URL + '/invitations/' + inviteToken)
-      .then(function(r) { return r.json() })
-      .then(function(data) {
-        if (data.error) { setError(data.error) } else { setInviteData(data) }
-        setLoading(false)
-      })
-      .catch(function() { setError('No se pudo verificar la invitación'); setLoading(false) })
-  }, [inviteToken])
-
-  var handleAccept = async function() {
-    if (!form.name || !form.password) { setError('Completa todos los campos'); return }
-    if (form.password !== form.password2) { setError('Las contraseñas no coinciden'); return }
-    if (form.password.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
-    setSubmitting(true); setError('')
-    try {
-      var r = await fetch(API_URL + '/invitations/' + inviteToken + '/accept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: form.name, password: form.password })
-      })
-      var data = await r.json()
-      if (!r.ok) { setError(data.error || 'Error al aceptar invitación') } else {
-        // Limpiar el ?invite= de la URL
-        window.history.replaceState({}, '', window.location.pathname)
-        onLogin(data.token, data.user)
-      }
-    } catch(e) { setError('No se pudo conectar con el servidor') }
-    setSubmitting(false)
-  }
-
-  if (loading) return (
-    <div className="auth-screen">
-      <div className="auth-card"><div className="auth-logo"><h1>Bitacora Post Venta</h1><p>Verificando invitación...</p></div></div>
-    </div>
-  )
-
-  if (error && !inviteData) return (
-    <div className="auth-screen">
-      <div className="auth-card">
-        <div className="auth-logo"><span className="header-icon">⚠️</span><h1>Invitación inválida</h1><p>{error}</p></div>
-        <button className="submit-button" onClick={onGoLogin}>Ir al inicio de sesión</button>
-      </div>
-    </div>
-  )
-
-  return (
-    <div className="auth-screen">
-      <div className="auth-card">
-        <div className="auth-logo">
-          <span className="header-icon">👥</span>
-          <h1>Bitacora Post Venta</h1>
-          <p>Te invitaron a <strong>{inviteData && inviteData.project_name}</strong></p>
-          <p style={{fontSize:'0.85rem',color:'#6B6760',marginTop:'0.25rem'}}>{inviteData && inviteData.company_name} · {inviteData && inviteData.email}</p>
-        </div>
-        {error && <div className="auth-error">{error}</div>}
-        <div className="form-field">
-          <label>👤 Tu nombre</label>
-          <input type="text" className="text-input" placeholder="Nombre completo" value={form.name} onChange={function(e) { setForm(Object.assign({}, form, { name: e.target.value })) }} autoFocus />
-        </div>
-        <div className="form-field">
-          <label>🔒 Elige una contraseña</label>
-          <input type="password" className="text-input" placeholder="Mínimo 6 caracteres" value={form.password} onChange={function(e) { setForm(Object.assign({}, form, { password: e.target.value })) }} />
-        </div>
-        <div className="form-field">
-          <label>🔒 Confirmar contraseña</label>
-          <input type="password" className="text-input" placeholder="Repite la contraseña" value={form.password2} onChange={function(e) { setForm(Object.assign({}, form, { password2: e.target.value })) }} onKeyDown={function(e) { if(e.key==='Enter') handleAccept() }} />
-        </div>
-        <button className="submit-button" onClick={handleAccept} disabled={submitting}>
-          {submitting ? 'Uniéndome...' : 'Unirme al proyecto'}
-        </button>
-        <p className="auth-switch">¿Ya tienes cuenta? <span className="auth-link" onClick={onGoLogin}>Ingresa aquí</span></p>
-      </div>
-    </div>
-  )
-}
-
 function App() {
   // Auth
   var [token, setToken] = useState(null)
   var [currentUser, setCurrentUser] = useState(null)
-  var [authScreen, setAuthScreen] = useState('home') // 'home' | 'login' | 'register' | 'invite'
-  var [inviteToken, setInviteToken] = useState(null)
+  var [authScreen, setAuthScreen] = useState('home') // 'home' | 'login' | 'register'
 
   // App state
   var [projects, setProjects] = useState([])
@@ -612,13 +526,6 @@ function App() {
   var [entries, setEntries] = useState([])
   var [showForm, setShowForm] = useState(false)
   var [isAnalyzing, setIsAnalyzing] = useState(false)
-
-  // Team
-  var [showTeam, setShowTeam] = useState(false)
-  var [team, setTeam] = useState({ members: [], pending_invitations: [] })
-  var [inviteEmail, setInviteEmail] = useState('')
-  var [inviteLoading, setInviteLoading] = useState(false)
-  var [inviteMsg, setInviteMsg] = useState('')
 
   // Forms
   var [newProjectName, setNewProjectName] = useState('')
@@ -633,13 +540,6 @@ function App() {
   var [isRecording, setIsRecording] = useState(false)
   var fileInputRef = useRef(null)
   var recognitionRef = useRef(null)
-
-  // Detectar token de invitación en la URL
-  useEffect(function() {
-    var params = new URLSearchParams(window.location.search)
-    var inv = params.get('invite')
-    if (inv) { setInviteToken(inv); setAuthScreen('invite') }
-  }, [])
 
   // Helper: fetch con token
   var authFetch = function(url, options) {
@@ -785,53 +685,9 @@ function App() {
     generatePDF(currentProject.name, currentProperty, entries)
   }
 
-  // Cargar equipo del proyecto
-  var loadTeam = function(projectId) {
-    authFetch(API_URL + '/projects/' + projectId + '/team')
-      .then(function(r) { return r.json() })
-      .then(function(data) { setTeam(data) })
-      .catch(console.error)
-  }
-
-  var handleOpenTeam = function() {
-    setShowTeam(true)
-    loadTeam(currentProject.id)
-  }
-
-  var handleInvite = async function() {
-    if (!inviteEmail.trim()) return
-    setInviteLoading(true); setInviteMsg('')
-    try {
-      var r = await authFetch(API_URL + '/projects/' + currentProject.id + '/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: inviteEmail.trim() })
-      })
-      var data = await r.json()
-      if (!r.ok) { setInviteMsg('❌ ' + data.error) } else {
-        setInviteMsg('✅ Invitación enviada a ' + inviteEmail.trim())
-        setInviteEmail('')
-        loadTeam(currentProject.id)
-      }
-    } catch(e) { setInviteMsg('❌ Error al enviar') }
-    setInviteLoading(false)
-  }
-
-  var handleRemoveMember = async function(userId, userName) {
-    if (!window.confirm('¿Quitar a ' + userName + ' del proyecto?')) return
-    await authFetch(API_URL + '/projects/' + currentProject.id + '/members/' + userId, { method: 'DELETE' })
-    loadTeam(currentProject.id)
-  }
-
-  var handleCancelInvite = async function(invId) {
-    await authFetch(API_URL + '/invitations/' + invId, { method: 'DELETE' })
-    loadTeam(currentProject.id)
-  }
-
   // === PANTALLAS DE AUTH ===
   if (!token) {
     if (authScreen === 'home') return <HomeScreen onGoLogin={function() { setAuthScreen('login') }} onGoRegister={function() { setAuthScreen('register') }} />
-    if (authScreen === 'invite') return <InviteRegisterScreen inviteToken={inviteToken} onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
     if (authScreen === 'register') return <RegisterScreen onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
     return <LoginScreen onLogin={handleLogin} onGoRegister={function() { setAuthScreen('register') }} />
   }
@@ -897,73 +753,13 @@ function App() {
               <div><h1>Bitacora Post Venta</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
             </div>
             <div className="header-info">
-              <button className="back-button" onClick={function() { setCurrentProject(null); setShowTeam(false) }}>← Proyectos</button>
+              <button className="back-button" onClick={function() { setCurrentProject(null) }}>← Proyectos</button>
               <div className="project-name-display">{currentProject.name}</div>
-              {currentUser && currentUser.role === 'admin' && (
-                <button className="back-button" onClick={handleOpenTeam} style={{background:'#EAF1EC',color:'#2D5A3D',border:'1px solid #c5deca'}}>👥 Equipo</button>
-              )}
               <button className="logout-button" onClick={handleLogout}>Cerrar sesion</button>
             </div>
           </div>
         </header>
         <main className="main">
-
-          {/* PANEL DE EQUIPO */}
-          {showTeam && (
-            <div className="form-card" style={{marginBottom:'1.5rem'}}>
-              <div className="form-header">
-                <h3>👥 Equipo del proyecto</h3>
-                <button className="close-button" onClick={function() { setShowTeam(false); setInviteMsg('') }}>X</button>
-              </div>
-
-              {/* Invitar */}
-              <div className="form-field">
-                <label>✉️ Invitar inspector por email</label>
-                <div style={{display:'flex',gap:'0.5rem'}}>
-                  <input type="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
-                  <button className="submit-button" onClick={handleInvite} disabled={inviteLoading} style={{width:'auto',padding:'0 1.25rem',flexShrink:0}}>
-                    {inviteLoading ? 'Enviando...' : 'Enviar'}
-                  </button>
-                </div>
-                {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('✅') ? '#2D5A3D' : '#B91C1C'}}>{inviteMsg}</p>}
-              </div>
-
-              {/* Miembros actuales */}
-              {team.members && team.members.length > 0 && (
-                <div className="form-field">
-                  <label>Miembros activos</label>
-                  {team.members.map(function(m) {
-                    return (
-                      <div key={m.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#f7f5f0',borderRadius:'8px',marginBottom:'0.4rem'}}>
-                        <div>
-                          <span style={{fontWeight:'500',fontSize:'0.875rem'}}>{m.name}</span>
-                          <span style={{color:'#6B6760',fontSize:'0.8rem',marginLeft:'0.5rem'}}>{m.email}</span>
-                          <span style={{background: m.role==='admin'?'#1A1814':'#EAF1EC',color:m.role==='admin'?'#fff':'#2D5A3D',fontSize:'0.65rem',padding:'0.15rem 0.5rem',borderRadius:'100px',marginLeft:'0.5rem',fontWeight:'500'}}>{m.role}</span>
-                        </div>
-                        {m.role !== 'admin' && <button onClick={function() { handleRemoveMember(m.id, m.name) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B91C1C',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Quitar</button>}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* Invitaciones pendientes */}
-              {team.pending_invitations && team.pending_invitations.length > 0 && (
-                <div className="form-field">
-                  <label>Invitaciones pendientes</label>
-                  {team.pending_invitations.map(function(inv) {
-                    return (
-                      <div key={inv.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#FEF3E2',borderRadius:'8px',marginBottom:'0.4rem'}}>
-                        <span style={{fontSize:'0.875rem',color:'#92400E'}}>{inv.email} — esperando respuesta</span>
-                        <button onClick={function() { handleCancelInvite(inv.id) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B45309',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Cancelar</button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
           <h2 className="section-title">Propiedades</h2>
           {!showNewProperty ? (
             <button className="add-button" onClick={function() { setShowNewProperty(true) }}>+ Nueva Propiedad</button>
@@ -1101,7 +897,7 @@ function App() {
                     <span className="entry-date">{new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   {entry.images && entry.images.length > 0 && (
-                    <div className="entry-images">{entry.images.map(function(img) { return <img key={img.id} src={API_URL + '/uploads/' + img.filename} alt="" className="entry-image" /> })}</div>
+                    <div className="entry-images">{entry.images.map(function(img) { return <img key={img.id} src={img.filename} alt="" className="entry-image" /> })}</div>
                   )}
                   {entry.inspector_note && <div className="inspector-note"><strong>🎙️ Nota del inspector:</strong> {entry.inspector_note}</div>}
                   {entry.description && <div className="entry-description-box"><p className="entry-description">{entry.description}</p></div>}

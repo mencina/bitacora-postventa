@@ -11,18 +11,31 @@ var multer = require('multer')
 var bcrypt = require('bcryptjs')
 var jwt = require('jsonwebtoken')
 var { Resend } = require('resend')
+var cloudinary = require('cloudinary').v2
 
-var uploadsDir = path.join(__dirname, 'uploads')
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir)
-
-var storage = multer.diskStorage({
-  destination: function(req, file, cb) { cb(null, uploadsDir) },
-  filename: function(req, file, cb) {
-    var uniqueName = Date.now() + '-' + Math.random().toString(36).slice(2) + path.extname(file.originalname)
-    cb(null, uniqueName)
-  }
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 })
-var upload = multer({ storage: storage, limits: { fileSize: 20 * 1024 * 1024 } })
+
+// Multer en memoria (no guarda en disco)
+var upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } })
+
+// Subir buffer a Cloudinary
+function uploadToCloudinary(buffer, mimetype) {
+  return new Promise(function(resolve, reject) {
+    var stream = cloudinary.uploader.upload_stream(
+      { folder: 'bitacora', resource_type: 'image' },
+      function(error, result) {
+        if (error) reject(error)
+        else resolve(result.secure_url)
+      }
+    )
+    stream.end(buffer)
+  })
+}
 
 var pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -274,14 +287,6 @@ app.delete('/projects/:id', authMiddleware, adminMiddleware, async function(req,
     var props = await pool.query('SELECT id FROM properties WHERE project_id = $1', [projectId])
     for (var i = 0; i < props.rows.length; i++) {
       var propId = props.rows[i].id
-      var images = await pool.query(
-        'SELECT i.filename FROM images i JOIN entries e ON i.entry_id = e.id WHERE e.property_id = $1',
-        [propId]
-      )
-      images.rows.forEach(function(img) {
-        var filepath = path.join(uploadsDir, img.filename)
-        if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
-      })
       await pool.query('DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE property_id = $1)', [propId])
       await pool.query('DELETE FROM entries WHERE property_id = $1', [propId])
     }
@@ -344,14 +349,6 @@ app.put('/properties/:id', authMiddleware, async function(req, res) {
 app.delete('/properties/:id', authMiddleware, async function(req, res) {
   try {
     var propId = req.params.id
-    var images = await pool.query(
-      'SELECT i.filename FROM images i JOIN entries e ON i.entry_id = e.id WHERE e.property_id = $1',
-      [propId]
-    )
-    images.rows.forEach(function(img) {
-      var filepath = path.join(uploadsDir, img.filename)
-      if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
-    })
     await pool.query('DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE property_id = $1)', [propId])
     await pool.query('DELETE FROM entries WHERE property_id = $1', [propId])
     await pool.query('DELETE FROM properties WHERE id = $1', [propId])
@@ -386,12 +383,10 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
 
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Se requiere al menos una foto' })
 
-    var imagesForAI = []
-    for (var i = 0; i < req.files.length; i++) {
-      var file = req.files[i]
-      var imageBuffer = fs.readFileSync(file.path)
-      imagesForAI.push({ base64: imageBuffer.toString('base64'), type: file.mimetype })
-    }
+    // Preparar imágenes para IA (desde buffer en memoria)
+    var imagesForAI = req.files.map(function(file) {
+      return { base64: file.buffer.toString('base64'), type: file.mimetype }
+    })
 
     var content = []
     for (var j = 0; j < imagesForAI.length; j++) {
@@ -418,8 +413,10 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
     )
     var entry = entryResult.rows[0]
 
+    // Subir imágenes a Cloudinary y guardar URLs
     for (var k = 0; k < req.files.length; k++) {
-      await pool.query('INSERT INTO images (entry_id, filename, original_name) VALUES ($1, $2, $3)', [entry.id, req.files[k].filename, req.files[k].originalname])
+      var cloudUrl = await uploadToCloudinary(req.files[k].buffer, req.files[k].mimetype)
+      await pool.query('INSERT INTO images (entry_id, filename, original_name) VALUES ($1, $2, $3)', [entry.id, cloudUrl, req.files[k].originalname])
     }
 
     var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
@@ -436,11 +433,6 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
 app.delete('/entries/:id', authMiddleware, async function(req, res) {
   try {
     var entryId = req.params.id
-    var images = await pool.query('SELECT filename FROM images WHERE entry_id = $1', [entryId])
-    images.rows.forEach(function(img) {
-      var filepath = path.join(uploadsDir, img.filename)
-      if (fs.existsSync(filepath)) fs.unlinkSync(filepath)
-    })
     await pool.query('DELETE FROM images WHERE entry_id = $1', [entryId])
     await pool.query('DELETE FROM entries WHERE id = $1', [entryId])
     res.json({ success: true })
