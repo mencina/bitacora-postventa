@@ -640,6 +640,26 @@ function App() {
     if (inv) { setInviteToken(inv); setAuthScreen('invite') }
   }, [])
 
+  // Lightbox
+  var [lightbox, setLightbox] = useState(null) // { images: [], index: 0 }
+
+  var openLightbox = function(images, index) { setLightbox({ images: images, index: index }) }
+  var closeLightbox = function() { setLightbox(null) }
+  var lightboxPrev = function() { setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }
+  var lightboxNext = function() { setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }
+
+  // Cerrar lightbox con Escape y navegar con flechas del teclado
+  useEffect(function() {
+    if (!lightbox) return
+    var handleKey = function(e) {
+      if (e.key === 'Escape') closeLightbox()
+      if (e.key === 'ArrowLeft') lightboxPrev()
+      if (e.key === 'ArrowRight') lightboxNext()
+    }
+    window.addEventListener('keydown', handleKey)
+    return function() { window.removeEventListener('keydown', handleKey) }
+  }, [lightbox])
+
   // Helper: fetch con token
   var authFetch = function(url, options) {
     var opts = options || {}
@@ -1104,7 +1124,7 @@ function App() {
                     <span className="entry-date">{new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                   {entry.images && entry.images.length > 0 && (
-                    <div className="entry-images">{entry.images.map(function(img) { return <img key={img.id} src={img.filename} alt="" className="entry-image" /> })}</div>
+                    <div className="entry-images">{entry.images.map(function(img, idx) { return <img key={img.id} src={img.filename} alt="" className="entry-image" onClick={function() { openLightbox(entry.images, idx) }} style={{cursor:'zoom-in'}} /> })}</div>
                   )}
                   {entry.inspector_note && <div className="inspector-note"><strong>🎙️ Nota del inspector:</strong> {entry.inspector_note}</div>}
                   {entry.description && <div className="entry-description-box"><p className="entry-description">{entry.description}</p></div>}
@@ -1122,6 +1142,37 @@ function App() {
           <div className="welcome-message"><h2>🏠 {currentProperty.unit_number}</h2><p>No hay hallazgos. Agrega el primero.</p></div>
         )}
       </main>
+
+      {/* LIGHTBOX */}
+      {lightbox && (
+        <div onClick={closeLightbox} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          {/* Imagen principal */}
+          <img
+            src={lightbox.images[lightbox.index].filename}
+            alt=""
+            onClick={function(e) { e.stopPropagation() }}
+            style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px',boxShadow:'0 8px 40px rgba(0,0,0,0.5)'}}
+          />
+
+          {/* Flecha izquierda */}
+          {lightbox.images.length > 1 && (
+            <button onClick={function(e) { e.stopPropagation(); lightboxPrev() }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
+          )}
+
+          {/* Flecha derecha */}
+          {lightbox.images.length > 1 && (
+            <button onClick={function(e) { e.stopPropagation(); lightboxNext() }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
+          )}
+
+          {/* Contador y cerrar */}
+          <div style={{position:'absolute',top:'1rem',left:0,right:0,display:'flex',alignItems:'center',justifyContent:'center',gap:'1rem'}}>
+            {lightbox.images.length > 1 && (
+              <span style={{color:'rgba(255,255,255,0.6)',fontSize:'0.85rem'}}>{lightbox.index + 1} / {lightbox.images.length}</span>
+            )}
+          </div>
+          <button onClick={closeLightbox} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+        </div>
+      )}
     </div>
   )
 }
