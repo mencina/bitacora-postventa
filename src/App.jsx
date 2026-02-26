@@ -7,14 +7,20 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
   var [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(function() {
+    if (menuOpen) { document.body.style.overflow = 'hidden' }
+    else { document.body.style.overflow = '' }
+    return function() { document.body.style.overflow = '' }
+  }, [menuOpen])
+
+  useEffect(function() {
     var observer = new IntersectionObserver(function(entries) {
       entries.forEach(function(entry, i) {
         if (entry.isIntersecting) {
-          setTimeout(function() { entry.target.classList.add('hp-visible') }, i * 60)
+          setTimeout(function() { entry.target.classList.add('hp-visible') }, i * 80)
           observer.unobserve(entry.target)
         }
       })
-    }, { threshold: 0.12 })
+    }, { threshold: 0.1 })
     document.querySelectorAll('.hp-reveal').forEach(function(el) { observer.observe(el) })
     return function() { observer.disconnect() }
   }, [])
@@ -27,8 +33,8 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         /* VARIABLES Y BASE */
         .hp-root{--bg:#F7F5F0;--ink:#1A1814;--muted:#6B6760;--accent:#2D5A3D;--accent-light:#EAF1EC;--line:#E2DDD6;--white:#FFFFFF;--serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',sans-serif;--gutter:max(1.25rem,5vw);font-family:var(--sans);background:var(--bg);color:var(--ink);overflow-x:hidden;font-weight:300;line-height:1.6;min-height:100vh;}
 
-        /* NAV desktop */
-        .hp-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem var(--gutter);background:rgba(247,245,240,0.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
+        /* NAV */
+        .hp-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem var(--gutter);background:rgba(247,245,240,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);}
         .hp-logo{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:-0.02em;white-space:nowrap;}
         .hp-logo span{color:var(--accent);}
         .hp-nav-links{display:flex;align-items:center;gap:1.5rem;}
@@ -37,18 +43,22 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         .hp-btn-nav{background:var(--ink)!important;color:var(--white)!important;padding:0.55rem 1.2rem;border-radius:6px;font-weight:500!important;font-size:0.875rem;font-family:var(--sans);border:none;cursor:pointer;transition:background 0.2s;white-space:nowrap;}
         .hp-btn-nav:hover{background:var(--accent)!important;}
 
-        /* Hamburger oculto en desktop */
-        .hp-hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;}
+        /* HAMBURGER */
+        .hp-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;background:none;border:none;cursor:pointer;padding:8px;border-radius:6px;min-width:44px;min-height:44px;}
         .hp-hamburger span{display:block;width:22px;height:2px;background:var(--ink);border-radius:2px;transition:all 0.25s;}
         .hp-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
         .hp-hamburger.open span:nth-child(2){opacity:0;}
         .hp-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
-        /* Drawer mobile oculto por defecto */
-        .hp-mobile-menu{display:none;position:fixed;inset:0;z-index:190;background:rgba(247,245,240,0.98);backdrop-filter:blur(16px);flex-direction:column;align-items:center;justify-content:center;gap:2rem;padding:2rem;}
+        /* MOBILE MENU */
+        .hp-mobile-menu{display:none;position:fixed;inset:0;z-index:190;background:rgba(247,245,240,0.98);backdrop-filter:blur(20px);flex-direction:column;align-items:stretch;justify-content:center;padding:2rem 1.5rem;gap:0;}
         .hp-mobile-menu.open{display:flex;}
-        .hp-mobile-menu .hp-nav-link{font-size:1.3rem;font-weight:400;color:var(--ink);padding:0.5rem 0;}
-        .hp-mobile-menu .hp-btn-nav{font-size:1rem!important;padding:0.875rem 2rem!important;border-radius:8px;margin-top:0.5rem;width:100%;max-width:260px;text-align:center;}
+        .hp-mobile-menu .hp-nav-link{font-size:1.4rem;font-weight:400;color:var(--ink);padding:1rem 0;border-bottom:1px solid var(--line);text-align:left;}
+        .hp-mobile-actions{display:flex;flex-direction:column;gap:0.75rem;margin-top:2rem;}
+        .hp-mobile-btn-primary{background:var(--ink);color:var(--white);padding:1rem;border-radius:10px;font-weight:500;font-size:1rem;font-family:var(--sans);border:none;cursor:pointer;min-height:52px;transition:background 0.2s;text-align:center;}
+        .hp-mobile-btn-primary:hover{background:var(--accent);}
+        .hp-mobile-btn-ghost{background:none;color:var(--ink);padding:1rem;border-radius:10px;font-weight:400;font-size:1rem;font-family:var(--sans);border:1.5px solid var(--line);cursor:pointer;min-height:52px;transition:border-color 0.2s;text-align:center;}
+        .hp-mobile-btn-ghost:hover{border-color:var(--ink);}
 
         /* HERO */
         .hp-hero{min-height:92vh;display:flex;flex-direction:column;justify-content:center;padding:5rem var(--gutter) 4rem;position:relative;overflow:hidden;}
@@ -59,94 +69,59 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         .hp-hero-title em{font-style:italic;color:var(--accent);}
         .hp-hero-sub{font-size:1rem;color:var(--muted);max-width:44ch;line-height:1.75;margin-bottom:2rem;animation:hp-fadeUp 0.8s 0.35s both;}
         .hp-hero-actions{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;animation:hp-fadeUp 0.8s 0.5s both;}
-        .hp-btn-primary{background:var(--ink);color:var(--white);padding:0.875rem 1.75rem;border-radius:8px;font-weight:500;font-size:0.95rem;font-family:var(--sans);border:none;cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;}
+        .hp-btn-primary{background:var(--ink);color:var(--white);padding:0.875rem 1.75rem;border-radius:8px;font-weight:500;font-size:0.95rem;font-family:var(--sans);border:none;cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;white-space:nowrap;min-height:44px;}
         .hp-btn-primary:hover{background:var(--accent);transform:translateY(-2px);box-shadow:0 8px 24px rgba(45,90,61,0.2);}
-        .hp-btn-ghost{background:none;border:none;color:var(--ink);font-size:0.9rem;font-family:var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;padding:0.875rem 0;transition:gap 0.2s;white-space:nowrap;}
-        .hp-btn-ghost:hover{gap:0.75rem;}
-        .hp-stats{margin-top:3.5rem;padding-top:2rem;border-top:1px solid var(--line);display:flex;gap:2.5rem;animation:hp-fadeUp 0.8s 0.65s both;flex-wrap:wrap;}
-        .hp-stat{max-width:28ch;}
-        .hp-stat strong{display:block;font-size:0.9rem;font-weight:500;color:var(--ink);line-height:1.3;margin-bottom:0.3rem;}
-        .hp-stat span{font-size:0.8rem;color:var(--muted);font-weight:300;line-height:1.5;}
+        .hp-btn-ghost{background:none;border:none;color:var(--muted);font-size:0.9rem;font-family:var(--sans);cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;padding:0.875rem 0.25rem;transition:color 0.2s,gap 0.2s;white-space:nowrap;min-height:44px;}
+        .hp-btn-ghost:hover{color:var(--ink);gap:0.65rem;}
 
-        /* SECCIONES */
-        .hp-section{padding:5rem var(--gutter);}
+        /* SECCIÓN DOLORES — oscura */
+        .hp-pain{background:#1A1814;color:var(--white);padding:5rem var(--gutter);}
+        .hp-pain .hp-label{color:#7CB891;}
+        .hp-pain .hp-section-title{color:var(--white);}
+        .hp-pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;margin-top:3rem;}
+        .hp-pain-card{background:#1A1814;padding:2rem 1.75rem;transition:background 0.2s;}
+        .hp-pain-card:hover{background:rgba(255,255,255,0.04);}
+        .hp-pain-before{font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:0.75rem;display:block;}
+        .hp-pain-problem{font-family:var(--serif);font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.85);margin-bottom:1rem;line-height:1.35;}
+        .hp-pain-solution{font-size:0.85rem;color:#7CB891;line-height:1.6;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:0.5rem;align-items:flex-start;}
+        .hp-pain-solution::before{content:'↳';opacity:0.6;flex-shrink:0;}
+
+        /* CÓMO FUNCIONA */
+        .hp-how{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:5rem var(--gutter);}
         .hp-label{font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:0.875rem;display:block;}
         .hp-section-title{font-family:var(--serif);font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:700;line-height:1.1;letter-spacing:-0.02em;margin-bottom:1.1rem;}
-        .hp-section-body{font-size:1rem;color:var(--muted);max-width:46ch;line-height:1.75;}
-        .hp-how{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
-        .hp-how-inner{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center;}
-        .hp-steps{display:flex;flex-direction:column;gap:1.75rem;margin-top:2.5rem;}
-        .hp-step{display:flex;gap:1.1rem;align-items:flex-start;}
-        .hp-step-num{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:var(--accent-light);color:var(--accent);font-family:var(--serif);font-size:0.95rem;font-weight:700;display:flex;align-items:center;justify-content:center;}
-        .hp-step h4{font-weight:500;font-size:0.9rem;margin-bottom:0.2rem;}
-        .hp-step p{font-size:0.85rem;color:var(--muted);line-height:1.6;}
-        .hp-flow{display:flex;flex-direction:column;gap:0.875rem;}
-        .hp-flow-card{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:1.1rem 1.25rem;display:flex;align-items:center;gap:1rem;transition:box-shadow 0.2s,transform 0.2s;}
-        .hp-flow-card:hover{box-shadow:0 4px 20px rgba(26,24,20,0.06);transform:translateX(4px);}
-        .hp-flow-icon{font-size:1.4rem;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--white);border-radius:10px;border:1px solid var(--line);flex-shrink:0;}
-        .hp-flow-card h5{font-weight:500;font-size:0.875rem;margin-bottom:0.1rem;}
-        .hp-flow-card p{font-size:0.775rem;color:var(--muted);}
-        .hp-flow-arrow{text-align:center;color:var(--line);font-size:1.1rem;}
-        .hp-feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px;background:var(--line);border:1.5px solid var(--line);border-radius:16px;overflow:hidden;margin-top:3.5rem;}
-        .hp-feat-card{background:var(--white);padding:2.25rem 1.75rem;transition:background 0.2s;}
-        .hp-feat-card:hover{background:#FAFAF7;}
-        .hp-feat-icon{font-size:1.6rem;margin-bottom:1.1rem;display:block;}
-        .hp-feat-card h3{font-family:var(--serif);font-size:1.05rem;font-weight:700;margin-bottom:0.5rem;line-height:1.2;}
-        .hp-feat-card p{font-size:0.85rem;color:var(--muted);line-height:1.65;}
-        .hp-dark{background:var(--ink);color:var(--white);}
-        .hp-dark .hp-label{color:#7CB891;}
-        .hp-dark .hp-section-title{color:var(--white);}
-        .hp-dark .hp-section-body{color:rgba(255,255,255,0.55);}
-        .hp-personas{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-top:3.5rem;}
-        .hp-persona{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:1.75rem;transition:background 0.2s,border-color 0.2s;}
-        .hp-persona:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.2);}
-        .hp-persona-role{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:#7CB891;font-weight:500;margin-bottom:0.6rem;}
-        .hp-persona h3{font-family:var(--serif);font-size:1.1rem;font-weight:700;margin-bottom:0.6rem;color:var(--white);}
-        .hp-persona p{font-size:0.85rem;color:rgba(255,255,255,0.5);line-height:1.65;}
+        .hp-hflow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:start;gap:0;margin-top:3rem;}
+        .hp-hstep{text-align:center;padding:0 0.75rem;}
+        .hp-hstep-icon{width:52px;height:52px;background:var(--accent-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 0.875rem;box-shadow:0 2px 8px rgba(45,90,61,0.1);}
+        .hp-hstep-num{display:block;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;}
+        .hp-hstep-title{font-family:var(--serif);font-size:0.95rem;font-weight:700;line-height:1.2;margin-bottom:0.35rem;color:var(--ink);}
+        .hp-hstep-body{font-size:0.8rem;color:var(--muted);line-height:1.55;}
+        .hp-hflow-arrow{color:var(--line);font-size:1.5rem;padding:0 0.25rem;margin-top:1rem;align-self:start;}
+
+        /* CTA */
         .hp-cta{text-align:center;padding:6rem var(--gutter);position:relative;overflow:hidden;}
         .hp-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(45,90,61,0.06) 0%,transparent 65%);pointer-events:none;}
         .hp-cta-title{font-family:var(--serif);font-size:clamp(1.8rem,4.5vw,4rem);font-weight:700;letter-spacing:-0.03em;line-height:1.05;margin-bottom:1.25rem;}
         .hp-cta-sub{font-size:0.95rem;color:var(--muted);max-width:40ch;margin:0 auto 2rem;line-height:1.7;}
+        .hp-cta-actions{display:flex;flex-direction:column;align-items:center;gap:0.875rem;}
+        .hp-cta-secondary{background:none;border:none;color:var(--muted);font-size:0.875rem;font-family:var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color 0.2s;padding:0.5rem;}
+        .hp-cta-secondary:hover{color:var(--ink);}
+
+        /* FOOTER */
         .hp-footer{border-top:1px solid var(--line);padding:1.75rem var(--gutter);display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;color:var(--muted);flex-wrap:wrap;gap:0.75rem;}
         .hp-footer-logo{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:1rem;}
         .hp-footer-link{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
         .hp-footer-link:hover{color:var(--ink);}
 
-        /* PRECIOS */
-        .hp-pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:3.5rem;align-items:start;}
-        .hp-plan{background:var(--white);border:1.5px solid var(--line);border-radius:16px;padding:1.75rem;position:relative;transition:box-shadow 0.2s,transform 0.2s;}
-        .hp-plan:hover{box-shadow:0 8px 32px rgba(26,24,20,0.09);transform:translateY(-2px);}
-        .hp-plan-featured{border-color:var(--accent);box-shadow:0 4px 24px rgba(45,90,61,0.12);}
-        .hp-plan-featured:hover{box-shadow:0 12px 40px rgba(45,90,61,0.18);}
-        .hp-plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:white;font-size:0.68rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:0.28rem 0.9rem;border-radius:100px;white-space:nowrap;}
-        .hp-plan-header{margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1px solid var(--line);}
-        .hp-plan-name{display:block;font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:0.65rem;}
-        .hp-plan-price{margin-bottom:0.4rem;line-height:1;}
-        .hp-plan-price strong{font-family:var(--serif);font-size:1.85rem;font-weight:700;color:var(--ink);}
-        .hp-plan-price span{font-size:0.85rem;color:var(--muted);margin-left:0.15rem;}
-        .hp-plan-for{font-size:0.78rem;color:var(--muted);margin-top:0.35rem;}
-        .hp-plan-features{list-style:none;margin:0 0 1.75rem;padding:0;display:flex;flex-direction:column;gap:0.55rem;}
-        .hp-plan-features li{display:flex;align-items:center;gap:0.55rem;font-size:0.85rem;color:var(--ink);}
-        .hp-feat-check{color:var(--accent);font-size:0.8rem;font-weight:700;flex-shrink:0;}
-        .hp-feat-x{color:#D4CFC8;font-size:0.8rem;font-weight:700;flex-shrink:0;}
-        .hp-plan-features li:has(.hp-feat-x){color:var(--muted);}
-        .hp-plan-btn{width:100%;padding:0.825rem;border-radius:8px;font-size:0.875rem;font-weight:500;font-family:var(--sans);cursor:pointer;transition:all 0.2s;border:none;min-height:44px;}
-        .hp-plan-btn-primary{background:var(--accent);color:white;}
-        .hp-plan-btn-primary:hover{background:var(--ink);transform:translateY(-1px);}
-        .hp-plan-btn-ghost{background:none;border:1.5px solid var(--ink)!important;color:var(--ink);}
-        .hp-plan-btn-ghost:hover{background:var(--ink);color:white;}
-
         /* ANIMACIONES */
-        .hp-reveal{opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease;}
+        .hp-reveal{opacity:0;transform:translateY(20px);transition:opacity 0.6s ease,transform 0.6s ease;}
         .hp-visible{opacity:1!important;transform:none!important;}
         @keyframes hp-fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
 
         /* TABLET */
         @media(max-width:1024px){
-          .hp-how-inner{grid-template-columns:1fr;gap:2.5rem;}
-          .hp-feat-grid{grid-template-columns:repeat(2,1fr);}
-          .hp-personas{grid-template-columns:1fr 1fr;}
-          .hp-pricing-grid{grid-template-columns:1fr 1fr;}
+          .hp-hflow{grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;}
+          .hp-pain-grid{grid-template-columns:1fr;}
         }
 
         /* MOBILE */
@@ -160,19 +135,22 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           .hp-hero-sub{font-size:0.95rem;margin-bottom:1.5rem;}
           .hp-hero-actions{flex-direction:column;align-items:stretch;gap:0.75rem;}
           .hp-btn-primary{justify-content:center;padding:1rem;font-size:1rem;min-height:52px;}
-          .hp-btn-ghost{justify-content:center;padding:0.5rem 0;}
-          .hp-stats{margin-top:2.5rem;flex-direction:column;gap:1.25rem;}
-          .hp-stat{max-width:none;}
-          .hp-section{padding:3.5rem 1.25rem;}
+          .hp-btn-ghost{justify-content:center;padding:0.875rem 0;}
+          .hp-pain{padding:3.5rem 1.25rem;}
+          .hp-pain-grid{grid-template-columns:1fr;border-radius:12px;}
+          .hp-pain-card{padding:1.5rem 1.25rem;}
+          .hp-how{padding:3.5rem 1.25rem;}
+          .hp-hflow{display:flex;flex-direction:column;gap:0;margin-top:2rem;}
+          .hp-hflow-arrow{transform:rotate(90deg);align-self:center;margin:0.1rem 0;}
+          .hp-hstep{text-align:left;display:flex;gap:1rem;align-items:flex-start;padding:1rem 0;border-bottom:1px solid var(--line);}
+          .hp-hstep:last-of-type{border-bottom:none;}
+          .hp-hstep-icon{margin:0;flex-shrink:0;width:44px;height:44px;border-radius:10px;}
+          .hp-hstep-num{margin-bottom:0.2rem;}
           .hp-cta{padding:4rem 1.25rem;}
           .hp-cta-title{font-size:clamp(1.7rem,7vw,2.4rem);}
           .hp-cta br{display:none;}
-          .hp-how-inner{grid-template-columns:1fr;gap:2rem;}
-          .hp-feat-grid{grid-template-columns:1fr;}
-          .hp-feat-card{padding:1.5rem 1.25rem;}
-          .hp-personas{grid-template-columns:1fr;}
-          .hp-pricing-grid{grid-template-columns:1fr;}
-          .hp-plan-featured{order:-1;}
+          .hp-cta-actions{flex-direction:column;align-items:stretch;}
+          .hp-btn-primary.hp-cta-btn{width:100%;min-height:52px;}
           .hp-footer{flex-direction:column;text-align:center;gap:0.5rem;padding:1.5rem 1.25rem;}
         }
       `}</style>
@@ -182,147 +160,100 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         <div className="hp-logo">BitácoraPro<span>.</span></div>
         <div className="hp-nav-links">
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
-          <button className="hp-nav-link" onClick={function() { document.getElementById('hp-precios').scrollIntoView({ behavior: 'smooth' }) }}>Precios</button>
           <button className="hp-btn-nav" onClick={onGoLogin}>Iniciar sesión →</button>
         </div>
-        {/* Hamburger — solo visible en mobile */}
         <button className={"hp-hamburger" + (menuOpen ? " open" : "")} onClick={function() { setMenuOpen(function(v) { return !v }) }} aria-label="Menú">
-          <span></span><span></span><span></span>
+          <span /><span /><span />
         </button>
       </nav>
 
-      {/* MENÚ MOBILE — drawer full screen */}
+      {/* MOBILE MENU */}
       <div className={"hp-mobile-menu" + (menuOpen ? " open" : "")}>
         <button className="hp-nav-link" onClick={function() { setMenuOpen(false); document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
-        <button className="hp-nav-link" onClick={function() { setMenuOpen(false); document.getElementById('hp-feat').scrollIntoView({ behavior: 'smooth' }) }}>Funcionalidades</button>
-        <button className="hp-nav-link" onClick={function() { setMenuOpen(false); document.getElementById('hp-precios').scrollIntoView({ behavior: 'smooth' }) }}>Precios</button>
-        <button className="hp-btn-nav" onClick={function() { setMenuOpen(false); onGoLogin() }}>Iniciar sesión →</button>
-        <button className="hp-btn-nav" style={{background:'var(--accent)'}} onClick={function() { setMenuOpen(false); onGoRegister() }}>Crear cuenta gratis</button>
+        <div className="hp-mobile-actions">
+          <button className="hp-mobile-btn-primary" onClick={function() { setMenuOpen(false); window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
+          <button className="hp-mobile-btn-ghost" onClick={function() { setMenuOpen(false); onGoRegister() }}>Probar gratis</button>
+          <button className="hp-mobile-btn-ghost" onClick={function() { setMenuOpen(false); onGoLogin() }}>Iniciar sesión</button>
+        </div>
       </div>
 
       {/* HERO */}
       <section className="hp-hero">
-        <div className="hp-eyebrow">Post venta inmobiliaria automatizada con IA</div>
+        <div className="hp-eyebrow">Post venta inmobiliaria</div>
         <h1 className="hp-hero-title">Del hallazgo al informe, <em>en segundos.</em></h1>
-        <p className="hp-hero-sub">Convierte fotos y notas de voz en documentación técnica estructurada, trazable y lista para respaldar cada entrega y proceso de postventa.</p>
+        <p className="hp-hero-sub">Tus inspectores llegan a terreno, toman fotos y hablan. BitácoraPro genera el informe técnico solo. Sin formularios, sin retrabajo, sin espera.</p>
         <div className="hp-hero-actions">
-          <button className="hp-btn-primary" onClick={onGoRegister}>Comenzar gratis →</button>
-          <button className="hp-btn-ghost" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Ver cómo funciona ↓</button>
+          <button className="hp-btn-primary" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
+          <button className="hp-btn-ghost" onClick={onGoRegister}>Probar gratis ↗</button>
+        </div>
+      </section>
+
+      {/* LOS 3 DOLORES */}
+      <section className="hp-pain">
+        <span className="hp-label hp-reveal">Por qué BitácoraPro</span>
+        <h2 className="hp-section-title hp-reveal">El problema que resolvemos.</h2>
+        <div className="hp-pain-grid">
+          <div className="hp-pain-card hp-reveal">
+            <span className="hp-pain-before">Hoy</span>
+            <p className="hp-pain-problem">Los informes de entrega se hacen a mano y toman horas de retrabajo.</p>
+            <p className="hp-pain-solution">El inspector sale del departamento con el informe listo.</p>
+          </div>
+          <div className="hp-pain-card hp-reveal">
+            <span className="hp-pain-before">Hoy</span>
+            <p className="hp-pain-problem">No hay trazabilidad real de los hallazgos por unidad ni proyecto.</p>
+            <p className="hp-pain-solution">Cada hallazgo queda registrado, categorizado y con evidencia fotográfica.</p>
+          </div>
+          <div className="hp-pain-card hp-reveal">
+            <span className="hp-pain-before">Hoy</span>
+            <p className="hp-pain-problem">Los inspectores trabajan con WhatsApp, papel y planillas Excel.</p>
+            <p className="hp-pain-solution">Una herramienta profesional diseñada para el trabajo en terreno.</p>
+          </div>
         </div>
       </section>
 
       {/* CÓMO FUNCIONA */}
-      <section className="hp-section hp-how" id="hp-como">
-        <div className="hp-how-inner">
-          <div>
-            <span className="hp-label hp-reveal">Cómo funciona</span>
-            <h2 className="hp-section-title hp-reveal">Así opera BitácoraPro</h2>
-            <p className="hp-section-body hp-reveal">Plataforma diseñada para la operación en terreno de post venta.</p>
-            <div className="hp-steps">
-              <div className="hp-step hp-reveal"><div className="hp-step-num">1</div><div><h4>Llegas a terreno y abres BitacoraPro</h4><p>Empieza la inspección desde su teléfono.</p></div></div>
-              <div className="hp-step hp-reveal"><div className="hp-step-num">2</div><div><h4>Toma fotos y hablas del hallazgo</h4><p>Sin formularios, sin escribir.</p></div></div>
-              <div className="hp-step hp-reveal"><div className="hp-step-num">3</div><div><h4>La IA arma el informe</h4><p>Diagnóstico, severidad y recomendación. En segundos.</p></div></div>
-              <div className="hp-step hp-reveal"><div className="hp-step-num">4</div><div><h4>Sales con el reporte listo</h4><p>Informe profesional en tiempo real. Sin retrabajo. Sin espera.</p></div></div>
-            </div>
+      <section className="hp-how" id="hp-como">
+        <span className="hp-label hp-reveal">Cómo funciona</span>
+        <h2 className="hp-section-title hp-reveal">Cuatro pasos. Sin capacitación.</h2>
+        <div className="hp-hflow">
+          <div className="hp-hstep hp-reveal">
+            <div className="hp-hstep-icon">📱</div>
+            <span className="hp-hstep-num">01</span>
+            <h4 className="hp-hstep-title">Llegas a terreno</h4>
+            <p className="hp-hstep-body">Abres BitácoraPro desde el teléfono. Sin papel, sin planilla.</p>
           </div>
-          <div className="hp-flow hp-reveal">
-            <div className="hp-flow-card"><div className="hp-flow-icon">🏢</div><div><h5>Multi-proyecto</h5><p>Organiza por proyecto, propiedad e inspector</p></div></div>
-            <div className="hp-flow-arrow">↓</div>
-            <div className="hp-flow-card"><div className="hp-flow-icon">📸</div><div><h5>Subida de fotos múltiples</h5><p>Registra todos los ángulos del hallazgo</p></div></div>
-            <div className="hp-flow-arrow">↓</div>
-            <div className="hp-flow-card"><div className="hp-flow-icon">🎙️</div><div><h5>Grabación de audio</h5><p>Transcripción en tiempo real mientras hablas</p></div></div>
-            <div className="hp-flow-arrow">↓</div>
-            <div className="hp-flow-card"><div className="hp-flow-icon">✦</div><div><h5>Análisis con IA</h5><p>Convierte evidencia en informe técnico estructurado</p></div></div>
-            <div className="hp-flow-arrow">↓</div>
-            <div className="hp-flow-card"><div className="hp-flow-icon">📄</div><div><h5>Informes en tiempo real</h5><p>Reporte listo para descargar y entregar en PDF</p></div></div>
+          <div className="hp-hflow-arrow hp-reveal">→</div>
+          <div className="hp-hstep hp-reveal">
+            <div className="hp-hstep-icon">📸</div>
+            <span className="hp-hstep-num">02</span>
+            <h4 className="hp-hstep-title">Fotos y nota de voz</h4>
+            <p className="hp-hstep-body">Sin formularios, sin escribir. Hablas del hallazgo y listo.</p>
+          </div>
+          <div className="hp-hflow-arrow hp-reveal">→</div>
+          <div className="hp-hstep hp-reveal">
+            <div className="hp-hstep-icon">✦</div>
+            <span className="hp-hstep-num">03</span>
+            <h4 className="hp-hstep-title">La IA arma el informe</h4>
+            <p className="hp-hstep-body">Diagnóstico, categoría, severidad y recomendación. En segundos.</p>
+          </div>
+          <div className="hp-hflow-arrow hp-reveal">→</div>
+          <div className="hp-hstep hp-reveal">
+            <div className="hp-hstep-icon">📄</div>
+            <span className="hp-hstep-num">04</span>
+            <h4 className="hp-hstep-title">Sales con el reporte</h4>
+            <p className="hp-hstep-body">PDF profesional al instante. Listo para entregar o archivar.</p>
           </div>
         </div>
       </section>
 
-      {/* PRECIOS */}
-      <section className="hp-section" id="hp-precios">
-        <span className="hp-label hp-reveal">Planes</span>
-        <h2 className="hp-section-title hp-reveal">Elige el plan que se adapta a ti</h2>
-        <p className="hp-section-body hp-reveal">Sin contratos, sin letra chica. Cancela cuando quieras.</p>
-        <div className="hp-pricing-grid">
-
-          {/* BÁSICO */}
-          <div className="hp-plan hp-reveal">
-            <div className="hp-plan-header">
-              <span className="hp-plan-name">Básico</span>
-              <div className="hp-plan-price"><strong>Gratis</strong></div>
-              <p className="hp-plan-for">Para persona natural</p>
-            </div>
-            <ul className="hp-plan-features">
-              <li><span className="hp-feat-check">✓</span> 1 usuario</li>
-              <li><span className="hp-feat-check">✓</span> Hasta 3 propiedades activas</li>
-              <li><span className="hp-feat-check">✓</span> Proyectos ilimitados</li>
-              <li><span className="hp-feat-check">✓</span> Hallazgos ilimitados</li>
-              <li><span className="hp-feat-check">✓</span> IA ilimitada</li>
-              <li><span className="hp-feat-check">✓</span> Fotos múltiples</li>
-              <li><span className="hp-feat-check">✓</span> Notas de voz</li>
-              <li><span className="hp-feat-check">✓</span> PDF profesional</li>
-              <li><span className="hp-feat-x">✗</span> Roles y permisos</li>
-              <li><span className="hp-feat-x">✗</span> Multi-inspector</li>
-            </ul>
-            <button className="hp-plan-btn hp-plan-btn-ghost" onClick={onGoRegister}>Comenzar gratis</button>
-          </div>
-
-          {/* PRO — destacado */}
-          <div className="hp-plan hp-plan-featured hp-reveal">
-            <div className="hp-plan-badge">Más popular</div>
-            <div className="hp-plan-header">
-              <span className="hp-plan-name">Pro</span>
-              <div className="hp-plan-price"><strong>$29.990</strong><span>/mes</span></div>
-              <p className="hp-plan-for">Para corredores de propiedades</p>
-            </div>
-            <ul className="hp-plan-features">
-              <li><span className="hp-feat-check">✓</span> Hasta 3 usuarios</li>
-              <li><span className="hp-feat-check">✓</span> Hasta 50 propiedades activas</li>
-              <li><span className="hp-feat-check">✓</span> Proyectos ilimitados</li>
-              <li><span className="hp-feat-check">✓</span> Hallazgos ilimitados</li>
-              <li><span className="hp-feat-check">✓</span> IA ilimitada</li>
-              <li><span className="hp-feat-check">✓</span> Fotos múltiples</li>
-              <li><span className="hp-feat-check">✓</span> Notas de voz</li>
-              <li><span className="hp-feat-check">✓</span> PDF profesional</li>
-              <li><span className="hp-feat-check">✓</span> Admin + Inspectores</li>
-              <li><span className="hp-feat-check">✓</span> Soporte prioritario</li>
-            </ul>
-            <button className="hp-plan-btn hp-plan-btn-primary" onClick={onGoRegister}>Comenzar ahora</button>
-          </div>
-
-          {/* ENTERPRISE */}
-          <div className="hp-plan hp-reveal">
-            <div className="hp-plan-header">
-              <span className="hp-plan-name">Enterprise</span>
-              <div className="hp-plan-price"><strong>Desde $149.000</strong><span>/mes</span></div>
-              <p className="hp-plan-for">Para inmobiliarias multiproyecto</p>
-            </div>
-            <ul className="hp-plan-features">
-              <li><span className="hp-feat-check">✓</span> Usuarios ilimitados</li>
-              <li><span className="hp-feat-check">✓</span> Propiedades ilimitadas</li>
-              <li><span className="hp-feat-check">✓</span> Proyectos ilimitados</li>
-              <li><span className="hp-feat-check">✓</span> Hallazgos ilimitados</li>
-              <li><span className="hp-feat-check">✓</span> IA ilimitada + prioridad</li>
-              <li><span className="hp-feat-check">✓</span> Fotos múltiples</li>
-              <li><span className="hp-feat-check">✓</span> Notas de voz</li>
-              <li><span className="hp-feat-check">✓</span> PDF profesional</li>
-              <li><span className="hp-feat-check">✓</span> Admin + Inspectores</li>
-              <li><span className="hp-feat-check">✓</span> Soporte dedicado</li>
-            </ul>
-            <button className="hp-plan-btn hp-plan-btn-ghost" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Consulta%20Enterprise', '_blank') }}>Contactar ventas</button>
-          </div>
-
-        </div>
-      </section>
-
-      {/* CTA */}
+      {/* CTA FINAL */}
       <section className="hp-cta">
         <span className="hp-label hp-reveal">Comenzar</span>
         <h2 className="hp-cta-title hp-reveal">¿Listo para automatizar<br/>tu post venta?</h2>
-        <p className="hp-cta-sub hp-reveal">Crea tu cuenta gratis y empieza a registrar hallazgos en minutos. Sin tarjeta de crédito.</p>
-        <div className="hp-reveal">
-          <button className="hp-btn-primary" style={{ fontSize: '1rem', padding: '1rem 2.25rem' }} onClick={onGoRegister}>Crear cuenta gratis →</button>
+        <p className="hp-cta-sub hp-reveal">Agenda una demo y te mostramos cómo funciona con tu operación. Sin compromisos.</p>
+        <div className="hp-cta-actions hp-reveal">
+          <button className="hp-btn-primary hp-cta-btn" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
+          <button className="hp-cta-secondary" onClick={onGoRegister}>o pruébalo gratis sin tarjeta</button>
         </div>
       </section>
 
@@ -334,8 +265,6 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           <button className="hp-footer-link" onClick={onGoLogin}>Iniciar sesión</button>
           {' · '}
           <button className="hp-footer-link" onClick={onGoRegister}>Registrarse</button>
-          {' · '}
-          <button className="hp-footer-link" onClick={function() { document.getElementById('hp-precios').scrollIntoView({ behavior: 'smooth' }) }}>Precios</button>
         </span>
       </footer>
     </div>
