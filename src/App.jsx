@@ -179,34 +179,33 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
 
       {/* HERO */}
       <section className="hp-hero">
-        <div className="hp-eyebrow">Post venta inmobiliaria</div>
+        <div className="hp-eyebrow">Automatiza la post venta de tus proyectos inmobiliarios</div>
         <h1 className="hp-hero-title">Del hallazgo al informe, <em>en segundos.</em></h1>
-        <p className="hp-hero-sub">Tus inspectores llegan a terreno, toman fotos y hablan. BitácoraPro genera el informe técnico solo. Sin formularios, sin retrabajo, sin espera.</p>
+        <p className="hp-hero-sub">Tus equipos de post venta registran fotos y notas de voz en terreno. BitácoraPro genera la documentación técnica automáticamente, en tiempo real y sin retrabajo.</p>
         <div className="hp-hero-actions">
-          <button className="hp-btn-primary" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
-          <button className="hp-btn-ghost" onClick={onGoRegister}>Probar gratis ↗</button>
+          <button className="hp-btn-primary" onClick={function() { window.open('mailto:mario.encina.d@gmail.com?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
         </div>
       </section>
 
       {/* LOS 3 DOLORES */}
       <section className="hp-pain">
         <span className="hp-label hp-reveal">Por qué BitácoraPro</span>
-        <h2 className="hp-section-title hp-reveal">El problema que resolvemos.</h2>
+        <h2 className="hp-section-title hp-reveal">El costo oculto de tu post venta</h2>
         <div className="hp-pain-grid">
           <div className="hp-pain-card hp-reveal">
             <span className="hp-pain-before">Hoy</span>
-            <p className="hp-pain-problem">Los informes de entrega se hacen a mano y toman horas de retrabajo.</p>
-            <p className="hp-pain-solution">El inspector sale del departamento con el informe listo.</p>
+            <p className="hp-pain-problem">Los informes de entrega se construyen manualmente y generan horas de retrabajo.</p>
+            <p className="hp-pain-solution">El informe se genera en terreno, en tiempo real y sin retrabajo posterior.</p>
           </div>
           <div className="hp-pain-card hp-reveal">
             <span className="hp-pain-before">Hoy</span>
             <p className="hp-pain-problem">No hay trazabilidad real de los hallazgos por unidad ni proyecto.</p>
-            <p className="hp-pain-solution">Cada hallazgo queda registrado, categorizado y con evidencia fotográfica.</p>
+            <p className="hp-pain-solution">Cada hallazgo queda registrado, categorizado y visible para su gestión hasta el cierre.</p>
           </div>
           <div className="hp-pain-card hp-reveal">
             <span className="hp-pain-before">Hoy</span>
-            <p className="hp-pain-problem">Los inspectores trabajan con WhatsApp, papel y planillas Excel.</p>
-            <p className="hp-pain-solution">Una herramienta profesional diseñada para el trabajo en terreno.</p>
+            <p className="hp-pain-problem">La operación depende de herramientas dispersas y no integradas.</p>
+            <p className="hp-pain-solution">Una plataforma digital centralizada para inspección, documentación y gestión.</p>
           </div>
         </div>
       </section>
@@ -214,20 +213,20 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
       {/* CÓMO FUNCIONA */}
       <section className="hp-how" id="hp-como">
         <span className="hp-label hp-reveal">Cómo funciona</span>
-        <h2 className="hp-section-title hp-reveal">Cuatro pasos. Sin capacitación.</h2>
+        <h2 className="hp-section-title hp-reveal">Inspecciona. Documenta. Gestiona.</h2>
         <div className="hp-hflow">
           <div className="hp-hstep hp-reveal">
             <div className="hp-hstep-icon">📱</div>
             <span className="hp-hstep-num">01</span>
             <h4 className="hp-hstep-title">Llegas a terreno</h4>
-            <p className="hp-hstep-body">Abres BitácoraPro desde el teléfono. Sin papel, sin planilla.</p>
+            <p className="hp-hstep-body">Registras la inspección desde el teléfono. Todo queda centralizado por proyecto.</p>
           </div>
           <div className="hp-hflow-arrow hp-reveal">→</div>
           <div className="hp-hstep hp-reveal">
             <div className="hp-hstep-icon">📸</div>
             <span className="hp-hstep-num">02</span>
             <h4 className="hp-hstep-title">Fotos y nota de voz</h4>
-            <p className="hp-hstep-body">Sin formularios, sin escribir. Hablas del hallazgo y listo.</p>
+            <p className="hp-hstep-body">Tomas fotos y registras notas de voz. Sin formularios ni carga manual.</p>
           </div>
           <div className="hp-hflow-arrow hp-reveal">→</div>
           <div className="hp-hstep hp-reveal">
@@ -240,32 +239,25 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           <div className="hp-hstep hp-reveal">
             <div className="hp-hstep-icon">📄</div>
             <span className="hp-hstep-num">04</span>
-            <h4 className="hp-hstep-title">Sales con el reporte</h4>
-            <p className="hp-hstep-body">PDF profesional al instante. Listo para entregar o archivar.</p>
+            <h4 className="hp-hstep-title">Hallazgos listos para gestionar</h4>
+            <p className="hp-hstep-body">Cada hallazgo queda registrado, categorizado y visible para ser gestionado.</p>
           </div>
         </div>
       </section>
 
       {/* CTA FINAL */}
       <section className="hp-cta">
-        <span className="hp-label hp-reveal">Comenzar</span>
         <h2 className="hp-cta-title hp-reveal">¿Listo para automatizar<br/>tu post venta?</h2>
         <p className="hp-cta-sub hp-reveal">Agenda una demo y te mostramos cómo funciona con tu operación. Sin compromisos.</p>
         <div className="hp-cta-actions hp-reveal">
           <button className="hp-btn-primary hp-cta-btn" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
-          <button className="hp-cta-secondary" onClick={onGoRegister}>o pruébalo gratis sin tarjeta</button>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="hp-footer">
         <span className="hp-footer-logo">BitácoraPro.</span>
-        <span>© 2025 BitácoraPro. Hecho en Chile.</span>
-        <span>
-          <button className="hp-footer-link" onClick={onGoLogin}>Iniciar sesión</button>
-          {' · '}
-          <button className="hp-footer-link" onClick={onGoRegister}>Registrarse</button>
-        </span>
+        <span>© 2026 BitácoraPro. Hecho en Chile.</span>
       </footer>
     </div>
   )
