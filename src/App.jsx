@@ -131,7 +131,7 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           .hp-hamburger{display:flex;}
           .hp-hero{min-height:auto;padding:4rem 1.25rem 3rem;}
           .hp-eyebrow{font-size:0.7rem;padding:0.35rem 0.875rem;margin-bottom:1.25rem;}
-          .hp-hero-title{font-size:clamp(4rem,12vw,5rem);margin-bottom:1rem;}
+          .hp-hero-title{font-size:clamp(3rem,11vw,4rem);margin-bottom:1rem;}
           .hp-hero-title .hp-nowrap{white-space:nowrap;}
           .hp-hero-sub{font-size:0.95rem;margin-bottom:1.5rem;}
           .hp-hero-actions{flex-direction:column;align-items:stretch;gap:0.75rem;}
