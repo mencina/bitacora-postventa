@@ -48,9 +48,12 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS companies (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
+      active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Migración: agregar columna active si no existe (para BD ya creadas)
+  await pool.query(`ALTER TABLE companies ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT TRUE`)
   // Usuarios
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
@@ -60,9 +63,12 @@ async function initDB() {
       email TEXT NOT NULL UNIQUE,
       password_hash TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'inspector',
+      must_change_password BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Migración: agregar columna must_change_password si no existe
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE`)
   // Proyectos
   await pool.query(`
     CREATE TABLE IF NOT EXISTS projects (
@@ -221,10 +227,16 @@ app.post('/auth/login', async function(req, res) {
     var valid = await bcrypt.compare(password, user.password_hash)
     if (!valid) return res.status(400).json({ error: 'Email o contraseña incorrectos' })
 
+    // Verificar que la empresa esté activa
+    var company = await pool.query('SELECT active FROM companies WHERE id = $1', [user.company_id])
+    if (company.rows.length > 0 && !company.rows[0].active) {
+      return res.status(403).json({ error: 'Esta cuenta está desactivada. Contacta a BitácoraPro.' })
+    }
+
     var token = jwt.sign({ id: user.id, email: user.email, role: user.role, company_id: user.company_id }, JWT_SECRET, { expiresIn: '7d' })
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, company_id: user.company_id, company_name: user.company_name }
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, company_id: user.company_id, company_name: user.company_name, must_change_password: user.must_change_password }
     })
   } catch (err) {
     res.status(500).json({ error: err.message })
@@ -671,6 +683,7 @@ app.get('/admin/stats', superadminMiddleware, async function(req, res) {
       result.push({
         id: c.id,
         company_name: c.name,
+        active: c.active,
         created_at: c.created_at,
         admin_name: adminUser.rows[0] ? adminUser.rows[0].name : '-',
         admin_email: adminUser.rows[0] ? adminUser.rows[0].email : '-',
@@ -682,6 +695,58 @@ app.get('/admin/stats', superadminMiddleware, async function(req, res) {
       })
     }
     res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// PUT /admin/companies/:id/toggle — desactivar o reactivar empresa
+app.put('/admin/companies/:id/toggle', superadminMiddleware, async function(req, res) {
+  try {
+    var result = await pool.query('SELECT active FROM companies WHERE id = $1', [req.params.id])
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Empresa no encontrada' })
+    var newActive = !result.rows[0].active
+    await pool.query('UPDATE companies SET active = $1 WHERE id = $2', [newActive, req.params.id])
+    res.json({ success: true, active: newActive })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// DELETE /admin/companies/:id — eliminar empresa y todos sus datos
+app.delete('/admin/companies/:id', superadminMiddleware, async function(req, res) {
+  try {
+    var companyId = req.params.id
+    // Eliminar en cascada: imágenes → hallazgos → propiedades → proyectos → miembros → invitaciones → usuarios → empresa
+    var projects = await pool.query('SELECT id FROM projects WHERE company_id = $1', [companyId])
+    for (var i = 0; i < projects.rows.length; i++) {
+      var pid = projects.rows[i].id
+      var props = await pool.query('SELECT id FROM properties WHERE project_id = $1', [pid])
+      for (var j = 0; j < props.rows.length; j++) {
+        await pool.query('DELETE FROM images WHERE entry_id IN (SELECT id FROM entries WHERE property_id = $1)', [props.rows[j].id])
+        await pool.query('DELETE FROM entries WHERE property_id = $1', [props.rows[j].id])
+      }
+      await pool.query('DELETE FROM properties WHERE project_id = $1', [pid])
+      await pool.query('DELETE FROM project_members WHERE project_id = $1', [pid])
+      await pool.query('DELETE FROM invitations WHERE project_id = $1', [pid])
+    }
+    await pool.query('DELETE FROM projects WHERE company_id = $1', [companyId])
+    await pool.query('DELETE FROM users WHERE company_id = $1', [companyId])
+    await pool.query('DELETE FROM companies WHERE id = $1', [companyId])
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /auth/change-password — cambiar contraseña (primer login)
+app.post('/auth/change-password', authMiddleware, async function(req, res) {
+  try {
+    var { new_password } = req.body
+    if (!new_password || new_password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' })
+    var hash = await bcrypt.hash(new_password, 10)
+    await pool.query('UPDATE users SET password_hash = $1, must_change_password = FALSE WHERE id = $2', [hash, req.user.id])
+    res.json({ success: true })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
@@ -701,9 +766,43 @@ app.post('/admin/create-company', superadminMiddleware, async function(req, res)
 
     var hash = await bcrypt.hash(password, 10)
     var userResult = await pool.query(
-      'INSERT INTO users (company_id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role',
+      'INSERT INTO users (company_id, name, email, password_hash, role, must_change_password) VALUES ($1, $2, $3, $4, $5, TRUE) RETURNING id, name, email, role',
       [company.id, name.trim(), email.trim().toLowerCase(), hash, 'admin']
     )
+
+    // Enviar email de bienvenida con credenciales
+    var loginUrl = process.env.NODE_ENV === 'production' ? 'https://www.bitacorapro.cl' : 'http://localhost:5173'
+    try {
+      await resend.emails.send({
+        from: 'BitácoraPro <noreply@contacto.bitacorapro.cl>',
+        to: email.trim().toLowerCase(),
+        subject: 'Bienvenido a BitácoraPro — tus credenciales de acceso',
+        html: `
+          <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; color: #1A1814;">
+            <div style="margin-bottom: 2rem;">
+              <span style="font-family: Georgia, serif; font-size: 1.3rem; font-weight: 700;">BitácoraPro<span style="color: #2D5A3D;">.</span></span>
+            </div>
+            <h2 style="font-family: Georgia, serif; font-size: 1.5rem; margin-bottom: 0.5rem;">Hola ${name.trim()}, bienvenido 👋</h2>
+            <p style="color: #6B6760; margin-bottom: 1.5rem;">Tu cuenta para <strong>${company_name.trim()}</strong> está lista. Aquí están tus credenciales de acceso:</p>
+            <div style="background: #F7F5F0; border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; border: 1px solid #E2DDD6;">
+              <p style="margin: 0 0 0.5rem; font-size: 0.9rem; color: #6B6760;">Usuario</p>
+              <p style="margin: 0 0 1rem; font-weight: 600; font-size: 1rem;">${email.trim().toLowerCase()}</p>
+              <p style="margin: 0 0 0.5rem; font-size: 0.9rem; color: #6B6760;">Contraseña temporal</p>
+              <p style="margin: 0; font-weight: 600; font-size: 1rem; font-family: monospace; letter-spacing: 0.05em;">${password}</p>
+            </div>
+            <p style="color: #6B6760; font-size: 0.9rem; margin-bottom: 1.75rem;">Al iniciar sesión por primera vez, te pediremos que cambies tu contraseña temporal por una propia.</p>
+            <a href="${loginUrl}" style="display:inline-block;background:#1A1814;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:500;font-size:15px;">
+              Iniciar sesión →
+            </a>
+            <p style="color: #C0BBB5; font-size: 0.78rem; margin-top: 2.5rem;">Si tienes dudas, responde este email o escríbenos a contacto@bitacorapro.cl</p>
+          </div>
+        `
+      })
+    } catch (emailErr) {
+      console.error('Error enviando email de bienvenida:', emailErr)
+      // No falla el endpoint si el email falla — la cuenta igual queda creada
+    }
+
     res.json({ success: true, company: company, user: userResult.rows[0] })
   } catch (err) {
     res.status(500).json({ error: err.message })

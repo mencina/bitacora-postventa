@@ -678,6 +678,56 @@ function InviteRegisterScreen({ inviteToken, onLogin, onGoLogin }) {
   )
 }
 
+// === PANTALLA CAMBIO DE CONTRASEÑA (primer login) ===
+function ChangePasswordScreen({ token, user, onDone }) {
+  var [newPassword, setNewPassword] = useState('')
+  var [newPassword2, setNewPassword2] = useState('')
+  var [error, setError] = useState('')
+  var [loading, setLoading] = useState(false)
+
+  var handleSubmit = async function() {
+    if (!newPassword || !newPassword2) { setError('Completa ambos campos'); return }
+    if (newPassword.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return }
+    if (newPassword !== newPassword2) { setError('Las contraseñas no coinciden'); return }
+    setLoading(true); setError('')
+    try {
+      var response = await fetch(API_URL + '/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ new_password: newPassword })
+      })
+      var data = await response.json()
+      if (!response.ok) { setError(data.error || 'Error al cambiar contraseña'); setLoading(false); return }
+      onDone()
+    } catch (err) { setError('No se pudo conectar con el servidor') }
+    setLoading(false)
+  }
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <span style={{fontSize:'2rem'}}>🔑</span>
+          <h1>Crea tu contraseña</h1>
+          <p>Hola {user.name}, es tu primer acceso. Elige una contraseña para tu cuenta.</p>
+        </div>
+        {error && <div className="auth-error">{error}</div>}
+        <div className="form-field">
+          <label>Nueva contraseña</label>
+          <input type="password" className="text-input" placeholder="Mínimo 6 caracteres" value={newPassword} onChange={function(e) { setNewPassword(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleSubmit() }} autoFocus />
+        </div>
+        <div className="form-field">
+          <label>Repetir contraseña</label>
+          <input type="password" className="text-input" placeholder="Repite tu contraseña" value={newPassword2} onChange={function(e) { setNewPassword2(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleSubmit() }} />
+        </div>
+        <button className="submit-button" onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Guardando...' : 'Guardar y entrar →'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // === PANTALLA ADMIN ===
 function AdminScreen() {
   var [secret, setSecret] = useState('')
@@ -707,6 +757,29 @@ function AdminScreen() {
 
   function refreshStats() {
     adminFetch('/admin/stats').then(function(r) { return r.json() }).then(setCompanies)
+  }
+
+  function handleToggle(c) {
+    var action = c.active ? 'desactivar' : 'reactivar'
+    var msg1 = '¿' + (c.active ? 'Desactivar' : 'Reactivar') + ' la empresa "' + c.company_name + '"?'
+    var msg2 = c.active
+      ? 'Los usuarios de esta empresa no podrán iniciar sesión. ¿Confirmas?'
+      : '¿Confirmas que quieres reactivar esta empresa?'
+    if (!window.confirm(msg1)) return
+    if (!window.confirm(msg2)) return
+    adminFetch('/admin/companies/' + c.id + '/toggle', { method: 'PUT' })
+      .then(function(r) { return r.json() })
+      .then(function(data) { if (data.success) refreshStats() })
+  }
+
+  function handleDelete(c) {
+    var msg1 = '⚠️ Eliminar "' + c.company_name + '" y TODOS sus datos?\n\nEsto borrará ' + c.projects + ' proyectos, ' + c.properties + ' propiedades y ' + c.entries + ' hallazgos. Esta acción es irreversible.'
+    var msg2 = 'Última confirmación: ¿estás seguro de eliminar "' + c.company_name + '" para siempre?'
+    if (!window.confirm(msg1)) return
+    if (!window.confirm(msg2)) return
+    adminFetch('/admin/companies/' + c.id, { method: 'DELETE' })
+      .then(function(r) { return r.json() })
+      .then(function(data) { if (data.success) refreshStats() })
   }
 
   function handleCreate() {
@@ -805,16 +878,16 @@ function AdminScreen() {
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.875rem'}}>
             <thead>
               <tr style={{background:'#F7F5F0',borderBottom:'1px solid #E2DDD6'}}>
-                {['Empresa','Admin','Usuarios','Proyectos','Propiedades','Hallazgos','Última actividad','Desde'].map(function(h) {
+                {['Empresa','Admin','Usuarios','Proyectos','Propiedades','Hallazgos','Última actividad','Desde','Estado','Acciones'].map(function(h) {
                   return <th key={h} style={{padding:'0.875rem 1rem',textAlign:'left',fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'#6B6760'}}>{h}</th>
                 })}
               </tr>
             </thead>
             <tbody>
               {companies.map(function(c, i) {
-                var isActive = c.last_activity && (Date.now() - new Date(c.last_activity).getTime()) < 7 * 24 * 60 * 60 * 1000
+                var isRecentlyActive = c.last_activity && (Date.now() - new Date(c.last_activity).getTime()) < 7 * 24 * 60 * 60 * 1000
                 return (
-                  <tr key={c.id} style={{borderBottom: i < companies.length - 1 ? '1px solid #E2DDD6' : 'none'}}>
+                  <tr key={c.id} style={{borderBottom: i < companies.length - 1 ? '1px solid #E2DDD6' : 'none', opacity: c.active ? 1 : 0.55}}>
                     <td style={{padding:'1rem',fontWeight:'600',color:'#1A1814'}}>{c.company_name}</td>
                     <td style={{padding:'1rem'}}>
                       <div style={{fontWeight:'500',color:'#1A1814'}}>{c.admin_name}</div>
@@ -828,13 +901,28 @@ function AdminScreen() {
                     </td>
                     <td style={{padding:'1rem'}}>
                       {c.last_activity
-                        ? <span style={{color: isActive ? '#2D5A3D' : '#6B6760', fontSize:'0.82rem', fontWeight: isActive ? '600' : '400'}}>
-                            {isActive && '● '}{new Date(c.last_activity).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}
+                        ? <span style={{color: isRecentlyActive ? '#2D5A3D' : '#6B6760', fontSize:'0.82rem', fontWeight: isRecentlyActive ? '600' : '400'}}>
+                            {isRecentlyActive && '● '}{new Date(c.last_activity).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}
                           </span>
                         : <span style={{color:'#C0BBB5',fontSize:'0.82rem'}}>Sin actividad</span>
                       }
                     </td>
                     <td style={{padding:'1rem',color:'#6B6760',fontSize:'0.82rem'}}>{new Date(c.created_at).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}</td>
+                    <td style={{padding:'1rem'}}>
+                      <span style={{display:'inline-block',padding:'0.2rem 0.65rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'600',background: c.active ? '#EAF1EC' : '#FEF0F0',color: c.active ? '#2D5A3D' : '#C0392B'}}>
+                        {c.active ? 'Activa' : 'Inactiva'}
+                      </span>
+                    </td>
+                    <td style={{padding:'1rem'}}>
+                      <div style={{display:'flex',gap:'0.4rem'}}>
+                        <button onClick={function() { handleToggle(c) }} style={{padding:'0.35rem 0.75rem',borderRadius:'6px',border:'1.5px solid #E2DDD6',background:'#fff',cursor:'pointer',fontSize:'0.78rem',fontWeight:'500',color: c.active ? '#F39C12' : '#2D5A3D',borderColor: c.active ? '#F39C12' : '#2D5A3D',whiteSpace:'nowrap'}}>
+                          {c.active ? '⏸ Desactivar' : '▶ Reactivar'}
+                        </button>
+                        <button onClick={function() { handleDelete(c) }} style={{padding:'0.35rem 0.75rem',borderRadius:'6px',border:'1.5px solid #E74C3C',background:'#fff',cursor:'pointer',fontSize:'0.78rem',fontWeight:'500',color:'#E74C3C',whiteSpace:'nowrap'}}>
+                          🗑 Eliminar
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 )
               })}
@@ -1147,6 +1235,11 @@ function App() {
     if (authScreen === 'invite') return <InviteRegisterScreen inviteToken={inviteToken} onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
     if (authScreen === 'register') return <RegisterScreen onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
     return <LoginScreen onLogin={handleLogin} onGoRegister={function() { setAuthScreen('register') }} />
+  }
+
+  // Primer login — forzar cambio de contraseña antes de entrar
+  if (currentUser && currentUser.must_change_password) {
+    return <ChangePasswordScreen token={token} user={currentUser} onDone={function() { setCurrentUser(Object.assign({}, currentUser, { must_change_password: false })) }} />
   }
 
   // === VISTA 1: PROYECTOS ===
