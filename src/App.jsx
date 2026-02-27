@@ -678,6 +678,177 @@ function InviteRegisterScreen({ inviteToken, onLogin, onGoLogin }) {
   )
 }
 
+// === PANTALLA ADMIN ===
+function AdminScreen() {
+  var [secret, setSecret] = useState('')
+  var [authed, setAuthed] = useState(false)
+  var [authError, setAuthError] = useState('')
+  var [companies, setCompanies] = useState([])
+  var [loading, setLoading] = useState(false)
+  var [showCreate, setShowCreate] = useState(false)
+  var [createForm, setCreateForm] = useState({ company_name: '', name: '', email: '', password: '' })
+  var [createMsg, setCreateMsg] = useState('')
+  var [creating, setCreating] = useState(false)
+
+  function adminFetch(url, options) {
+    var opts = options || {}
+    opts.headers = Object.assign({}, opts.headers || {}, { 'x-admin-secret': secret, 'Content-Type': 'application/json' })
+    return fetch(API_URL + url, opts)
+  }
+
+  function handleLogin() {
+    setLoading(true)
+    setAuthError('')
+    adminFetch('/admin/stats').then(function(r) {
+      if (r.status === 401) { setAuthError('Clave incorrecta'); setLoading(false); return }
+      return r.json().then(function(data) { setCompanies(data); setAuthed(true); setLoading(false) })
+    }).catch(function() { setAuthError('Error de conexión'); setLoading(false) })
+  }
+
+  function refreshStats() {
+    adminFetch('/admin/stats').then(function(r) { return r.json() }).then(setCompanies)
+  }
+
+  function handleCreate() {
+    if (!createForm.company_name || !createForm.name || !createForm.email || !createForm.password) {
+      setCreateMsg('Todos los campos son requeridos'); return
+    }
+    setCreating(true); setCreateMsg('')
+    adminFetch('/admin/create-company', { method: 'POST', body: JSON.stringify(createForm) })
+      .then(function(r) { return r.json() })
+      .then(function(data) {
+        if (data.error) { setCreateMsg('❌ ' + data.error) }
+        else { setCreateMsg('✅ Cliente creado: ' + data.company.name); setCreateForm({ company_name: '', name: '', email: '', password: '' }); setShowCreate(false); refreshStats() }
+        setCreating(false)
+      }).catch(function() { setCreateMsg('❌ Error de conexión'); setCreating(false) })
+  }
+
+  if (!authed) {
+    return (
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+        <div style={{background:'#fff',borderRadius:'16px',padding:'2.5rem',width:'100%',maxWidth:'360px',boxShadow:'0 4px 24px rgba(0,0,0,0.08)'}}>
+          <h2 style={{fontFamily:'Playfair Display,serif',fontSize:'1.5rem',marginBottom:'0.25rem',color:'#1A1814'}}>Panel de Admin</h2>
+          <p style={{color:'#6B6760',fontSize:'0.85rem',marginBottom:'1.75rem'}}>Solo para uso interno de BitácoraPro.</p>
+          <input
+            type="password" placeholder="Clave de acceso"
+            value={secret} onChange={function(e) { setSecret(e.target.value) }}
+            onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }}
+            style={{width:'100%',padding:'0.75rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'1rem',boxSizing:'border-box',marginBottom:'0.75rem',outline:'none'}}
+          />
+          {authError && <p style={{color:'#E74C3C',fontSize:'0.85rem',marginBottom:'0.75rem'}}>{authError}</p>}
+          <button onClick={handleLogin} disabled={loading} style={{width:'100%',padding:'0.875rem',background:'#1A1814',color:'#fff',border:'none',borderRadius:'8px',fontSize:'1rem',cursor:'pointer',fontWeight:'500'}}>
+            {loading ? 'Verificando...' : 'Entrar →'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  var totalProjects = companies.reduce(function(s, c) { return s + c.projects }, 0)
+  var totalProperties = companies.reduce(function(s, c) { return s + c.properties }, 0)
+  var totalEntries = companies.reduce(function(s, c) { return s + c.entries }, 0)
+
+  return (
+    <div style={{minHeight:'100vh',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+      {/* Header */}
+      <div style={{background:'#1A1814',padding:'1.25rem 2rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontFamily:'Playfair Display,serif',color:'#fff',fontSize:'1.15rem',fontWeight:'700'}}>BitácoraPro <span style={{color:'#7CB891'}}>Admin</span></span>
+        <button onClick={refreshStats} style={{background:'rgba(255,255,255,0.1)',border:'none',color:'#fff',padding:'0.5rem 1rem',borderRadius:'6px',cursor:'pointer',fontSize:'0.85rem'}}>↻ Actualizar</button>
+      </div>
+
+      <div style={{maxWidth:'1100px',margin:'0 auto',padding:'2rem 1.5rem'}}>
+
+        {/* Stats globales */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'1rem',marginBottom:'2rem'}}>
+          {[
+            { label: 'Clientes', value: companies.length, icon: '🏢' },
+            { label: 'Proyectos', value: totalProjects, icon: '📁' },
+            { label: 'Propiedades', value: totalProperties, icon: '🏠' },
+            { label: 'Hallazgos', value: totalEntries, icon: '📋' },
+          ].map(function(stat) {
+            return (
+              <div key={stat.label} style={{background:'#fff',borderRadius:'12px',padding:'1.25rem 1.5rem',boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+                <div style={{fontSize:'1.5rem',marginBottom:'0.4rem'}}>{stat.icon}</div>
+                <div style={{fontSize:'1.75rem',fontWeight:'700',color:'#1A1814',lineHeight:1}}>{stat.value}</div>
+                <div style={{fontSize:'0.8rem',color:'#6B6760',marginTop:'0.25rem'}}>{stat.label}</div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Botón crear cliente */}
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
+          <h3 style={{fontFamily:'Playfair Display,serif',fontSize:'1.2rem',color:'#1A1814',margin:0}}>Clientes ({companies.length})</h3>
+          <button onClick={function() { setShowCreate(true); setCreateMsg('') }} style={{background:'#2D5A3D',color:'#fff',border:'none',borderRadius:'8px',padding:'0.6rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>+ Nuevo cliente</button>
+        </div>
+
+        {/* Modal crear cliente */}
+        {showCreate && (
+          <div style={{background:'#fff',borderRadius:'12px',padding:'1.5rem',marginBottom:'1.5rem',boxShadow:'0 2px 12px rgba(0,0,0,0.08)',border:'1px solid #E2DDD6'}}>
+            <h4 style={{margin:'0 0 1.25rem',fontFamily:'Playfair Display,serif',fontSize:'1.1rem'}}>Crear nuevo cliente</h4>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem',marginBottom:'0.75rem'}}>
+              <input placeholder="Nombre de la empresa" value={createForm.company_name} onChange={function(e) { setCreateForm(Object.assign({},createForm,{company_name:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
+              <input placeholder="Nombre del admin" value={createForm.name} onChange={function(e) { setCreateForm(Object.assign({},createForm,{name:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
+              <input placeholder="Email del admin" type="email" value={createForm.email} onChange={function(e) { setCreateForm(Object.assign({},createForm,{email:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
+              <input placeholder="Contraseña temporal" type="text" value={createForm.password} onChange={function(e) { setCreateForm(Object.assign({},createForm,{password:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
+            </div>
+            {createMsg && <p style={{color: createMsg.startsWith('✅') ? '#2D5A3D' : '#E74C3C',fontSize:'0.85rem',margin:'0 0 0.75rem'}}>{createMsg}</p>}
+            <div style={{display:'flex',gap:'0.75rem'}}>
+              <button onClick={handleCreate} disabled={creating} style={{background:'#1A1814',color:'#fff',border:'none',borderRadius:'8px',padding:'0.7rem 1.5rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>{creating ? 'Creando...' : 'Crear cliente'}</button>
+              <button onClick={function() { setShowCreate(false); setCreateMsg('') }} style={{background:'none',border:'1.5px solid #E2DDD6',borderRadius:'8px',padding:'0.7rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',color:'#6B6760'}}>Cancelar</button>
+            </div>
+          </div>
+        )}
+
+        {/* Tabla de clientes */}
+        <div style={{background:'#fff',borderRadius:'12px',overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.875rem'}}>
+            <thead>
+              <tr style={{background:'#F7F5F0',borderBottom:'1px solid #E2DDD6'}}>
+                {['Empresa','Admin','Usuarios','Proyectos','Propiedades','Hallazgos','Última actividad','Desde'].map(function(h) {
+                  return <th key={h} style={{padding:'0.875rem 1rem',textAlign:'left',fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'#6B6760'}}>{h}</th>
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {companies.map(function(c, i) {
+                var isActive = c.last_activity && (Date.now() - new Date(c.last_activity).getTime()) < 7 * 24 * 60 * 60 * 1000
+                return (
+                  <tr key={c.id} style={{borderBottom: i < companies.length - 1 ? '1px solid #E2DDD6' : 'none'}}>
+                    <td style={{padding:'1rem',fontWeight:'600',color:'#1A1814'}}>{c.company_name}</td>
+                    <td style={{padding:'1rem'}}>
+                      <div style={{fontWeight:'500',color:'#1A1814'}}>{c.admin_name}</div>
+                      <div style={{fontSize:'0.78rem',color:'#6B6760'}}>{c.admin_email}</div>
+                    </td>
+                    <td style={{padding:'1rem',textAlign:'center',color:'#1A1814',fontWeight:'500'}}>{c.users}</td>
+                    <td style={{padding:'1rem',textAlign:'center',color:'#1A1814',fontWeight:'500'}}>{c.projects}</td>
+                    <td style={{padding:'1rem',textAlign:'center',color:'#1A1814',fontWeight:'500'}}>{c.properties}</td>
+                    <td style={{padding:'1rem',textAlign:'center'}}>
+                      <span style={{background: c.entries > 0 ? '#EAF1EC' : '#F7F5F0', color: c.entries > 0 ? '#2D5A3D' : '#6B6760', padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600',fontSize:'0.85rem'}}>{c.entries}</span>
+                    </td>
+                    <td style={{padding:'1rem'}}>
+                      {c.last_activity
+                        ? <span style={{color: isActive ? '#2D5A3D' : '#6B6760', fontSize:'0.82rem', fontWeight: isActive ? '600' : '400'}}>
+                            {isActive && '● '}{new Date(c.last_activity).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}
+                          </span>
+                        : <span style={{color:'#C0BBB5',fontSize:'0.82rem'}}>Sin actividad</span>
+                      }
+                    </td>
+                    <td style={{padding:'1rem',color:'#6B6760',fontSize:'0.82rem'}}>{new Date(c.created_at).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+          {companies.length === 0 && (
+            <div style={{padding:'3rem',textAlign:'center',color:'#6B6760'}}>Aún no hay clientes registrados.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function App() {
   // Auth
   var [token, setToken] = useState(null)
@@ -970,6 +1141,8 @@ function App() {
 
   // === PANTALLAS DE AUTH ===
   if (!token) {
+    var params = new URLSearchParams(window.location.search)
+    if (params.get('admin') === '1') return <AdminScreen />
     if (authScreen === 'home') return <HomeScreen onGoLogin={function() { setAuthScreen('login') }} onGoRegister={function() { setAuthScreen('register') }} />
     if (authScreen === 'invite') return <InviteRegisterScreen inviteToken={inviteToken} onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
     if (authScreen === 'register') return <RegisterScreen onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />

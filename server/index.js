@@ -632,6 +632,83 @@ app.delete('/invitations/:id', authMiddleware, adminMiddleware, async function(r
   }
 })
 
+// === PANEL DE SUPERADMIN ===
+
+var ADMIN_SECRET = process.env.ADMIN_SECRET || 'bitacora-admin-2026'
+
+function superadminMiddleware(req, res, next) {
+  var secret = req.headers['x-admin-secret']
+  if (!secret || secret !== ADMIN_SECRET) return res.status(401).json({ error: 'No autorizado' })
+  next()
+}
+
+// GET /admin/stats — todas las empresas con métricas de uso
+app.get('/admin/stats', superadminMiddleware, async function(req, res) {
+  try {
+    var companies = await pool.query('SELECT * FROM companies ORDER BY created_at DESC')
+    var result = []
+    for (var i = 0; i < companies.rows.length; i++) {
+      var c = companies.rows[i]
+      var adminUser = await pool.query(
+        'SELECT name, email, created_at FROM users WHERE company_id = $1 AND role = $2 LIMIT 1',
+        [c.id, 'admin']
+      )
+      var userCount = await pool.query('SELECT COUNT(*) as count FROM users WHERE company_id = $1', [c.id])
+      var projectCount = await pool.query('SELECT COUNT(*) as count FROM projects WHERE company_id = $1', [c.id])
+      var propertyCount = await pool.query(
+        'SELECT COUNT(*) as count FROM properties p JOIN projects pr ON p.project_id = pr.id WHERE pr.company_id = $1',
+        [c.id]
+      )
+      var entryCount = await pool.query(
+        'SELECT COUNT(*) as count FROM entries e JOIN properties p ON e.property_id = p.id JOIN projects pr ON p.project_id = pr.id WHERE pr.company_id = $1',
+        [c.id]
+      )
+      var lastActivity = await pool.query(
+        'SELECT MAX(e.created_at) as last_entry FROM entries e JOIN properties p ON e.property_id = p.id JOIN projects pr ON p.project_id = pr.id WHERE pr.company_id = $1',
+        [c.id]
+      )
+      result.push({
+        id: c.id,
+        company_name: c.name,
+        created_at: c.created_at,
+        admin_name: adminUser.rows[0] ? adminUser.rows[0].name : '-',
+        admin_email: adminUser.rows[0] ? adminUser.rows[0].email : '-',
+        users: parseInt(userCount.rows[0].count),
+        projects: parseInt(projectCount.rows[0].count),
+        properties: parseInt(propertyCount.rows[0].count),
+        entries: parseInt(entryCount.rows[0].count),
+        last_activity: lastActivity.rows[0].last_entry || null
+      })
+    }
+    res.json(result)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /admin/create-company — crear empresa + usuario admin
+app.post('/admin/create-company', superadminMiddleware, async function(req, res) {
+  try {
+    var { company_name, name, email, password } = req.body
+    if (!company_name || !name || !email || !password) return res.status(400).json({ error: 'Todos los campos son requeridos' })
+
+    var existing = await pool.query('SELECT id FROM users WHERE email = $1', [email.trim().toLowerCase()])
+    if (existing.rows.length > 0) return res.status(400).json({ error: 'Ya existe una cuenta con ese email' })
+
+    var companyResult = await pool.query('INSERT INTO companies (name) VALUES ($1) RETURNING *', [company_name.trim()])
+    var company = companyResult.rows[0]
+
+    var hash = await bcrypt.hash(password, 10)
+    var userResult = await pool.query(
+      'INSERT INTO users (company_id, name, email, password_hash, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role',
+      [company.id, name.trim(), email.trim().toLowerCase(), hash, 'admin']
+    )
+    res.json({ success: true, company: company, user: userResult.rows[0] })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 var PORT = process.env.PORT || 3001
 initDB().then(function() {
   app.listen(PORT, function() { console.log('Servidor corriendo en puerto ' + PORT) })
