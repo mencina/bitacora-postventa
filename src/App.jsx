@@ -131,7 +131,7 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           .hp-hamburger{display:flex;}
           .hp-hero{min-height:auto;padding:4rem 1.25rem 3rem;}
           .hp-eyebrow{font-size:0.7rem;padding:0.35rem 0.875rem;margin-bottom:1.25rem;}
-          .hp-hero-title{font-size:clamp(2.6rem,10vw,3.4rem);margin-bottom:1rem;}
+          .hp-hero-title{font-size:clamp(4rem,12vw,5rem);margin-bottom:1rem;}
           .hp-hero-title .hp-nowrap{white-space:nowrap;}
           .hp-hero-sub{font-size:0.95rem;margin-bottom:1.5rem;}
           .hp-hero-actions{flex-direction:column;align-items:stretch;gap:0.75rem;}
@@ -261,7 +261,7 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
 
       {/* CTA FINAL */}
       <section className="hp-cta" id="hp-contacto">
-        <h2 className="hp-cta-title hp-reveal">¿Listo para automatizar<br/>tu postventa?</h2>
+        <h2 className="hp-cta-title hp-reveal">¿Listo para automatizar<br/> tu postventa?</h2>
         <p className="hp-cta-sub hp-reveal">Agenda una demo y te mostramos cómo funciona con tu operación. Sin compromisos.</p>
         <div className="hp-cta-actions hp-reveal">
           <button className="hp-btn-primary hp-cta-btn" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
