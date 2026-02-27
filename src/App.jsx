@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
+import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import './App.css'
 
 // === PANTALLA HOME ===
-function HomeScreen({ onGoLogin, onGoRegister }) {
+function HomeScreen() {
+  var navigate = useNavigate()
+  var onGoLogin = function() { navigate('/login') }
   var [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(function() {
@@ -482,7 +485,8 @@ async function generatePDF(projectName, property, entries) {
 }
 
 // === PANTALLA LOGIN ===
-function LoginScreen({ onLogin, onGoRegister }) {
+function LoginScreen({ onLogin }) {
+  var navigate = useNavigate()
   var [email, setEmail] = useState('')
   var [password, setPassword] = useState('')
   var [error, setError] = useState('')
@@ -530,7 +534,9 @@ function LoginScreen({ onLogin, onGoRegister }) {
 }
 
 // === PANTALLA REGISTRO ===
-function RegisterScreen({ onLogin, onGoLogin }) {
+function RegisterScreen({ onLogin }) {
+  var navigate = useNavigate()
+  var onGoLogin = function() { navigate('/login') }
   var [form, setForm] = useState({ company_name: '', name: '', email: '', password: '', password2: '' })
   var [error, setError] = useState('')
   var [loading, setLoading] = useState(false)
@@ -594,7 +600,10 @@ function RegisterScreen({ onLogin, onGoLogin }) {
 }
 
 // === PANTALLA REGISTRO POR INVITACIÓN ===
-function InviteRegisterScreen({ inviteToken, onLogin, onGoLogin }) {
+function InviteRegisterScreen({ onLogin }) {
+  var { token: inviteToken } = useParams()
+  var navigate = useNavigate()
+  var onGoLogin = function() { navigate('/login') }
   var [inviteData, setInviteData] = useState(null)
   var [error, setError] = useState('')
   var [loading, setLoading] = useState(true)
@@ -624,7 +633,6 @@ function InviteRegisterScreen({ inviteToken, onLogin, onGoLogin }) {
       })
       var data = await r.json()
       if (!r.ok) { setError(data.error || 'Error al aceptar invitación') } else {
-        window.history.replaceState({}, '', window.location.pathname)
         onLogin(data.token, data.user)
       }
     } catch(e) { setError('No se pudo conectar con el servidor') }
@@ -959,8 +967,6 @@ function App() {
   // Auth
   var [token, setToken] = useState(null)
   var [currentUser, setCurrentUser] = useState(null)
-  var [authScreen, setAuthScreen] = useState('home') // 'home' | 'login' | 'register' | 'invite'
-  var [inviteToken, setInviteToken] = useState(null)
 
   // App state
   var [projects, setProjects] = useState([])
@@ -992,30 +998,22 @@ function App() {
   var fileInputRef = useRef(null)
   var recognitionRef = useRef(null)
 
-  // Detectar token de invitación en la URL
-  useEffect(function() {
-    var params = new URLSearchParams(window.location.search)
-    var inv = params.get('invite')
-    if (inv) { setInviteToken(inv); setAuthScreen('invite') }
-  }, [])
-
   // Editar propiedad
-  var [editingProperty, setEditingProperty] = useState(null) // prop object siendo editado
+  var [editingProperty, setEditingProperty] = useState(null)
   var [editPropForm, setEditPropForm] = useState({})
 
   // Editar hallazgo
-  var [editingEntry, setEditingEntry] = useState(null) // entry id siendo editado
+  var [editingEntry, setEditingEntry] = useState(null)
   var [editEntryForm, setEditEntryForm] = useState({})
 
   // Lightbox
-  var [lightbox, setLightbox] = useState(null) // { images: [], index: 0 }
+  var [lightbox, setLightbox] = useState(null)
 
   var openLightbox = function(images, index) { setLightbox({ images: images, index: index }) }
   var closeLightbox = function() { setLightbox(null) }
   var lightboxPrev = function() { setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }
   var lightboxNext = function() { setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }
 
-  // Cerrar lightbox con Escape y navegar con flechas del teclado
   useEffect(function() {
     if (!lightbox) return
     var handleKey = function(e) {
@@ -1027,7 +1025,6 @@ function App() {
     return function() { window.removeEventListener('keydown', handleKey) }
   }, [lightbox])
 
-  // Helper: fetch con token
   var authFetch = function(url, options) {
     var opts = options || {}
     var headers = opts.headers || {}
@@ -1044,7 +1041,6 @@ function App() {
   var handleLogout = function() {
     setToken(null)
     setCurrentUser(null)
-    setAuthScreen('home')
     setProjects([])
     setCurrentProject(null)
     setProperties([])
@@ -1171,7 +1167,6 @@ function App() {
     generatePDF(currentProject.name, currentProperty, entries)
   }
 
-  // Guardar edición de propiedad
   var handleSaveProperty = function() {
     if (!editPropForm.unit_number || !editPropForm.unit_number.trim()) { alert('El número de propiedad es requerido'); return }
     authFetch(API_URL + '/properties/' + editingProperty.id, {
@@ -1187,7 +1182,6 @@ function App() {
       .catch(function() { alert('Error al guardar') })
   }
 
-  // Guardar edición de hallazgo
   var handleSaveEntry = function() {
     authFetch(API_URL + '/entries/' + editingEntry, {
       method: 'PUT',
@@ -1202,7 +1196,6 @@ function App() {
       .catch(function() { alert('Error al guardar') })
   }
 
-  // Cargar equipo del proyecto
   var loadTeam = function(projectId) {
     authFetch(API_URL + '/projects/' + projectId + '/team')
       .then(function(r) { return r.json() })
@@ -1245,75 +1238,245 @@ function App() {
     loadTeam(currentProject.id)
   }
 
-  // === PANTALLAS DE AUTH ===
-  if (!token) {
-    var params = new URLSearchParams(window.location.search)
-    if (params.get('admin') === '1') return <AdminScreen />
-    if (authScreen === 'home') return <HomeScreen onGoLogin={function() { setAuthScreen('login') }} onGoRegister={function() { setAuthScreen('register') }} />
-    if (authScreen === 'invite') return <InviteRegisterScreen inviteToken={inviteToken} onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
-    if (authScreen === 'register') return <RegisterScreen onLogin={handleLogin} onGoLogin={function() { setAuthScreen('login') }} />
-    return <LoginScreen onLogin={handleLogin} onGoRegister={function() { setAuthScreen('register') }} />
-  }
+  // === COMPONENTE INTERIOR DE LA APP (requiere token) ===
+  function AppInterior() {
+    var navigate = useNavigate()
 
-  // Primer login — forzar cambio de contraseña antes de entrar
-  if (currentUser && currentUser.must_change_password) {
-    return <ChangePasswordScreen token={token} user={currentUser} onDone={function() { setCurrentUser(Object.assign({}, currentUser, { must_change_password: false })) }} />
-  }
+    // Si no hay token, redirigir a login
+    if (!token) return <Navigate to="/login" replace />
 
-  // === VISTA 1: PROYECTOS ===
-  if (!currentProject) {
-    return (
-      <div className="app">
-        <header className="header">
-          <div className="header-content">
-            <div className="header-row-top">
-              <div className="header-title">
-                <span className="header-icon">📋</span>
-                <div><h1>BitácoraPro</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
-              </div>
-              <div className="header-info">
-                <span className="user-name">👤 {currentUser && currentUser.name}</span>
-                <button className="logout-button" onClick={handleLogout}>Cerrar sesión</button>
-              </div>
-            </div>
-          </div>
-        </header>
-        <main className="main">
-          <h2 className="section-title">Mis Proyectos</h2>
-          {!showNewProject ? (
-            <button className="add-button" onClick={function() { setShowNewProject(true) }}>+ Nuevo Proyecto</button>
-          ) : (
-            <div className="new-project-form">
-              <input type="text" placeholder="Nombre del proyecto..." value={newProjectName} onChange={function(e) { setNewProjectName(e.target.value) }} className="text-input" autoFocus onKeyDown={function(e) { if (e.key === 'Enter') handleCreateProject() }} />
-              <div className="new-project-actions">
-                <button className="submit-button" onClick={handleCreateProject}>Crear Proyecto</button>
-                <button className="cancel-button" onClick={function() { setShowNewProject(false); setNewProjectName('') }}>Cancelar</button>
-              </div>
-            </div>
-          )}
-          {projects.length === 0 && !showNewProject && (
-            <div className="welcome-message"><h2>👋 Bienvenido, {currentUser && currentUser.name}</h2><p>Crea tu primer proyecto para comenzar.</p></div>
-          )}
-          <div className="projects-grid">
-            {projects.map(function(project) {
-              return (
-                <div key={project.id} className="project-card">
-                  <div className="project-card-content" onClick={function() { setCurrentProject(project) }}>
-                    <h3>📁 {project.name}</h3>
-                    <p className="project-date">{project.property_count || 0} propiedades | Creado: {new Date(project.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                  </div>
-                  <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProject(project.id) }}>🗑</button>
+    // Primer login — forzar cambio de contraseña antes de entrar
+    if (currentUser && currentUser.must_change_password) {
+      return <ChangePasswordScreen token={token} user={currentUser} onDone={function() { setCurrentUser(Object.assign({}, currentUser, { must_change_password: false })) }} />
+    }
+
+    var handleLogoutAndRedirect = function() {
+      handleLogout()
+      navigate('/')
+    }
+
+    // === VISTA 1: PROYECTOS ===
+    if (!currentProject) {
+      return (
+        <div className="app">
+          <header className="header">
+            <div className="header-content">
+              <div className="header-row-top">
+                <div className="header-title">
+                  <span className="header-icon">📋</span>
+                  <div><h1>BitácoraPro</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
                 </div>
-              )
-            })}
-          </div>
-        </main>
-      </div>
-    )
-  }
+                <div className="header-info">
+                  <span className="user-name">👤 {currentUser && currentUser.name}</span>
+                  <button className="logout-button" onClick={handleLogoutAndRedirect}>Cerrar sesión</button>
+                </div>
+              </div>
+            </div>
+          </header>
+          <main className="main">
+            <h2 className="section-title">Mis Proyectos</h2>
+            {!showNewProject ? (
+              <button className="add-button" onClick={function() { setShowNewProject(true) }}>+ Nuevo Proyecto</button>
+            ) : (
+              <div className="new-project-form">
+                <input type="text" placeholder="Nombre del proyecto..." value={newProjectName} onChange={function(e) { setNewProjectName(e.target.value) }} className="text-input" autoFocus onKeyDown={function(e) { if (e.key === 'Enter') handleCreateProject() }} />
+                <div className="new-project-actions">
+                  <button className="submit-button" onClick={handleCreateProject}>Crear Proyecto</button>
+                  <button className="cancel-button" onClick={function() { setShowNewProject(false); setNewProjectName('') }}>Cancelar</button>
+                </div>
+              </div>
+            )}
+            {projects.length === 0 && !showNewProject && (
+              <div className="welcome-message"><h2>👋 Bienvenido, {currentUser && currentUser.name}</h2><p>Crea tu primer proyecto para comenzar.</p></div>
+            )}
+            <div className="projects-grid">
+              {projects.map(function(project) {
+                return (
+                  <div key={project.id} className="project-card">
+                    <div className="project-card-content" onClick={function() { setCurrentProject(project) }}>
+                      <h3>📁 {project.name}</h3>
+                      <p className="project-date">{project.property_count || 0} propiedades | Creado: {new Date(project.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                    </div>
+                    <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProject(project.id) }}>🗑</button>
+                  </div>
+                )
+              })}
+            </div>
+          </main>
+        </div>
+      )
+    }
 
-  // === VISTA 2: PROPIEDADES ===
-  if (!currentProperty) {
+    // === VISTA 2: PROPIEDADES ===
+    if (!currentProperty) {
+      return (
+        <div className="app">
+          <header className="header">
+            <div className="header-content">
+              <div className="header-row-top">
+                <div className="header-title">
+                  <span className="header-icon">📋</span>
+                  <div><h1>BitácoraPro</h1></div>
+                </div>
+                <div className="header-info">
+                  {currentUser && currentUser.role === 'admin' && (
+                    <button className="back-button" onClick={handleOpenTeam} style={{background:'#EAF1EC',color:'#2D5A3D',border:'1px solid #c5deca'}}>👥 Equipo</button>
+                  )}
+                  <button className="logout-button" onClick={handleLogoutAndRedirect}>Cerrar sesión</button>
+                </div>
+              </div>
+              <div className="header-row-nav">
+                <button className="back-button" onClick={function() { setCurrentProject(null); setShowTeam(false) }}>← Proyectos</button>
+                <div className="project-name-display">{currentProject.name}</div>
+              </div>
+            </div>
+          </header>
+          <main className="main">
+
+            {/* PANEL DE EQUIPO */}
+            {showTeam && (
+              <div className="form-card" style={{marginBottom:'1.5rem'}}>
+                <div className="form-header">
+                  <h3>👥 Equipo del proyecto</h3>
+                  <button className="close-button" onClick={function() { setShowTeam(false); setInviteMsg('') }}>X</button>
+                </div>
+                <div className="form-field">
+                  <label>✉️ Invitar inspector por email</label>
+                  <div style={{display:'flex',gap:'0.5rem'}}>
+                    <input type="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
+                    <button className="submit-button" onClick={handleInvite} disabled={inviteLoading} style={{width:'auto',padding:'0 1.25rem',flexShrink:0}}>
+                      {inviteLoading ? 'Enviando...' : 'Enviar'}
+                    </button>
+                  </div>
+                  {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('✅') ? '#2D5A3D' : '#B91C1C'}}>{inviteMsg}</p>}
+                </div>
+                {team.members && team.members.length > 0 && (
+                  <div className="form-field">
+                    <label>Miembros activos</label>
+                    {team.members.map(function(m) {
+                      return (
+                        <div key={m.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#f7f5f0',borderRadius:'8px',marginBottom:'0.4rem'}}>
+                          <div>
+                            <span style={{fontWeight:'500',fontSize:'0.875rem'}}>{m.name}</span>
+                            <span style={{color:'#6B6760',fontSize:'0.8rem',marginLeft:'0.5rem'}}>{m.email}</span>
+                            <span style={{background: m.role==='admin'?'#1A1814':'#EAF1EC',color:m.role==='admin'?'#fff':'#2D5A3D',fontSize:'0.65rem',padding:'0.15rem 0.5rem',borderRadius:'100px',marginLeft:'0.5rem',fontWeight:'500'}}>{m.role}</span>
+                          </div>
+                          {m.role !== 'admin' && <button onClick={function() { handleRemoveMember(m.id, m.name) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B91C1C',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Quitar</button>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                {team.pending_invitations && team.pending_invitations.length > 0 && (
+                  <div className="form-field">
+                    <label>Invitaciones pendientes</label>
+                    {team.pending_invitations.map(function(inv) {
+                      return (
+                        <div key={inv.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#FEF3E2',borderRadius:'8px',marginBottom:'0.4rem'}}>
+                          <span style={{fontSize:'0.875rem',color:'#92400E'}}>{inv.email} — esperando respuesta</span>
+                          <button onClick={function() { handleCancelInvite(inv.id) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B45309',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Cancelar</button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <h2 className="section-title">Propiedades</h2>
+            {!showNewProperty ? (
+              <button className="add-button" onClick={function() { setShowNewProperty(true) }}>+ Nueva Propiedad</button>
+            ) : (
+              <div className="form-card">
+                <div className="form-header">
+                  <h3>Nueva Propiedad</h3>
+                  <button className="close-button" onClick={function() { setShowNewProperty(false); setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' }) }}>X</button>
+                </div>
+                <div className="form-field">
+                  <label>🏠 Numero / Identificador de propiedad *</label>
+                  <input type="text" placeholder="Ej: Casa 471, Depto 301..." value={propForm.unit_number} onChange={function(e) { setPropForm(Object.assign({}, propForm, { unit_number: e.target.value })) }} className="text-input" autoFocus />
+                </div>
+                <div className="form-field">
+                  <label>👤 Nombre del propietario</label>
+                  <input type="text" placeholder="Nombre completo..." value={propForm.owner_name} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_name: e.target.value })) }} className="text-input" />
+                </div>
+                <div className="form-field">
+                  <label>🪪 RUT</label>
+                  <input type="text" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
+                </div>
+                <div className="form-row">
+                  <div className="form-field form-field-half">
+                    <label>📧 Correo electronico</label>
+                    <input type="email" placeholder="correo@ejemplo.com" value={propForm.owner_email} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_email: e.target.value })) }} className="text-input" />
+                  </div>
+                  <div className="form-field form-field-half">
+                    <label>📱 Telefono</label>
+                    <input type="tel" placeholder="+56 9 1234 5678" value={propForm.owner_phone} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_phone: e.target.value })) }} className="text-input" />
+                  </div>
+                </div>
+                <button className="submit-button" onClick={handleCreateProperty}>Crear Propiedad</button>
+              </div>
+            )}
+            {properties.length === 0 && !showNewProperty && (
+              <div className="welcome-message"><h2>🏠 {currentProject.name}</h2><p>Agrega las propiedades del proyecto para registrar hallazgos.</p></div>
+            )}
+            <div className="projects-grid">
+              {properties.map(function(prop) {
+                if (editingProperty && editingProperty.id === prop.id) {
+                  return (
+                    <div key={prop.id} className="form-card" style={{marginBottom:'0'}}>
+                      <div className="form-header">
+                        <h3>✏️ Editar propiedad</h3>
+                        <button className="close-button" onClick={function() { setEditingProperty(null) }}>X</button>
+                      </div>
+                      <div className="form-field">
+                        <label>🏠 Número / Identificador *</label>
+                        <input type="text" className="text-input" value={editPropForm.unit_number} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { unit_number: e.target.value })) }} autoFocus />
+                      </div>
+                      <div className="form-field">
+                        <label>👤 Nombre del propietario</label>
+                        <input type="text" className="text-input" value={editPropForm.owner_name} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_name: e.target.value })) }} />
+                      </div>
+                      <div className="form-field">
+                        <label>🪪 RUT</label>
+                        <input type="text" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
+                      </div>
+                      <div className="form-row">
+                        <div className="form-field form-field-half">
+                          <label>📧 Correo</label>
+                          <input type="email" className="text-input" value={editPropForm.owner_email} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_email: e.target.value })) }} />
+                        </div>
+                        <div className="form-field form-field-half">
+                          <label>📱 Teléfono</label>
+                          <input type="tel" className="text-input" value={editPropForm.owner_phone} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_phone: e.target.value })) }} />
+                        </div>
+                      </div>
+                      <div style={{display:'flex', gap:'0.75rem'}}>
+                        <button className="submit-button" onClick={handleSaveProperty}>Guardar cambios</button>
+                        <button className="cancel-button" onClick={function() { setEditingProperty(null) }}>Cancelar</button>
+                      </div>
+                    </div>
+                  )
+                }
+                return (
+                  <div key={prop.id} className="project-card property-card">
+                    <div className="project-card-content" onClick={function() { setCurrentProperty(prop) }}>
+                      <h3>🏠 {prop.unit_number}</h3>
+                      <p className="property-owner">{prop.owner_name || 'Sin propietario asignado'}</p>
+                      <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
+                    </div>
+                    <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
+                    <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
+                  </div>
+                )
+              })}
+            </div>
+          </main>
+        </div>
+      )
+    }
+
+    // === VISTA 3: HALLAZGOS ===
     return (
       <div className="app">
         <header className="header">
@@ -1324,350 +1487,187 @@ function App() {
                 <div><h1>BitácoraPro</h1></div>
               </div>
               <div className="header-info">
-                {currentUser && currentUser.role === 'admin' && (
-                  <button className="back-button" onClick={handleOpenTeam} style={{background:'#EAF1EC',color:'#2D5A3D',border:'1px solid #c5deca'}}>👥 Equipo</button>
-                )}
-                <button className="logout-button" onClick={handleLogout}>Cerrar sesión</button>
+                <div className="entry-count">{entries.length} hallazgo{entries.length !== 1 ? 's' : ''}</div>
+                <button className="logout-button" onClick={handleLogoutAndRedirect}>Cerrar sesión</button>
               </div>
             </div>
             <div className="header-row-nav">
-              <button className="back-button" onClick={function() { setCurrentProject(null); setShowTeam(false) }}>← Proyectos</button>
-              <div className="project-name-display">{currentProject.name}</div>
+              <button className="back-button" onClick={function() { setCurrentProperty(null); setShowForm(false) }}>← Propiedades</button>
+              <div className="project-name-display">{currentProperty.unit_number}{currentProperty.owner_name ? ' — ' + currentProperty.owner_name : ''}</div>
             </div>
           </div>
         </header>
         <main className="main">
+          <div className="action-buttons">
+            {!showForm && <button className="add-button" onClick={function() { setShowForm(true) }}>+ Nuevo Hallazgo</button>}
+            {entries.length > 0 && !showForm && <button className="pdf-button" onClick={handleExportPDF}>📄 Descargar PDF</button>}
+          </div>
 
-          {/* PANEL DE EQUIPO */}
-          {showTeam && (
-            <div className="form-card" style={{marginBottom:'1.5rem'}}>
-              <div className="form-header">
-                <h3>👥 Equipo del proyecto</h3>
-                <button className="close-button" onClick={function() { setShowTeam(false); setInviteMsg('') }}>X</button>
-              </div>
-              <div className="form-field">
-                <label>✉️ Invitar inspector por email</label>
-                <div style={{display:'flex',gap:'0.5rem'}}>
-                  <input type="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
-                  <button className="submit-button" onClick={handleInvite} disabled={inviteLoading} style={{width:'auto',padding:'0 1.25rem',flexShrink:0}}>
-                    {inviteLoading ? 'Enviando...' : 'Enviar'}
-                  </button>
-                </div>
-                {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('✅') ? '#2D5A3D' : '#B91C1C'}}>{inviteMsg}</p>}
-              </div>
-              {team.members && team.members.length > 0 && (
-                <div className="form-field">
-                  <label>Miembros activos</label>
-                  {team.members.map(function(m) {
-                    return (
-                      <div key={m.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#f7f5f0',borderRadius:'8px',marginBottom:'0.4rem'}}>
-                        <div>
-                          <span style={{fontWeight:'500',fontSize:'0.875rem'}}>{m.name}</span>
-                          <span style={{color:'#6B6760',fontSize:'0.8rem',marginLeft:'0.5rem'}}>{m.email}</span>
-                          <span style={{background: m.role==='admin'?'#1A1814':'#EAF1EC',color:m.role==='admin'?'#fff':'#2D5A3D',fontSize:'0.65rem',padding:'0.15rem 0.5rem',borderRadius:'100px',marginLeft:'0.5rem',fontWeight:'500'}}>{m.role}</span>
-                        </div>
-                        {m.role !== 'admin' && <button onClick={function() { handleRemoveMember(m.id, m.name) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B91C1C',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Quitar</button>}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-              {team.pending_invitations && team.pending_invitations.length > 0 && (
-                <div className="form-field">
-                  <label>Invitaciones pendientes</label>
-                  {team.pending_invitations.map(function(inv) {
-                    return (
-                      <div key={inv.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#FEF3E2',borderRadius:'8px',marginBottom:'0.4rem'}}>
-                        <span style={{fontSize:'0.875rem',color:'#92400E'}}>{inv.email} — esperando respuesta</span>
-                        <button onClick={function() { handleCancelInvite(inv.id) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B45309',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Cancelar</button>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          <h2 className="section-title">Propiedades</h2>
-          {!showNewProperty ? (
-            <button className="add-button" onClick={function() { setShowNewProperty(true) }}>+ Nueva Propiedad</button>
-          ) : (
+          {showForm && (
             <div className="form-card">
               <div className="form-header">
-                <h3>Nueva Propiedad</h3>
-                <button className="close-button" onClick={function() { setShowNewProperty(false); setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' }) }}>X</button>
+                <h3>Nuevo Hallazgo — {currentProperty.unit_number}</h3>
+                <button className="close-button" onClick={function() { if (!isAnalyzing) setShowForm(false) }}>X</button>
               </div>
               <div className="form-field">
-                <label>🏠 Numero / Identificador de propiedad *</label>
-                <input type="text" placeholder="Ej: Casa 471, Depto 301..." value={propForm.unit_number} onChange={function(e) { setPropForm(Object.assign({}, propForm, { unit_number: e.target.value })) }} className="text-input" autoFocus />
-              </div>
-              <div className="form-field">
-                <label>👤 Nombre del propietario</label>
-                <input type="text" placeholder="Nombre completo..." value={propForm.owner_name} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_name: e.target.value })) }} className="text-input" />
-              </div>
-              <div className="form-field">
-                <label>🪪 RUT</label>
-                <input type="text" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
-              </div>
-              <div className="form-row">
-                <div className="form-field form-field-half">
-                  <label>📧 Correo electronico</label>
-                  <input type="email" placeholder="correo@ejemplo.com" value={propForm.owner_email} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_email: e.target.value })) }} className="text-input" />
-                </div>
-                <div className="form-field form-field-half">
-                  <label>📱 Telefono</label>
-                  <input type="tel" placeholder="+56 9 1234 5678" value={propForm.owner_phone} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_phone: e.target.value })) }} className="text-input" />
+                <label>📷 Fotos del hallazgo</label>
+                <div className="upload-area" onClick={function() { if (!isAnalyzing) fileInputRef.current.click() }}>
+                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
+                  {imagePreviews.length === 0 ? (
+                    <div className="upload-placeholder"><span className="upload-icon">📸</span><p>Toca aqui para subir fotos</p><p className="upload-hint">Puedes seleccionar varias a la vez</p></div>
+                  ) : (
+                    <div className="image-grid">
+                      {imagePreviews.map(function(img, index) {
+                        return (<div key={img.id} className="image-thumb"><img src={img.preview} alt="" />{!isAnalyzing && <button className="remove-image" onClick={function(e) { e.stopPropagation(); removeImage(index) }}>X</button>}</div>)
+                      })}
+                      {!isAnalyzing && <div className="add-more-images">+</div>}
+                    </div>
+                  )}
                 </div>
               </div>
-              <button className="submit-button" onClick={handleCreateProperty}>Crear Propiedad</button>
+              <div className="form-field">
+                <label>🎙️ Descripcion del inspector</label>
+                <div className="audio-section">
+                  <button className={'record-button' + (isRecording ? ' recording' : '')} onClick={toggleRecording} disabled={isAnalyzing} type="button">
+                    {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content">🎙️ Grabar audio</span>}
+                  </button>
+                  <textarea placeholder="Habla o escribe tu descripcion aqui..." value={description} onChange={function(e) { setDescription(e.target.value) }} className="text-area" rows={3} disabled={isAnalyzing} />
+                  {description && <p className="audio-hint">Puedes editar el texto antes de enviar</p>}
+                </div>
+              </div>
+              <button className={'submit-button' + (isAnalyzing ? ' analyzing' : '')} onClick={handleSubmit} disabled={isAnalyzing}>
+                {isAnalyzing ? <span className="analyzing-text"><span className="spinner"></span> Analizando con IA...</span> : '🤖 Analizar y Registrar'}
+              </button>
             </div>
           )}
-          {properties.length === 0 && !showNewProperty && (
-            <div className="welcome-message"><h2>🏠 {currentProject.name}</h2><p>Agrega las propiedades del proyecto para registrar hallazgos.</p></div>
-          )}
-          <div className="projects-grid">
-            {properties.map(function(prop) {
-              // Modo edición inline
-              if (editingProperty && editingProperty.id === prop.id) {
+
+          {entries.length > 0 && (
+            <div className="entries-section">
+              <h3 className="entries-title">Hallazgos registrados</h3>
+              {entries.map(function(entry) {
+                var cat = CATEGORIES[entry.category] || CATEGORIES.otro
+                var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
+
+                if (editingEntry === entry.id) {
+                  return (
+                    <div key={entry.id} className="form-card" style={{marginBottom:'0.875rem'}}>
+                      <div className="form-header">
+                        <h3>✏️ Editar hallazgo</h3>
+                        <button className="close-button" onClick={function() { setEditingEntry(null) }}>X</button>
+                      </div>
+                      <div className="form-field">
+                        <label>Título</label>
+                        <input type="text" className="text-input" value={editEntryForm.title || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { title: e.target.value })) }} autoFocus />
+                      </div>
+                      <div className="form-row">
+                        <div className="form-field form-field-half">
+                          <label>Categoría</label>
+                          <select className="text-input" value={editEntryForm.category || 'otro'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { category: e.target.value })) }}>
+                            {Object.entries(CATEGORIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].icon} {pair[1].label}</option> })}
+                          </select>
+                        </div>
+                        <div className="form-field form-field-half">
+                          <label>Severidad</label>
+                          <select className="text-input" value={editEntryForm.severity || 'leve'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { severity: e.target.value })) }}>
+                            {Object.entries(SEVERITIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].label}</option> })}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="form-field">
+                        <label>📍 Ubicación</label>
+                        <input type="text" className="text-input" value={editEntryForm.location || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { location: e.target.value })) }} />
+                      </div>
+                      <div className="form-field">
+                        <label>Descripción técnica</label>
+                        <textarea className="text-area" rows={4} value={editEntryForm.description || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { description: e.target.value })) }} />
+                      </div>
+                      <div className="form-field">
+                        <label>💡 Recomendación</label>
+                        <textarea className="text-area" rows={3} value={editEntryForm.recommendation || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { recommendation: e.target.value })) }} />
+                      </div>
+                      <div style={{display:'flex', gap:'0.75rem'}}>
+                        <button className="submit-button" onClick={handleSaveEntry}>Guardar cambios</button>
+                        <button className="cancel-button" onClick={function() { setEditingEntry(null) }}>Cancelar</button>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
-                  <div key={prop.id} className="form-card" style={{marginBottom:'0'}}>
-                    <div className="form-header">
-                      <h3>✏️ Editar propiedad</h3>
-                      <button className="close-button" onClick={function() { setEditingProperty(null) }}>X</button>
+                  <div key={entry.id} className="entry-card">
+                    <div style={{position:'absolute', top:'0.875rem', right:'0.875rem', display:'flex', gap:'0.25rem'}}>
+                      <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}>✏️</button>
+                      <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
                     </div>
-                    <div className="form-field">
-                      <label>🏠 Número / Identificador *</label>
-                      <input type="text" className="text-input" value={editPropForm.unit_number} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { unit_number: e.target.value })) }} autoFocus />
+                    <div className="entry-tags">
+                      <span className="tag category-tag" style={{ background: cat.color + '18', color: cat.color, border: '1px solid ' + cat.color + '33' }}>{cat.icon} {cat.label}</span>
+                      <span className="tag severity-tag" style={{ background: sev.bg, color: sev.color, border: '1px solid ' + sev.color + '33' }}>{sev.label}</span>
+                      {entry.ai_generated === 1 && <span className="tag ai-tag">🤖 IA</span>}
                     </div>
-                    <div className="form-field">
-                      <label>👤 Nombre del propietario</label>
-                      <input type="text" className="text-input" value={editPropForm.owner_name} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_name: e.target.value })) }} />
+                    <h4 className="entry-title">{entry.title}</h4>
+                    <div className="entry-header">
+                      <span className="entry-unit">📍 {entry.location || 'Sin ubicacion'}</span>
+                      <span className="entry-date">{new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
-                    <div className="form-field">
-                      <label>🪪 RUT</label>
-                      <input type="text" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
-                    </div>
-                    <div className="form-row">
-                      <div className="form-field form-field-half">
-                        <label>📧 Correo</label>
-                        <input type="email" className="text-input" value={editPropForm.owner_email} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_email: e.target.value })) }} />
-                      </div>
-                      <div className="form-field form-field-half">
-                        <label>📱 Teléfono</label>
-                        <input type="tel" className="text-input" value={editPropForm.owner_phone} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_phone: e.target.value })) }} />
-                      </div>
-                    </div>
-                    <div style={{display:'flex', gap:'0.75rem'}}>
-                      <button className="submit-button" onClick={handleSaveProperty}>Guardar cambios</button>
-                      <button className="cancel-button" onClick={function() { setEditingProperty(null) }}>Cancelar</button>
-                    </div>
+                    {entry.images && entry.images.length > 0 && (
+                      <div className="entry-images">{entry.images.map(function(img, idx) { return <img key={img.id} src={img.filename} alt="" className="entry-image" onClick={function() { openLightbox(entry.images, idx) }} style={{cursor:'zoom-in'}} /> })}</div>
+                    )}
+                    {entry.inspector_note && <div className="inspector-note"><strong>🎙️ Nota del inspector:</strong> {entry.inspector_note}</div>}
+                    {entry.description && <div className="entry-description-box"><p className="entry-description">{entry.description}</p></div>}
+                    {entry.recommendation && <div className="entry-recommendation"><strong>💡 Recomendacion:</strong> {entry.recommendation}</div>}
+                    {entry.affected_elements && entry.affected_elements.length > 0 && (
+                      <div className="entry-elements">{entry.affected_elements.map(function(el, i) { return <span key={i} className="element-chip">{el}</span> })}</div>
+                    )}
                   </div>
                 )
-              }
-              return (
-                <div key={prop.id} className="project-card property-card">
-                  <div className="project-card-content" onClick={function() { setCurrentProperty(prop) }}>
-                    <h3>🏠 {prop.unit_number}</h3>
-                    <p className="property-owner">{prop.owner_name || 'Sin propietario asignado'}</p>
-                    <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
-                  </div>
-                  <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
-                  <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
-                </div>
-              )
-            })}
-          </div>
+              })}
+            </div>
+          )}
+
+          {entries.length === 0 && !showForm && (
+            <div className="welcome-message"><h2>🏠 {currentProperty.unit_number}</h2><p>No hay hallazgos. Agrega el primero.</p></div>
+          )}
         </main>
+
+        {/* LIGHTBOX */}
+        {lightbox && (
+          <div onClick={closeLightbox} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <img
+              src={lightbox.images[lightbox.index].filename}
+              alt=""
+              onClick={function(e) { e.stopPropagation() }}
+              style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px',boxShadow:'0 8px 40px rgba(0,0,0,0.5)'}}
+            />
+            {lightbox.images.length > 1 && (
+              <button onClick={function(e) { e.stopPropagation(); lightboxPrev() }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
+            )}
+            {lightbox.images.length > 1 && (
+              <button onClick={function(e) { e.stopPropagation(); lightboxNext() }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
+            )}
+            <div style={{position:'absolute',top:'1rem',left:0,right:0,display:'flex',alignItems:'center',justifyContent:'center',gap:'1rem'}}>
+              {lightbox.images.length > 1 && (
+                <span style={{color:'rgba(255,255,255,0.6)',fontSize:'0.85rem'}}>{lightbox.index + 1} / {lightbox.images.length}</span>
+              )}
+            </div>
+            <button onClick={closeLightbox} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+          </div>
+        )}
       </div>
     )
   }
 
-  // === VISTA 3: HALLAZGOS ===
+  // === RUTAS ===
   return (
-    <div className="app">
-      <header className="header">
-        <div className="header-content">
-          <div className="header-row-top">
-            <div className="header-title">
-              <span className="header-icon">📋</span>
-              <div><h1>BitácoraPro</h1></div>
-            </div>
-            <div className="header-info">
-              <div className="entry-count">{entries.length} hallazgo{entries.length !== 1 ? 's' : ''}</div>
-              <button className="logout-button" onClick={handleLogout}>Cerrar sesión</button>
-            </div>
-          </div>
-          <div className="header-row-nav">
-            <button className="back-button" onClick={function() { setCurrentProperty(null); setShowForm(false) }}>← Propiedades</button>
-            <div className="project-name-display">{currentProperty.unit_number}{currentProperty.owner_name ? ' — ' + currentProperty.owner_name : ''}</div>
-          </div>
-        </div>
-      </header>
-      <main className="main">
-        <div className="action-buttons">
-          {!showForm && <button className="add-button" onClick={function() { setShowForm(true) }}>+ Nuevo Hallazgo</button>}
-          {entries.length > 0 && !showForm && <button className="pdf-button" onClick={handleExportPDF}>📄 Descargar PDF</button>}
-        </div>
-
-        {showForm && (
-          <div className="form-card">
-            <div className="form-header">
-              <h3>Nuevo Hallazgo — {currentProperty.unit_number}</h3>
-              <button className="close-button" onClick={function() { if (!isAnalyzing) setShowForm(false) }}>X</button>
-            </div>
-            <div className="form-field">
-              <label>📷 Fotos del hallazgo</label>
-              <div className="upload-area" onClick={function() { if (!isAnalyzing) fileInputRef.current.click() }}>
-                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
-                {imagePreviews.length === 0 ? (
-                  <div className="upload-placeholder"><span className="upload-icon">📸</span><p>Toca aqui para subir fotos</p><p className="upload-hint">Puedes seleccionar varias a la vez</p></div>
-                ) : (
-                  <div className="image-grid">
-                    {imagePreviews.map(function(img, index) {
-                      return (<div key={img.id} className="image-thumb"><img src={img.preview} alt="" />{!isAnalyzing && <button className="remove-image" onClick={function(e) { e.stopPropagation(); removeImage(index) }}>X</button>}</div>)
-                    })}
-                    {!isAnalyzing && <div className="add-more-images">+</div>}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="form-field">
-              <label>🎙️ Descripcion del inspector</label>
-              <div className="audio-section">
-                <button className={'record-button' + (isRecording ? ' recording' : '')} onClick={toggleRecording} disabled={isAnalyzing} type="button">
-                  {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content">🎙️ Grabar audio</span>}
-                </button>
-                <textarea placeholder="Habla o escribe tu descripcion aqui..." value={description} onChange={function(e) { setDescription(e.target.value) }} className="text-area" rows={3} disabled={isAnalyzing} />
-                {description && <p className="audio-hint">Puedes editar el texto antes de enviar</p>}
-              </div>
-            </div>
-            <button className={'submit-button' + (isAnalyzing ? ' analyzing' : '')} onClick={handleSubmit} disabled={isAnalyzing}>
-              {isAnalyzing ? <span className="analyzing-text"><span className="spinner"></span> Analizando con IA...</span> : '🤖 Analizar y Registrar'}
-            </button>
-          </div>
-        )}
-
-        {entries.length > 0 && (
-          <div className="entries-section">
-            <h3 className="entries-title">Hallazgos registrados</h3>
-            {entries.map(function(entry) {
-              var cat = CATEGORIES[entry.category] || CATEGORIES.otro
-              var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
-
-              // Modo edición inline del hallazgo
-              if (editingEntry === entry.id) {
-                return (
-                  <div key={entry.id} className="form-card" style={{marginBottom:'0.875rem'}}>
-                    <div className="form-header">
-                      <h3>✏️ Editar hallazgo</h3>
-                      <button className="close-button" onClick={function() { setEditingEntry(null) }}>X</button>
-                    </div>
-                    <div className="form-field">
-                      <label>Título</label>
-                      <input type="text" className="text-input" value={editEntryForm.title || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { title: e.target.value })) }} autoFocus />
-                    </div>
-                    <div className="form-row">
-                      <div className="form-field form-field-half">
-                        <label>Categoría</label>
-                        <select className="text-input" value={editEntryForm.category || 'otro'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { category: e.target.value })) }}>
-                          {Object.entries(CATEGORIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].icon} {pair[1].label}</option> })}
-                        </select>
-                      </div>
-                      <div className="form-field form-field-half">
-                        <label>Severidad</label>
-                        <select className="text-input" value={editEntryForm.severity || 'leve'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { severity: e.target.value })) }}>
-                          {Object.entries(SEVERITIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].label}</option> })}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="form-field">
-                      <label>📍 Ubicación</label>
-                      <input type="text" className="text-input" value={editEntryForm.location || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { location: e.target.value })) }} />
-                    </div>
-                    <div className="form-field">
-                      <label>Descripción técnica</label>
-                      <textarea className="text-area" rows={4} value={editEntryForm.description || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { description: e.target.value })) }} />
-                    </div>
-                    <div className="form-field">
-                      <label>💡 Recomendación</label>
-                      <textarea className="text-area" rows={3} value={editEntryForm.recommendation || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { recommendation: e.target.value })) }} />
-                    </div>
-                    <div style={{display:'flex', gap:'0.75rem'}}>
-                      <button className="submit-button" onClick={handleSaveEntry}>Guardar cambios</button>
-                      <button className="cancel-button" onClick={function() { setEditingEntry(null) }}>Cancelar</button>
-                    </div>
-                  </div>
-                )
-              }
-
-              return (
-                <div key={entry.id} className="entry-card">
-                  <div style={{position:'absolute', top:'0.875rem', right:'0.875rem', display:'flex', gap:'0.25rem'}}>
-                    <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}>✏️</button>
-                    <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
-                  </div>
-                  <div className="entry-tags">
-                    <span className="tag category-tag" style={{ background: cat.color + '18', color: cat.color, border: '1px solid ' + cat.color + '33' }}>{cat.icon} {cat.label}</span>
-                    <span className="tag severity-tag" style={{ background: sev.bg, color: sev.color, border: '1px solid ' + sev.color + '33' }}>{sev.label}</span>
-                    {entry.ai_generated === 1 && <span className="tag ai-tag">🤖 IA</span>}
-                  </div>
-                  <h4 className="entry-title">{entry.title}</h4>
-                  <div className="entry-header">
-                    <span className="entry-unit">📍 {entry.location || 'Sin ubicacion'}</span>
-                    <span className="entry-date">{new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                  {entry.images && entry.images.length > 0 && (
-                    <div className="entry-images">{entry.images.map(function(img, idx) { return <img key={img.id} src={img.filename} alt="" className="entry-image" onClick={function() { openLightbox(entry.images, idx) }} style={{cursor:'zoom-in'}} /> })}</div>
-                  )}
-                  {entry.inspector_note && <div className="inspector-note"><strong>🎙️ Nota del inspector:</strong> {entry.inspector_note}</div>}
-                  {entry.description && <div className="entry-description-box"><p className="entry-description">{entry.description}</p></div>}
-                  {entry.recommendation && <div className="entry-recommendation"><strong>💡 Recomendacion:</strong> {entry.recommendation}</div>}
-                  {entry.affected_elements && entry.affected_elements.length > 0 && (
-                    <div className="entry-elements">{entry.affected_elements.map(function(el, i) { return <span key={i} className="element-chip">{el}</span> })}</div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {entries.length === 0 && !showForm && (
-          <div className="welcome-message"><h2>🏠 {currentProperty.unit_number}</h2><p>No hay hallazgos. Agrega el primero.</p></div>
-        )}
-      </main>
-
-      {/* LIGHTBOX */}
-      {lightbox && (
-        <div onClick={closeLightbox} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          {/* Imagen principal */}
-          <img
-            src={lightbox.images[lightbox.index].filename}
-            alt=""
-            onClick={function(e) { e.stopPropagation() }}
-            style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px',boxShadow:'0 8px 40px rgba(0,0,0,0.5)'}}
-          />
-
-          {/* Flecha izquierda */}
-          {lightbox.images.length > 1 && (
-            <button onClick={function(e) { e.stopPropagation(); lightboxPrev() }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
-          )}
-
-          {/* Flecha derecha */}
-          {lightbox.images.length > 1 && (
-            <button onClick={function(e) { e.stopPropagation(); lightboxNext() }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
-          )}
-
-          {/* Contador y cerrar */}
-          <div style={{position:'absolute',top:'1rem',left:0,right:0,display:'flex',alignItems:'center',justifyContent:'center',gap:'1rem'}}>
-            {lightbox.images.length > 1 && (
-              <span style={{color:'rgba(255,255,255,0.6)',fontSize:'0.85rem'}}>{lightbox.index + 1} / {lightbox.images.length}</span>
-            )}
-          </div>
-          <button onClick={closeLightbox} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-        </div>
-      )}
-    </div>
+    <Routes>
+      <Route path="/" element={<HomeScreen />} />
+      <Route path="/login" element={token ? <Navigate to="/proyectos" replace /> : <LoginScreen onLogin={handleLogin} />} />
+      <Route path="/invitacion/:token" element={<InviteRegisterScreen onLogin={handleLogin} />} />
+      <Route path="/admin" element={<AdminScreen />} />
+      <Route path="/proyectos" element={<AppInterior />} />
+      <Route path="/propiedades" element={<AppInterior />} />
+      <Route path="/hallazgos" element={<AppInterior />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
-
 export default App
