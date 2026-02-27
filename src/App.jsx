@@ -882,7 +882,7 @@ function AdminScreen() {
         )}
 
         {/* Tabla de clientes */}
-        <div style={{background:'#fff',borderRadius:'12px',overflow:'hidden',boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
+        <div style={{background:'#fff',borderRadius:'12px',overflow:'visible',boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.875rem'}}>
             <thead>
               <tr style={{background:'#F7F5F0',borderBottom:'1px solid #E2DDD6'}}>
@@ -928,7 +928,7 @@ function AdminScreen() {
                           style={{background:'#F7F5F0',border:'1px solid #E2DDD6',borderRadius:'6px',padding:'0.4rem 0.65rem',cursor:'pointer',fontSize:'1rem',lineHeight:1,color:'#1A1814'}}
                         >⋯</button>
                         {openMenu === c.id && (
-                          <div onClick={function(e) { e.stopPropagation() }} style={{position:'absolute',right:0,top:'calc(100% + 4px)',background:'#fff',border:'1px solid #E2DDD6',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
+                          <div onClick={function(e) { e.stopPropagation() }} style={{position:'absolute',right:0,bottom:'calc(100% + 4px)', top:'auto',background:'#fff',border:'1px solid #E2DDD6',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
                             <button
                               onClick={function() { setOpenMenu(null); handleToggle(c) }}
                               style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color: c.active ? '#F39C12' : '#2D5A3D',fontWeight:'500'}}
