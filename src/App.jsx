@@ -131,7 +131,8 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           .hp-hamburger{display:flex;}
           .hp-hero{min-height:auto;padding:4rem 1.25rem 3rem;}
           .hp-eyebrow{font-size:0.7rem;padding:0.35rem 0.875rem;margin-bottom:1.25rem;}
-          .hp-hero-title{font-size:clamp(2.2rem,9vw,3rem);margin-bottom:1rem;}
+          .hp-hero-title{font-size:clamp(2.6rem,10vw,3.4rem);margin-bottom:1rem;}
+          .hp-hero-title .hp-nowrap{white-space:nowrap;}
           .hp-hero-sub{font-size:0.95rem;margin-bottom:1.5rem;}
           .hp-hero-actions{flex-direction:column;align-items:stretch;gap:0.75rem;}
           .hp-btn-primary{justify-content:center;padding:1rem;font-size:1rem;min-height:52px;}
@@ -146,6 +147,8 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
           .hp-hstep:last-of-type{border-bottom:none;}
           .hp-hstep-icon{margin:0;flex-shrink:0;width:44px;height:44px;border-radius:10px;}
           .hp-hstep-num{margin-bottom:0.2rem;}
+          .hp-hstep-text{display:flex;flex-direction:column;}
+          .hp-hflow-arrow{display:none;}
           .hp-cta{padding:4rem 1.25rem;}
           .hp-cta-title{font-size:clamp(1.7rem,7vw,2.4rem);}
           .hp-cta br{display:none;}
@@ -159,7 +162,9 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
       <nav className="hp-nav">
         <div className="hp-logo">BitácoraPro<span>.</span></div>
         <div className="hp-nav-links">
+          <button className="hp-nav-link" onClick={function() { document.getElementById('hp-dolores').scrollIntoView({ behavior: 'smooth' }) }}>Por qué BitácoraPro</button>
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
+          <button className="hp-nav-link" onClick={function() { document.getElementById('hp-contacto').scrollIntoView({ behavior: 'smooth' }) }}>Contacto</button>
           <button className="hp-btn-nav" onClick={onGoLogin}>Iniciar sesión →</button>
         </div>
         <button className={"hp-hamburger" + (menuOpen ? " open" : "")} onClick={function() { setMenuOpen(function(v) { return !v }) }} aria-label="Menú">
@@ -169,28 +174,29 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
 
       {/* MOBILE MENU */}
       <div className={"hp-mobile-menu" + (menuOpen ? " open" : "")}>
+        <button className="hp-nav-link" onClick={function() { setMenuOpen(false); document.getElementById('hp-dolores').scrollIntoView({ behavior: 'smooth' }) }}>Por qué BitácoraPro</button>
         <button className="hp-nav-link" onClick={function() { setMenuOpen(false); document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
+        <button className="hp-nav-link" onClick={function() { setMenuOpen(false); document.getElementById('hp-contacto').scrollIntoView({ behavior: 'smooth' }) }}>Contacto</button>
         <div className="hp-mobile-actions">
           <button className="hp-mobile-btn-primary" onClick={function() { setMenuOpen(false); window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
-          <button className="hp-mobile-btn-ghost" onClick={function() { setMenuOpen(false); onGoRegister() }}>Probar gratis</button>
           <button className="hp-mobile-btn-ghost" onClick={function() { setMenuOpen(false); onGoLogin() }}>Iniciar sesión</button>
         </div>
       </div>
 
       {/* HERO */}
       <section className="hp-hero">
-        <div className="hp-eyebrow">Automatiza la post venta de tus proyectos inmobiliarios</div>
-        <h1 className="hp-hero-title">Del hallazgo al informe, <em>en segundos.</em></h1>
-        <p className="hp-hero-sub">Tus equipos de post venta registran fotos y notas de voz en terreno. BitácoraPro genera la documentación técnica automáticamente, en tiempo real y sin retrabajo.</p>
+        <div className="hp-eyebrow">Postventa automatizada con IA</div>
+        <h1 className="hp-hero-title">Del hallazgo al informe, <em><span className="hp-nowrap">en segundos.</span></em></h1>
+        <p className="hp-hero-sub">Tus equipos de postventa registran fotos y notas de voz en terreno. BitácoraPro genera la documentación técnica automáticamente, en tiempo real y sin retrabajo.</p>
         <div className="hp-hero-actions">
           <button className="hp-btn-primary" onClick={function() { window.open('mailto:mario.encina.d@gmail.com?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
         </div>
       </section>
 
       {/* LOS 3 DOLORES */}
-      <section className="hp-pain">
+      <section className="hp-pain" id="hp-dolores">
         <span className="hp-label hp-reveal">Por qué BitácoraPro</span>
-        <h2 className="hp-section-title hp-reveal">El costo oculto de tu post venta</h2>
+        <h2 className="hp-section-title hp-reveal">El costo oculto de tu postventa</h2>
         <div className="hp-pain-grid">
           <div className="hp-pain-card hp-reveal">
             <span className="hp-pain-before">Hoy</span>
@@ -217,37 +223,45 @@ function HomeScreen({ onGoLogin, onGoRegister }) {
         <div className="hp-hflow">
           <div className="hp-hstep hp-reveal">
             <div className="hp-hstep-icon">📱</div>
-            <span className="hp-hstep-num">01</span>
-            <h4 className="hp-hstep-title">Llegas a terreno</h4>
-            <p className="hp-hstep-body">Registras la inspección desde el teléfono. Todo queda centralizado por proyecto.</p>
+            <div className="hp-hstep-text">
+              <span className="hp-hstep-num">01</span>
+              <h4 className="hp-hstep-title">Llegas a terreno</h4>
+              <p className="hp-hstep-body">Registras la inspección desde el teléfono. Todo queda centralizado por proyecto.</p>
+            </div>
           </div>
           <div className="hp-hflow-arrow hp-reveal">→</div>
           <div className="hp-hstep hp-reveal">
             <div className="hp-hstep-icon">📸</div>
-            <span className="hp-hstep-num">02</span>
-            <h4 className="hp-hstep-title">Fotos y nota de voz</h4>
-            <p className="hp-hstep-body">Tomas fotos y registras notas de voz. Sin formularios ni carga manual.</p>
+            <div className="hp-hstep-text">
+              <span className="hp-hstep-num">02</span>
+              <h4 className="hp-hstep-title">Fotos y nota de voz</h4>
+              <p className="hp-hstep-body">Tomas fotos y registras notas de voz. Sin formularios ni carga manual.</p>
+            </div>
           </div>
           <div className="hp-hflow-arrow hp-reveal">→</div>
           <div className="hp-hstep hp-reveal">
             <div className="hp-hstep-icon">✦</div>
-            <span className="hp-hstep-num">03</span>
-            <h4 className="hp-hstep-title">La IA arma el informe</h4>
-            <p className="hp-hstep-body">Diagnóstico, categoría, severidad y recomendación. En segundos.</p>
+            <div className="hp-hstep-text">
+              <span className="hp-hstep-num">03</span>
+              <h4 className="hp-hstep-title">La IA arma el informe</h4>
+              <p className="hp-hstep-body">Diagnóstico, categoría, severidad y recomendación. En segundos.</p>
+            </div>
           </div>
           <div className="hp-hflow-arrow hp-reveal">→</div>
           <div className="hp-hstep hp-reveal">
             <div className="hp-hstep-icon">📄</div>
-            <span className="hp-hstep-num">04</span>
-            <h4 className="hp-hstep-title">Hallazgos listos para gestionar</h4>
-            <p className="hp-hstep-body">Cada hallazgo queda registrado, categorizado y visible para ser gestionado.</p>
+            <div className="hp-hstep-text">
+              <span className="hp-hstep-num">04</span>
+              <h4 className="hp-hstep-title">Hallazgos listos para gestionar</h4>
+              <p className="hp-hstep-body">Cada hallazgo queda registrado, categorizado y visible para ser gestionado.</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA FINAL */}
-      <section className="hp-cta">
-        <h2 className="hp-cta-title hp-reveal">¿Listo para automatizar<br/>tu post venta?</h2>
+      <section className="hp-cta" id="hp-contacto">
+        <h2 className="hp-cta-title hp-reveal">¿Listo para automatizar<br/>tu postventa?</h2>
         <p className="hp-cta-sub hp-reveal">Agenda una demo y te mostramos cómo funciona con tu operación. Sin compromisos.</p>
         <div className="hp-cta-actions hp-reveal">
           <button className="hp-btn-primary hp-cta-btn" onClick={function() { window.open('mailto:contacto@bitacorapro.cl?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
