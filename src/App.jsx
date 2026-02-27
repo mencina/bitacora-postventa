@@ -924,11 +924,11 @@ function AdminScreen() {
                     <td style={{padding:'1rem'}}>
                       <div style={{position:'relative'}}>
                         <button
-                          onClick={function() { setOpenMenu(function(prev) { return prev === c.id ? null : c.id }) }}
+                          onClick={function(e) { e.stopPropagation(); setOpenMenu(function(prev) { return prev === c.id ? null : c.id }) }}
                           style={{background:'#F7F5F0',border:'1px solid #E2DDD6',borderRadius:'6px',padding:'0.4rem 0.65rem',cursor:'pointer',fontSize:'1rem',lineHeight:1,color:'#1A1814'}}
                         >⋯</button>
                         {openMenu === c.id && (
-                          <div style={{position:'absolute',right:0,top:'calc(100% + 4px)',background:'#fff',border:'1px solid #E2DDD6',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
+                          <div onClick={function(e) { e.stopPropagation() }} style={{position:'absolute',right:0,top:'calc(100% + 4px)',background:'#fff',border:'1px solid #E2DDD6',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
                             <button
                               onClick={function() { setOpenMenu(null); handleToggle(c) }}
                               style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color: c.active ? '#F39C12' : '#2D5A3D',fontWeight:'500'}}
