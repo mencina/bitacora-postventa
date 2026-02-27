@@ -771,7 +771,7 @@ app.post('/admin/create-company', superadminMiddleware, async function(req, res)
     )
 
     // Enviar email de bienvenida con credenciales
-    var loginUrl = process.env.NODE_ENV === 'production' ? 'https://www.bitacorapro.cl' : 'http://localhost:5173'
+    var loginUrl = process.env.NODE_ENV === 'production' ? 'https://www.bitacorapro.cl/login' : 'http://localhost:5173/login'
     try {
       await resend.emails.send({
         from: 'BitácoraPro <noreply@contacto.bitacorapro.cl>',

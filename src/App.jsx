@@ -1343,7 +1343,7 @@ function App() {
                 <div className="form-field">
                   <label>✉️ Invitar inspector por email</label>
                   <div style={{display:'flex',gap:'0.5rem'}}>
-                    <input type="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
+                    <input type="email" inputMode="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
                     <button className="submit-button" onClick={handleInvite} disabled={inviteLoading} style={{width:'auto',padding:'0 1.25rem',flexShrink:0}}>
                       {inviteLoading ? 'Enviando...' : 'Enviar'}
                     </button>
@@ -1394,7 +1394,7 @@ function App() {
                 </div>
                 <div className="form-field">
                   <label>🏠 Numero / Identificador de propiedad *</label>
-                  <input type="text" placeholder="Ej: Casa 471, Depto 301..." value={propForm.unit_number} onChange={function(e) { setPropForm(Object.assign({}, propForm, { unit_number: e.target.value })) }} className="text-input" autoFocus />
+                  <input type="text" inputMode="text" placeholder="Ej: Casa 471, Depto 301..." value={propForm.unit_number} onChange={function(e) { setPropForm(Object.assign({}, propForm, { unit_number: e.target.value })) }} className="text-input" />
                 </div>
                 <div className="form-field">
                   <label>👤 Nombre del propietario</label>
@@ -1402,16 +1402,16 @@ function App() {
                 </div>
                 <div className="form-field">
                   <label>🪪 RUT</label>
-                  <input type="text" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
+                  <input type="text" inputMode="numeric" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
                 </div>
                 <div className="form-row">
                   <div className="form-field form-field-half">
                     <label>📧 Correo electronico</label>
-                    <input type="email" placeholder="correo@ejemplo.com" value={propForm.owner_email} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_email: e.target.value })) }} className="text-input" />
+                    <input type="email" inputMode="email" placeholder="correo@ejemplo.com" value={propForm.owner_email} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_email: e.target.value })) }} className="text-input" />
                   </div>
                   <div className="form-field form-field-half">
                     <label>📱 Telefono</label>
-                    <input type="tel" placeholder="+56 9 1234 5678" value={propForm.owner_phone} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_phone: e.target.value })) }} className="text-input" />
+                    <input type="tel" inputMode="tel" placeholder="+56 9 1234 5678" value={propForm.owner_phone} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_phone: e.target.value })) }} className="text-input" />
                   </div>
                 </div>
                 <button className="submit-button" onClick={handleCreateProperty}>Crear Propiedad</button>
@@ -1431,7 +1431,7 @@ function App() {
                       </div>
                       <div className="form-field">
                         <label>🏠 Número / Identificador *</label>
-                        <input type="text" className="text-input" value={editPropForm.unit_number} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { unit_number: e.target.value })) }} autoFocus />
+                        <input type="text" inputMode="text" className="text-input" value={editPropForm.unit_number} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { unit_number: e.target.value })) }} />
                       </div>
                       <div className="form-field">
                         <label>👤 Nombre del propietario</label>
@@ -1439,16 +1439,16 @@ function App() {
                       </div>
                       <div className="form-field">
                         <label>🪪 RUT</label>
-                        <input type="text" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
+                        <input type="text" inputMode="numeric" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
                       </div>
                       <div className="form-row">
                         <div className="form-field form-field-half">
                           <label>📧 Correo</label>
-                          <input type="email" className="text-input" value={editPropForm.owner_email} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_email: e.target.value })) }} />
+                          <input type="email" inputMode="email" className="text-input" value={editPropForm.owner_email} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_email: e.target.value })) }} />
                         </div>
                         <div className="form-field form-field-half">
                           <label>📱 Teléfono</label>
-                          <input type="tel" className="text-input" value={editPropForm.owner_phone} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_phone: e.target.value })) }} />
+                          <input type="tel" inputMode="tel" className="text-input" value={editPropForm.owner_phone} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_phone: e.target.value })) }} />
                         </div>
                       </div>
                       <div style={{display:'flex', gap:'0.75rem'}}>
@@ -1557,7 +1557,7 @@ function App() {
                       </div>
                       <div className="form-field">
                         <label>Título</label>
-                        <input type="text" className="text-input" value={editEntryForm.title || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { title: e.target.value })) }} autoFocus />
+                        <input type="text" inputMode="text" className="text-input" value={editEntryForm.title || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { title: e.target.value })) }} />
                       </div>
                       <div className="form-row">
                         <div className="form-field form-field-half">
