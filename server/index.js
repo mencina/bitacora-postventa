@@ -147,7 +147,8 @@ app.use(cors({
     'http://localhost:5173'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-secret']
 }))
 app.use(express.json({ limit: '50mb' }))
 
