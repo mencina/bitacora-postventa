@@ -524,7 +524,6 @@ function LoginScreen({ onLogin, onGoRegister }) {
         <button className="submit-button" onClick={handleLogin} disabled={loading}>
           {loading ? 'Ingresando...' : 'Ingresar'}
         </button>
-        <p className="auth-switch">¿No tienes cuenta? <span className="auth-link" onClick={onGoRegister}>Regístrate aqui</span></p>
       </div>
     </div>
   )
