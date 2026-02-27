@@ -1238,22 +1238,104 @@ function App() {
     loadTeam(currentProject.id)
   }
 
-  // === COMPONENTE INTERIOR DE LA APP (requiere token) ===
-  function AppInterior() {
-    var navigate = useNavigate()
+  // === RUTAS ===
+  return (
+    <Routes>
+      <Route path="/" element={<HomeScreen />} />
+      <Route path="/login" element={token ? <Navigate to="/proyectos" replace /> : <LoginScreen onLogin={handleLogin} />} />
+      <Route path="/invitacion/:token" element={<InviteRegisterScreen onLogin={handleLogin} />} />
+      <Route path="/admin" element={<AdminScreen />} />
+      <Route path="/proyectos" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
+      <Route path="/propiedades" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
+      <Route path="/hallazgos" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
 
-    // Si no hay token, redirigir a login
-    if (!token) return <Navigate to="/login" replace />
+// === COMPONENTE INTERIOR DE LA APP (fuera de App para evitar re-montaje) ===
+function AppInterior(props) {
+  var navigate = useNavigate()
+  var token = props.token
+  var currentUser = props.currentUser
+  var setCurrentUser = props.setCurrentUser
+  var handleLogout = props.handleLogout
+  var projects = props.projects
+  var currentProject = props.currentProject
+  var setCurrentProject = props.setCurrentProject
+  var properties = props.properties
+  var setProperties = props.setProperties
+  var currentProperty = props.currentProperty
+  var setCurrentProperty = props.setCurrentProperty
+  var entries = props.entries
+  var setEntries = props.setEntries
+  var showForm = props.showForm
+  var setShowForm = props.setShowForm
+  var isAnalyzing = props.isAnalyzing
+  var showTeam = props.showTeam
+  var setShowTeam = props.setShowTeam
+  var team = props.team
+  var inviteEmail = props.inviteEmail
+  var setInviteEmail = props.setInviteEmail
+  var inviteLoading = props.inviteLoading
+  var inviteMsg = props.inviteMsg
+  var setInviteMsg = props.setInviteMsg
+  var newProjectName = props.newProjectName
+  var setNewProjectName = props.setNewProjectName
+  var showNewProject = props.showNewProject
+  var setShowNewProject = props.setShowNewProject
+  var showNewProperty = props.showNewProperty
+  var setShowNewProperty = props.setShowNewProperty
+  var propForm = props.propForm
+  var setPropForm = props.setPropForm
+  var description = props.description
+  var setDescription = props.setDescription
+  var imageFiles = props.imageFiles
+  var imagePreviews = props.imagePreviews
+  var isRecording = props.isRecording
+  var editingProperty = props.editingProperty
+  var setEditingProperty = props.setEditingProperty
+  var editPropForm = props.editPropForm
+  var setEditPropForm = props.setEditPropForm
+  var editingEntry = props.editingEntry
+  var setEditingEntry = props.setEditingEntry
+  var editEntryForm = props.editEntryForm
+  var setEditEntryForm = props.setEditEntryForm
+  var lightbox = props.lightbox
+  var handleCreateProject = props.handleCreateProject
+  var handleDeleteProject = props.handleDeleteProject
+  var handleCreateProperty = props.handleCreateProperty
+  var handleDeleteProperty = props.handleDeleteProperty
+  var handleImageUpload = props.handleImageUpload
+  var removeImage = props.removeImage
+  var toggleRecording = props.toggleRecording
+  var handleSubmit = props.handleSubmit
+  var handleDeleteEntry = props.handleDeleteEntry
+  var handleExportPDF = props.handleExportPDF
+  var handleSaveProperty = props.handleSaveProperty
+  var handleSaveEntry = props.handleSaveEntry
+  var handleOpenTeam = props.handleOpenTeam
+  var handleInvite = props.handleInvite
+  var handleRemoveMember = props.handleRemoveMember
+  var handleCancelInvite = props.handleCancelInvite
+  var openLightbox = props.openLightbox
+  var closeLightbox = props.closeLightbox
+  var lightboxPrev = props.lightboxPrev
+  var lightboxNext = props.lightboxNext
+  var fileInputRef = props.fileInputRef
 
-    // Primer login — forzar cambio de contraseña antes de entrar
-    if (currentUser && currentUser.must_change_password) {
-      return <ChangePasswordScreen token={token} user={currentUser} onDone={function() { setCurrentUser(Object.assign({}, currentUser, { must_change_password: false })) }} />
-    }
+  // Si no hay token, redirigir a login
+  if (!token) return <Navigate to="/login" replace />
 
-    var handleLogoutAndRedirect = function() {
-      handleLogout()
-      navigate('/')
-    }
+  // Primer login — forzar cambio de contraseña antes de entrar
+  if (currentUser && currentUser.must_change_password) {
+    return <ChangePasswordScreen token={token} user={currentUser} onDone={function() { setCurrentUser(Object.assign({}, currentUser, { must_change_password: false })) }} />
+  }
+
+  var handleLogoutAndRedirect = function() {
+    handleLogout()
+    navigate('/')
+  }
 
     // === VISTA 1: PROYECTOS ===
     if (!currentProject) {
@@ -1654,20 +1736,6 @@ function App() {
         )}
       </div>
     )
-  }
-
-  // === RUTAS ===
-  return (
-    <Routes>
-      <Route path="/" element={<HomeScreen />} />
-      <Route path="/login" element={token ? <Navigate to="/proyectos" replace /> : <LoginScreen onLogin={handleLogin} />} />
-      <Route path="/invitacion/:token" element={<InviteRegisterScreen onLogin={handleLogin} />} />
-      <Route path="/admin" element={<AdminScreen />} />
-      <Route path="/proyectos" element={<AppInterior />} />
-      <Route path="/propiedades" element={<AppInterior />} />
-      <Route path="/hallazgos" element={<AppInterior />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  )
 }
+
 export default App
