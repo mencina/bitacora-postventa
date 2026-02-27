@@ -1034,9 +1034,9 @@ function App() {
   }
 
   var handleLogin = function(newToken, user) {
-    window.scrollTo(0, 0)
     setToken(newToken)
     setCurrentUser(user)
+    setTimeout(function() { window.scrollTo(0, 0) }, 50)
   }
 
   var handleLogout = function() {
