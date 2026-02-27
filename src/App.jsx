@@ -739,6 +739,14 @@ function AdminScreen() {
   var [createForm, setCreateForm] = useState({ company_name: '', name: '', email: '', password: '' })
   var [createMsg, setCreateMsg] = useState('')
   var [creating, setCreating] = useState(false)
+  var [openMenu, setOpenMenu] = useState(null)
+
+  useEffect(function() {
+    if (!openMenu) return
+    var handler = function() { setOpenMenu(null) }
+    document.addEventListener('click', handler)
+    return function() { document.removeEventListener('click', handler) }
+  }, [openMenu])
 
   function adminFetch(url, options) {
     var opts = options || {}
@@ -878,7 +886,7 @@ function AdminScreen() {
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.875rem'}}>
             <thead>
               <tr style={{background:'#F7F5F0',borderBottom:'1px solid #E2DDD6'}}>
-                {['Empresa','Admin','Usuarios','Proyectos','Propiedades','Hallazgos','Última actividad','Desde','Estado','Acciones'].map(function(h) {
+                {['Empresa','Admin','Usuarios','Proyectos','Propiedades','Hallazgos','Última actividad','Desde',''].map(function(h) {
                   return <th key={h} style={{padding:'0.875rem 1rem',textAlign:'left',fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'#6B6760'}}>{h}</th>
                 })}
               </tr>
@@ -888,7 +896,12 @@ function AdminScreen() {
                 var isRecentlyActive = c.last_activity && (Date.now() - new Date(c.last_activity).getTime()) < 7 * 24 * 60 * 60 * 1000
                 return (
                   <tr key={c.id} style={{borderBottom: i < companies.length - 1 ? '1px solid #E2DDD6' : 'none', opacity: c.active ? 1 : 0.55}}>
-                    <td style={{padding:'1rem',fontWeight:'600',color:'#1A1814'}}>{c.company_name}</td>
+                    <td style={{padding:'1rem',fontWeight:'600',color:'#1A1814'}}>
+                      <div>{c.company_name}</div>
+                      <span style={{display:'inline-block',marginTop:'0.25rem',padding:'0.15rem 0.55rem',borderRadius:'100px',fontSize:'0.7rem',fontWeight:'600',background: c.active ? '#EAF1EC' : '#FEF0F0',color: c.active ? '#2D5A3D' : '#C0392B'}}>
+                        {c.active ? 'Activa' : 'Inactiva'}
+                      </span>
+                    </td>
                     <td style={{padding:'1rem'}}>
                       <div style={{fontWeight:'500',color:'#1A1814'}}>{c.admin_name}</div>
                       <div style={{fontSize:'0.78rem',color:'#6B6760'}}>{c.admin_email}</div>
@@ -909,18 +922,24 @@ function AdminScreen() {
                     </td>
                     <td style={{padding:'1rem',color:'#6B6760',fontSize:'0.82rem'}}>{new Date(c.created_at).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}</td>
                     <td style={{padding:'1rem'}}>
-                      <span style={{display:'inline-block',padding:'0.2rem 0.65rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'600',background: c.active ? '#EAF1EC' : '#FEF0F0',color: c.active ? '#2D5A3D' : '#C0392B'}}>
-                        {c.active ? 'Activa' : 'Inactiva'}
-                      </span>
-                    </td>
-                    <td style={{padding:'1rem'}}>
-                      <div style={{display:'flex',gap:'0.4rem'}}>
-                        <button onClick={function() { handleToggle(c) }} style={{padding:'0.35rem 0.75rem',borderRadius:'6px',border:'1.5px solid #E2DDD6',background:'#fff',cursor:'pointer',fontSize:'0.78rem',fontWeight:'500',color: c.active ? '#F39C12' : '#2D5A3D',borderColor: c.active ? '#F39C12' : '#2D5A3D',whiteSpace:'nowrap'}}>
-                          {c.active ? '⏸ Desactivar' : '▶ Reactivar'}
-                        </button>
-                        <button onClick={function() { handleDelete(c) }} style={{padding:'0.35rem 0.75rem',borderRadius:'6px',border:'1.5px solid #E74C3C',background:'#fff',cursor:'pointer',fontSize:'0.78rem',fontWeight:'500',color:'#E74C3C',whiteSpace:'nowrap'}}>
-                          🗑 Eliminar
-                        </button>
+                      <div style={{position:'relative'}}>
+                        <button
+                          onClick={function() { setOpenMenu(function(prev) { return prev === c.id ? null : c.id }) }}
+                          style={{background:'#F7F5F0',border:'1px solid #E2DDD6',borderRadius:'6px',padding:'0.4rem 0.65rem',cursor:'pointer',fontSize:'1rem',lineHeight:1,color:'#1A1814'}}
+                        >⋯</button>
+                        {openMenu === c.id && (
+                          <div style={{position:'absolute',right:0,top:'calc(100% + 4px)',background:'#fff',border:'1px solid #E2DDD6',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
+                            <button
+                              onClick={function() { setOpenMenu(null); handleToggle(c) }}
+                              style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color: c.active ? '#F39C12' : '#2D5A3D',fontWeight:'500'}}
+                            >{c.active ? '⏸ Desactivar' : '▶ Reactivar'}</button>
+                            <div style={{height:'1px',background:'#E2DDD6',margin:'0'}}/>
+                            <button
+                              onClick={function() { setOpenMenu(null); handleDelete(c) }}
+                              style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color:'#E74C3C',fontWeight:'500'}}
+                            >🗑 Eliminar empresa</button>
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>
