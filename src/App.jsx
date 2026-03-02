@@ -964,10 +964,16 @@ function AdminScreen() {
 }
 
 // === SCROLL TO TOP GLOBAL ===
+function scrollToTop() {
+  window.scrollTo(0, 0)
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+}
+
 function ScrollToTop() {
   var location = useLocation()
   useLayoutEffect(function() {
-    window.scrollTo(0, 0)
+    scrollToTop()
   }, [location.pathname])
   return null
 }
@@ -1045,7 +1051,7 @@ function App() {
   var handleLogin = function(newToken, user) {
     setToken(newToken)
     setCurrentUser(user)
-    setTimeout(function() { window.scrollTo(0, 0) }, 50)
+    setTimeout(function() { scrollToTop() }, 50)
   }
 
   var handleLogout = function() {
@@ -1341,7 +1347,7 @@ function AppInterior(props) {
   var currentProjectId = props.currentProject ? props.currentProject.id : null
   var currentPropertyId = props.currentProperty ? props.currentProperty.id : null
   useLayoutEffect(function() {
-    window.scrollTo(0, 0)
+    scrollToTop()
   }, [currentProjectId, currentPropertyId])
 
   // Si no hay token, redirigir a login
