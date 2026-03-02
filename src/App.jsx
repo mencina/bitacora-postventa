@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Routes, Route, useNavigate, useParams, Navigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import './App.css'
 
@@ -37,7 +37,7 @@ function HomeScreen() {
         .hp-root{--bg:#F7F5F0;--ink:#1A1814;--muted:#6B6760;--accent:#2D5A3D;--accent-light:#EAF1EC;--line:#E2DDD6;--white:#FFFFFF;--serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',sans-serif;--gutter:max(1.25rem,5vw);font-family:var(--sans);background:var(--bg);color:var(--ink);overflow-x:hidden;font-weight:300;line-height:1.6;min-height:100vh;}
 
         /* NAV */
-        .hp-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem var(--gutter);background:rgba(247,245,240,0.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);}
+        .hp-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem var(--gutter);background:rgb(255, 255, 255);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);}
         .hp-logo{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:-0.02em;white-space:nowrap;}
         .hp-logo span{color:var(--accent);}
         .hp-nav-links{display:flex;align-items:center;gap:1.5rem;}
@@ -963,6 +963,15 @@ function AdminScreen() {
   )
 }
 
+// === SCROLL TO TOP GLOBAL (cambios de ruta real: / → /login → /proyectos) ===
+function ScrollToTop() {
+  var location = useLocation()
+  useEffect(function() {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [location.pathname])
+  return null
+}
+
 function App() {
   // Auth
   var [token, setToken] = useState(null)
@@ -1241,7 +1250,9 @@ function App() {
 
   // === RUTAS ===
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/" element={<HomeScreen />} />
       <Route path="/login" element={token ? <Navigate to="/proyectos" replace /> : <LoginScreen onLogin={handleLogin} />} />
       <Route path="/invitacion/:token" element={<InviteRegisterScreen onLogin={handleLogin} />} />
@@ -1250,7 +1261,8 @@ function App() {
       <Route path="/propiedades" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
       <Route path="/hallazgos" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </>
   )
 }
 
@@ -1324,6 +1336,11 @@ function AppInterior(props) {
   var lightboxPrev = props.lightboxPrev
   var lightboxNext = props.lightboxNext
   var fileInputRef = props.fileInputRef
+
+  // Scroll al tope cada vez que cambia la vista (proyecto o propiedad)
+  useEffect(function() {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  }, [props.currentProject, props.currentProperty])
 
   // Si no hay token, redirigir a login
   if (!token) return <Navigate to="/login" replace />
