@@ -830,7 +830,7 @@ body {
   background: var(--ink);
   padding: 1.25rem;
   position: relative;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .auth-screen::before {
