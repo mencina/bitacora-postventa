@@ -824,14 +824,13 @@ body {
 .auth-screen {
   min-height: 100vh;
   min-height: 100dvh;
-  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--ink);
   padding: 1.25rem;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .auth-screen::before {
