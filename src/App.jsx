@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect } from 'react'
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import './App.css'
@@ -963,11 +963,11 @@ function AdminScreen() {
   )
 }
 
-// === SCROLL TO TOP GLOBAL (cambios de ruta real: / → /login → /proyectos) ===
+// === SCROLL TO TOP GLOBAL ===
 function ScrollToTop() {
   var location = useLocation()
-  useEffect(function() {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+  useLayoutEffect(function() {
+    window.scrollTo(0, 0)
   }, [location.pathname])
   return null
 }
@@ -1337,10 +1337,12 @@ function AppInterior(props) {
   var lightboxNext = props.lightboxNext
   var fileInputRef = props.fileInputRef
 
-  // Scroll al tope cada vez que cambia la vista (proyecto o propiedad)
-  useEffect(function() {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
-  }, [props.currentProject, props.currentProperty])
+  // Scroll al tope en cada cambio de vista interna (por id, no por referencia de objeto)
+  var currentProjectId = props.currentProject ? props.currentProject.id : null
+  var currentPropertyId = props.currentProperty ? props.currentProperty.id : null
+  useLayoutEffect(function() {
+    window.scrollTo(0, 0)
+  }, [currentProjectId, currentPropertyId])
 
   // Si no hay token, redirigir a login
   if (!token) return <Navigate to="/login" replace />
