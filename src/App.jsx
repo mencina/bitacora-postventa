@@ -1401,7 +1401,7 @@ function AppInterior(props) {
               {projects.map(function(project) {
                 return (
                   <div key={project.id} className="project-card">
-                    <div className="project-card-content" onClick={function() { setCurrentProject(project) }}>
+                    <div className="project-card-content" onClick={function() { scrollToTop(); setCurrentProject(project) }}>
                       <h3>📁 {project.name}</h3>
                       <p className="project-date">{project.property_count || 0} propiedades | Creado: {new Date(project.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                     </div>
@@ -1434,7 +1434,7 @@ function AppInterior(props) {
                 </div>
               </div>
               <div className="header-row-nav">
-                <button className="back-button" onClick={function() { setCurrentProject(null); setShowTeam(false) }}>← Proyectos</button>
+                <button className="back-button" onClick={function() { scrollToTop(); setCurrentProject(null); setShowTeam(false) }}>← Proyectos</button>
                 <div className="project-name-display">{currentProject.name}</div>
               </div>
             </div>
@@ -1568,7 +1568,7 @@ function AppInterior(props) {
                 }
                 return (
                   <div key={prop.id} className="project-card property-card">
-                    <div className="project-card-content" onClick={function() { setCurrentProperty(prop) }}>
+                    <div className="project-card-content" onClick={function() { scrollToTop(); setCurrentProperty(prop) }}>
                       <h3>🏠 {prop.unit_number}</h3>
                       <p className="property-owner">{prop.owner_name || 'Sin propietario asignado'}</p>
                       <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
@@ -1600,7 +1600,7 @@ function AppInterior(props) {
               </div>
             </div>
             <div className="header-row-nav">
-              <button className="back-button" onClick={function() { setCurrentProperty(null); setShowForm(false) }}>← Propiedades</button>
+              <button className="back-button" onClick={function() { scrollToTop(); setCurrentProperty(null); setShowForm(false) }}>← Propiedades</button>
               <div className="project-name-display">{currentProperty.unit_number}{currentProperty.owner_name ? ' — ' + currentProperty.owner_name : ''}</div>
             </div>
           </div>
