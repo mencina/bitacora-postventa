@@ -494,6 +494,26 @@ function LoginScreen({ onLogin }) {
   var [password, setPassword] = useState('')
   var [error, setError] = useState('')
   var [loading, setLoading] = useState(false)
+  var [showForgot, setShowForgot] = useState(false)
+  var [forgotEmail, setForgotEmail] = useState('')
+  var [forgotMsg, setForgotMsg] = useState('')
+  var [forgotLoading, setForgotLoading] = useState(false)
+
+  var handleForgot = async function() {
+  if (!forgotEmail.trim()) return setForgotMsg('Ingresa tu email')
+  setForgotLoading(true)
+  try {
+    await fetch(API_URL + '/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: forgotEmail.trim() })
+    })
+    setForgotMsg('✅ Si ese email existe, recibirás un link en los próximos minutos.')
+  } catch (err) {
+    setForgotMsg('Error al enviar. Intenta de nuevo.')
+  }
+  setForgotLoading(false)
+  }
 
   var handleLogin = async function() {
     if (!email || !password) { setError('Completa todos los campos'); return }
@@ -512,28 +532,53 @@ function LoginScreen({ onLogin }) {
   }
 
   return (
-    <div className="auth-screen">
-      <div className="auth-card">
-        <div className="auth-logo">
-          <span className="header-icon">📋</span>
-          <h1>BitacoraPro</h1>
-          <p>Ingresa a tu cuenta</p>
-        </div>
-        {error && <div className="auth-error">{error}</div>}
-        <div className="form-field">
-          <label>Correo electronico</label>
-          <input type="email" className="text-input" placeholder="correo@empresa.com" value={email} onChange={function(e) { setEmail(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }} autoFocus />
-        </div>
-        <div className="form-field">
-          <label>Contraseña</label>
-          <input type="password" className="text-input" placeholder="Tu contraseña" value={password} onChange={function(e) { setPassword(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }} />
-        </div>
-        <button className="submit-button" onClick={handleLogin} disabled={loading}>
-          {loading ? 'Ingresando...' : 'Ingresar'}
-        </button>
+  <div className="auth-screen">
+    <div className="auth-card">
+      <div className="auth-logo">
+        <span className="header-icon">📋</span>
+        <h1>BitacoraPro</h1>
+        <p>Ingresa a tu cuenta</p>
       </div>
+
+      {showForgot ? (
+        <div>
+          <h2 style={{fontFamily:'Georgia,serif', marginBottom:'0.5rem'}}>Recuperar contraseña</h2>
+          <p style={{color:'#6B6760', fontSize:'0.9rem', marginBottom:'1.25rem'}}>Ingresa tu email y te enviaremos un link para restablecer tu contraseña.</p>
+          <div className="form-field">
+            <label>Email</label>
+            <input type="email" inputMode="email" className="text-input" value={forgotEmail} onChange={function(e) { setForgotEmail(e.target.value) }} placeholder="tu@email.com" />
+          </div>
+          {forgotMsg && <p style={{fontSize:'0.875rem', color: forgotMsg.startsWith('✅') ? '#2D5A3D' : '#B91C1C', marginBottom:'1rem'}}>{forgotMsg}</p>}
+          <button className="submit-button" onClick={handleForgot} disabled={forgotLoading}>
+            {forgotLoading ? 'Enviando...' : 'Enviar link →'}
+          </button>
+          <button type="button" onClick={function() { setShowForgot(false); setForgotMsg('') }} style={{background:'none',border:'none',color:'#6B6760',fontSize:'0.875rem',cursor:'pointer',marginTop:'0.75rem',textDecoration:'underline',display:'block'}}>
+            ← Volver al login
+          </button>
+        </div>
+      ) : (
+        <div>
+          {error && <div className="auth-error">{error}</div>}
+          <div className="form-field">
+            <label>Correo electronico</label>
+            <input type="email" className="text-input" placeholder="correo@empresa.com" value={email} onChange={function(e) { setEmail(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }} autoFocus />
+          </div>
+          <div className="form-field">
+            <label>Contraseña</label>
+            <input type="password" className="text-input" placeholder="Tu contraseña" value={password} onChange={function(e) { setPassword(e.target.value) }} onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }} />
+          </div>
+          <button className="submit-button" onClick={handleLogin} disabled={loading}>
+            {loading ? 'Ingresando...' : 'Ingresar'}
+          </button>
+          <button type="button" onClick={function() { setShowForgot(true) }} style={{background:'none', border:'none', color:'#6B6760', fontSize:'0.875rem', cursor:'pointer', marginTop:'0.75rem', textDecoration:'underline'}}>
+            ¿Olvidaste tu contraseña?
+          </button>
+        </div>
+      )}
     </div>
-  )
+  </div>
+)
+  
 }
 
 // === PANTALLA REGISTRO ===
@@ -1142,7 +1187,9 @@ function PublicEntryScreen() {
 
 function App() {
   // Auth
-  var [token, setToken] = useState(null)
+  var [token, setToken] = useState(function() {
+  return localStorage.getItem('bpro_token') || null
+  })
   var [currentUser, setCurrentUser] = useState(null)
 
   // App state
@@ -1212,12 +1259,14 @@ function App() {
 
 var handleLogin = function(newToken, user) {
     setToken(newToken)
+    localStorage.setItem('bpro_token', newToken)
     setCurrentUser(user)
     setTimeout(function() { scrollToTop() }, 50)
 }
 
   var handleLogout = function() {
     setToken(null)
+    localStorage.removeItem('bpro_token')
     setCurrentUser(null)
     setProjects([])
     setCurrentProject(null)
@@ -1460,6 +1509,7 @@ var handleLogin = function(newToken, user) {
         <Route path="/invitacion/:token" element={token ? <Navigate to="/proyectos" replace /> : <InviteRegisterScreen onLogin={handleLogin} />} />
         <Route path="/admin" element={<AdminScreen />} />
         <Route path="/h/:entryId" element={<PublicEntryScreen />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordScreen onLogin={handleLogin} />} />
         <Route path="/proyectos" element={<AppInterior {...interiorProps} vista="proyectos" />} />
         <Route path="/proyectos/:projectId" element={<AppInterior {...interiorProps} vista="propiedades" />} />
         <Route path="/proyectos/:projectId/propiedades/:propertyId" element={<AppInterior {...interiorProps} vista="hallazgos" />} />
@@ -2038,6 +2088,59 @@ function AppInterior(props) {
         )}
       </div>
     )
+}
+
+function ResetPasswordScreen({ onLogin }) {
+  var navigate = useNavigate()
+  var params = useParams()
+  var [password, setPassword] = useState('')
+  var [password2, setPassword2] = useState('')
+  var [loading, setLoading] = useState(false)
+  var [error, setError] = useState('')
+
+  var handleSubmit = async function() {
+    if (!password || !password2) return setError('Completa ambos campos')
+    if (password !== password2) return setError('Las contraseñas no coinciden')
+    if (password.length < 6) return setError('Mínimo 6 caracteres')
+    setLoading(true)
+    setError('')
+    try {
+      var res = await fetch(API_URL + '/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: params.token, new_password: password })
+      })
+      var data = await res.json()
+      if (!res.ok) return setError(data.error || 'Error al restablecer')
+      onLogin(data.token, data.user)
+      navigate('/proyectos', { replace: true })
+    } catch (err) {
+      setError('Error de conexión. Intenta de nuevo.')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <div className="auth-logo">BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
+        <h2 style={{fontFamily:'Georgia,serif', marginBottom:'0.5rem'}}>Nueva contraseña</h2>
+        <p style={{color:'#6B6760', fontSize:'0.9rem', marginBottom:'1.25rem'}}>Elige una contraseña nueva para tu cuenta.</p>
+        <div className="form-field">
+          <label>Nueva contraseña</label>
+          <input type="password" className="text-input" value={password} onChange={function(e) { setPassword(e.target.value) }} placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div className="form-field">
+          <label>Repetir contraseña</label>
+          <input type="password" className="text-input" value={password2} onChange={function(e) { setPassword2(e.target.value) }} placeholder="Repite la contraseña" onKeyDown={function(e) { if(e.key === 'Enter') handleSubmit() }} />
+        </div>
+        {error && <p style={{color:'#B91C1C', fontSize:'0.875rem', marginBottom:'1rem'}}>{error}</p>}
+        <button className="submit-button" onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Guardando...' : 'Guardar contraseña →'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 export default App

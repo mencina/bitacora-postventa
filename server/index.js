@@ -141,6 +141,17 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Recuperación de contraseña
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS password_resets (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMP NOT NULL,
+      used BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
   console.log('Base de datos lista')
 }
 
@@ -767,6 +778,92 @@ app.delete('/admin/companies/:id', superadminMiddleware, async function(req, res
     await pool.query('DELETE FROM users WHERE company_id = $1', [companyId])
     await pool.query('DELETE FROM companies WHERE id = $1', [companyId])
     res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /auth/forgot-password — solicitar recuperación de contraseña
+app.post('/auth/forgot-password', async function(req, res) {
+  try {
+    var { email } = req.body
+    if (!email) return res.status(400).json({ error: 'Email requerido' })
+
+    var result = await pool.query('SELECT * FROM users WHERE email = $1', [email.trim().toLowerCase()])
+    // Siempre respondemos lo mismo para no revelar si el email existe
+    if (result.rows.length === 0) return res.json({ success: true })
+
+    var user = result.rows[0]
+    var crypto = require('crypto')
+    var token = crypto.randomBytes(32).toString('hex')
+    var expiresAt = new Date(Date.now() + 1000 * 60 * 60) // 1 hora
+
+    // Invalidar tokens anteriores del mismo usuario
+    await pool.query('DELETE FROM password_resets WHERE user_id = $1', [user.id])
+    await pool.query(
+      'INSERT INTO password_resets (user_id, token, expires_at) VALUES ($1, $2, $3)',
+      [user.id, token, expiresAt]
+    )
+
+    var resetUrl = APP_URL + '/reset-password/' + token
+    try {
+      await resend.emails.send({
+        from: 'BitácoraPro <noreply@contacto.bitacorapro.cl>',
+        to: user.email,
+        subject: 'Recupera tu contraseña — BitácoraPro',
+        html: `
+          <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px; color: #1A1814;">
+            <div style="margin-bottom: 2rem;">
+              <span style="font-family: Georgia, serif; font-size: 1.3rem; font-weight: 700;">BitácoraPro<span style="color: #2D5A3D;">.</span></span>
+            </div>
+            <h2 style="font-family: Georgia, serif; font-size: 1.5rem; margin-bottom: 0.5rem;">Recupera tu contraseña</h2>
+            <p style="color: #6B6760; margin-bottom: 1.5rem;">Hola ${user.name}, recibimos una solicitud para restablecer tu contraseña. El link es válido por 1 hora.</p>
+            <a href="${resetUrl}" style="display:inline-block;background:#1A1814;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:500;font-size:15px;">
+              Restablecer contraseña →
+            </a>
+            <p style="color: #6B6760; font-size: 0.9rem; margin-top: 1.5rem;">Si no solicitaste esto, ignora este email. Tu contraseña no cambiará.</p>
+            <p style="color: #C0BBB5; font-size: 0.78rem; margin-top: 2rem;">¿Dudas? Escríbenos a contacto@bitacorapro.cl</p>
+          </div>
+        `
+      })
+    } catch (emailErr) {
+      console.error('Error enviando email de recuperación:', emailErr)
+    }
+
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /auth/reset-password — establecer nueva contraseña con token
+app.post('/auth/reset-password', async function(req, res) {
+  try {
+    var { token, new_password } = req.body
+    if (!token || !new_password) return res.status(400).json({ error: 'Datos incompletos' })
+    if (new_password.length < 6) return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' })
+
+    var result = await pool.query(
+      'SELECT pr.*, u.email, u.name, u.company_id, u.role FROM password_resets pr JOIN users u ON pr.user_id = u.id WHERE pr.token = $1',
+      [token]
+    )
+    if (result.rows.length === 0) return res.status(400).json({ error: 'Link inválido o expirado' })
+
+    var reset = result.rows[0]
+    if (reset.used) return res.status(400).json({ error: 'Este link ya fue utilizado' })
+    if (new Date() > new Date(reset.expires_at)) return res.status(400).json({ error: 'El link expiró. Solicita uno nuevo.' })
+
+    var hash = await bcrypt.hash(new_password, 10)
+    await pool.query('UPDATE users SET password_hash = $1, must_change_password = FALSE WHERE id = $2', [hash, reset.user_id])
+    await pool.query('UPDATE password_resets SET used = TRUE WHERE id = $1', [reset.id])
+
+    // Loguear automáticamente al usuario
+    var newToken = jwt.sign({ id: reset.user_id, email: reset.email, role: reset.role, company_id: reset.company_id }, JWT_SECRET, { expiresIn: '7d' })
+    var userResult = await pool.query(
+      'SELECT u.id, u.name, u.email, u.role, u.company_id, c.name as company_name FROM users u JOIN companies c ON u.company_id = c.id WHERE u.id = $1',
+      [reset.user_id]
+    )
+    res.json({ success: true, token: newToken, user: userResult.rows[0] })
   } catch (err) {
     res.status(500).json({ error: err.message })
   }
