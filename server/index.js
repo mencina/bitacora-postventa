@@ -536,17 +536,21 @@ app.post('/projects/:id/invite', authMiddleware, adminMiddleware, async function
     // Obtener nombre de la empresa
     var companyResult = await pool.query('SELECT name FROM companies WHERE id = $1', [req.user.company_id])
     var companyName = companyResult.rows[0].name
+    
+    // Obtener nombre del usuario
+    var adminResult = await pool.query('SELECT name FROM users WHERE id = $1', [req.user.id])
+    var adminName = adminResult.rows[0].name
 
     // Enviar email con Resend
     await resend.emails.send({
-      from: 'Bitácora <noreply@contacto.bitacorapro.cl>',
+      from: 'BitácoraPro <noreply@contacto.bitacorapro.cl>',
       to: emailNorm,
-      subject: 'Te invitaron a unirte a ' + projectName + ' en Bitácora',
+      subject: 'Te invitaron a unirte a ' + projectName + ' en BitácoraPro',
       html: `
         <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
-          <h2 style="color: #1A1814; font-size: 24px; margin-bottom: 8px;">Te invitaron a Bitácora</h2>
+          <h2 style="color: #1A1814; font-size: 24px; margin-bottom: 8px;">Te invitaron a BitácoraPro</h2>
           <p style="color: #6B6760; margin-bottom: 24px;">
-            <strong>${req.user.name}</strong> de <strong>${companyName}</strong> te invita a colaborar en el proyecto <strong>${projectName}</strong>.
+            <strong>${adminName}</strong> de <strong>${companyName}</strong> te invita a colaborar en el proyecto <strong>${projectName}</strong>.
           </p>
           <a href="${inviteUrl}" style="display:inline-block;background:#1A1814;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:500;font-size:15px;">
             Aceptar invitación →
