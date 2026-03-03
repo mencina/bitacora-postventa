@@ -1691,16 +1691,18 @@ function AppInterior(props) {
           </header>
           <main className="main" id="app-scroll">
             <h2 className="section-title">Mis Proyectos</h2>
-            {!showNewProject ? (
-              <button className="add-button" onClick={function() { setShowNewProject(true) }}>+ Nuevo Proyecto</button>
-            ) : (
-              <div className="new-project-form">
-                <input type="text" placeholder="Nombre del proyecto..." value={newProjectName} onChange={function(e) { setNewProjectName(e.target.value) }} className="text-input" autoFocus onKeyDown={function(e) { if (e.key === 'Enter') handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }} />
-                <div className="new-project-actions">
-                  <button className="submit-button" onClick={function() { handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }}>Crear Proyecto</button>
-                  <button className="cancel-button" onClick={function() { setShowNewProject(false); setNewProjectName('') }}>Cancelar</button>
+            {currentUser && currentUser.role === 'admin' && (
+              !showNewProject ? (
+                <button className="add-button" onClick={function() { setShowNewProject(true) }}>+ Nuevo Proyecto</button>
+              ) : (
+                <div className="new-project-form">
+                  <input type="text" placeholder="Nombre del proyecto..." value={newProjectName} onChange={function(e) { setNewProjectName(e.target.value) }} className="text-input" autoFocus onKeyDown={function(e) { if (e.key === 'Enter') handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }} />
+                  <div className="new-project-actions">
+                    <button className="submit-button" onClick={function() { handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }}>Crear Proyecto</button>
+                    <button className="cancel-button" onClick={function() { setShowNewProject(false); setNewProjectName('') }}>Cancelar</button>
+                  </div>
                 </div>
-              </div>
+              )
             )}
             {projects.length === 0 && !showNewProject && (
               <div className="welcome-message"><h2>👋 Bienvenido, {currentUser && currentUser.name}</h2><p>Crea tu primer proyecto para comenzar.</p></div>
@@ -1713,7 +1715,9 @@ function AppInterior(props) {
                       <h3>📁 {project.name}</h3>
                       <p className="project-date">{project.property_count || 0} propiedades | Creado: {new Date(project.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                     </div>
-                    <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProject(project.id) }}>🗑</button>
+                    {currentUser && currentUser.role === 'admin' && (
+                      <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProject(project.id) }}>🗑</button>
+                    )}
                   </div>
                 )
               })}
@@ -1887,7 +1891,9 @@ function AppInterior(props) {
                       <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
                     </div>
                     <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
-                    <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
+                    {currentUser && currentUser.role === 'admin' && (
+                      <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
+                    )}
                   </div>
                 )
               })}
@@ -2031,7 +2037,9 @@ function AppInterior(props) {
                         })
                       }}>🔗</button>
                       <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}>✏️</button>
-                      <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
+                      {currentUser && currentUser.role === 'admin' && (
+                        <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
+                      )}
                     </div>
                     <div className="entry-tags">
                       <span className="tag category-tag" style={{ background: cat.color + '18', color: cat.color, border: '1px solid ' + cat.color + '33' }}>{cat.icon} {cat.label}</span>
