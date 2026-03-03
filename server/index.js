@@ -656,6 +656,34 @@ function superadminMiddleware(req, res, next) {
   next()
 }
 
+// GET /public/entries/:entryId — vista pública de un hallazgo (sin autenticación)
+app.get('/public/entries/:entryId', async function(req, res) {
+  try {
+    var entryId = req.params.entryId
+    // Obtener hallazgo con contexto de propiedad y proyecto
+    var result = await pool.query(
+      `SELECT e.*, p.unit_number, p.project_id,
+              proj.name AS project_name
+       FROM entries e
+       JOIN properties p ON e.property_id = p.id
+       JOIN projects proj ON p.project_id = proj.id
+       WHERE e.id = $1`,
+      [entryId]
+    )
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Hallazgo no encontrado' })
+    var entry = result.rows[0]
+    // Imágenes
+    var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
+    entry.images = imgs.rows
+    entry.affected_elements = entry.affected_elements ? JSON.parse(entry.affected_elements) : []
+    // Omitir datos sensibles del propietario
+    delete entry.property_id
+    res.json(entry)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // GET /admin/stats — todas las empresas con métricas de uso
 app.get('/admin/stats', superadminMiddleware, async function(req, res) {
   try {

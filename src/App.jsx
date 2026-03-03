@@ -991,6 +991,155 @@ function ScrollToTop() {
   return null
 }
 
+// === VISTA PÚBLICA DE HALLAZGO (sin login) ===
+function PublicEntryScreen() {
+  var { entryId } = useParams()
+  var [entry, setEntry] = useState(null)
+  var [error, setError] = useState('')
+  var [loading, setLoading] = useState(true)
+  var [lightbox, setLightbox] = useState(null)
+
+  useEffect(function() {
+    fetch(API_URL + '/public/entries/' + entryId)
+      .then(function(r) { return r.json() })
+      .then(function(data) {
+        if (data.error) { setError(data.error) } else { setEntry(data) }
+        setLoading(false)
+      })
+      .catch(function() { setError('No se pudo cargar el hallazgo'); setLoading(false) })
+  }, [entryId])
+
+  useEffect(function() {
+    if (!lightbox) return
+    var handleKey = function(e) {
+      if (e.key === 'Escape') setLightbox(null)
+      if (e.key === 'ArrowLeft') setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } })
+      if (e.key === 'ArrowRight') setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } })
+    }
+    window.addEventListener('keydown', handleKey)
+    return function() { window.removeEventListener('keydown', handleKey) }
+  }, [lightbox])
+
+  var CATS = { estructural: { label: 'Estructural', color: '#DC2626', icon: '🏗️' }, humedad: { label: 'Humedad', color: '#2563EB', icon: '💧' }, electrico: { label: 'Eléctrico', color: '#D97706', icon: '⚡' }, terminaciones: { label: 'Terminaciones', color: '#7C3AED', icon: '🎨' }, instalaciones: { label: 'Instalaciones', color: '#059669', icon: '🔧' }, otro: { label: 'Otro', color: '#6B7280', icon: '📋' } }
+  var SEVS = { leve: { label: 'Leve', color: '#16A34A', bg: '#F0FDF4' }, moderado: { label: 'Moderado', color: '#D97706', bg: '#FFFBEB' }, grave: { label: 'Grave', color: '#DC2626', bg: '#FEF2F2' }, critico: { label: 'Crítico', color: '#7C3AED', bg: '#FAF5FF' } }
+
+  if (loading) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+      <p style={{color:'#6B6760'}}>Cargando hallazgo...</p>
+    </div>
+  )
+
+  if (error) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+      <div style={{textAlign:'center'}}>
+        <p style={{fontSize:'2rem',marginBottom:'0.5rem'}}>🔍</p>
+        <p style={{color:'#1A1814',fontWeight:'500',marginBottom:'0.25rem'}}>Hallazgo no encontrado</p>
+        <p style={{color:'#6B6760',fontSize:'0.875rem'}}>{error}</p>
+      </div>
+    </div>
+  )
+
+  var cat = CATS[entry.category] || CATS.otro
+  var sev = SEVS[entry.severity] || SEVS.leve
+
+  return (
+    <div style={{minHeight:'100vh',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+      {/* Header */}
+      <div style={{background:'#1A1814',padding:'1rem 1.5rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontFamily:'Playfair Display,serif',color:'#fff',fontSize:'1.1rem',fontWeight:'700'}}>BitácoraPro<span style={{color:'#7CB891'}}>.</span></span>
+        <span style={{color:'rgba(255,255,255,0.4)',fontSize:'0.75rem',letterSpacing:'0.05em',textTransform:'uppercase'}}>Vista de hallazgo</span>
+      </div>
+
+      {/* Contexto: proyecto / propiedad */}
+      <div style={{background:'#fff',borderBottom:'1px solid #E2DDD6',padding:'0.75rem 1.5rem',display:'flex',alignItems:'center',gap:'0.5rem',fontSize:'0.8rem',color:'#6B6760',flexWrap:'wrap'}}>
+        <span>📁 {entry.project_name}</span>
+        <span style={{color:'#E2DDD6'}}>›</span>
+        <span>🏠 {entry.unit_number}</span>
+      </div>
+
+      {/* Contenido */}
+      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.5rem 1.25rem'}}>
+
+        {/* Tags */}
+        <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap',marginBottom:'0.875rem'}}>
+          <span style={{background:cat.color+'18',color:cat.color,border:'1px solid '+cat.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{cat.icon} {cat.label}</span>
+          <span style={{background:sev.bg,color:sev.color,border:'1px solid '+sev.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{sev.label}</span>
+          {entry.ai_generated === 1 && <span style={{background:'#EEF2FF',color:'#4F46E5',border:'1px solid #C7D2FE',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>🤖 Generado con IA</span>}
+        </div>
+
+        {/* Título */}
+        <h1 style={{fontFamily:'Playfair Display,serif',fontSize:'1.4rem',fontWeight:'700',color:'#1A1814',lineHeight:1.25,marginBottom:'0.5rem'}}>{entry.title}</h1>
+
+        {/* Meta */}
+        <div style={{display:'flex',gap:'1rem',fontSize:'0.8rem',color:'#6B6760',marginBottom:'1.25rem',flexWrap:'wrap'}}>
+          {entry.location && <span>📍 {entry.location}</span>}
+          <span>🗓 {new Date(entry.created_at).toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' })}</span>
+        </div>
+
+        {/* Fotos */}
+        {entry.images && entry.images.length > 0 && (
+          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:'0.5rem',marginBottom:'1.25rem'}}>
+            {entry.images.map(function(img, idx) {
+              return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',borderRadius:'8px',cursor:'zoom-in',border:'1px solid #E2DDD6'}} />
+            })}
+          </div>
+        )}
+
+        {/* Nota del inspector */}
+        {entry.inspector_note && (
+          <div style={{background:'#EFF6FF',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid #BFDBFE'}}>
+            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#3B82F6',marginBottom:'0.4rem'}}>🎙️ Nota del inspector</p>
+            <p style={{fontSize:'0.9rem',color:'#1E3A5F',lineHeight:1.6}}>{entry.inspector_note}</p>
+          </div>
+        )}
+
+        {/* Descripción */}
+        {entry.description && (
+          <div style={{background:'#fff',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid #E2DDD6'}}>
+            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B6760',marginBottom:'0.4rem'}}>Descripción técnica</p>
+            <p style={{fontSize:'0.9rem',color:'#1A1814',lineHeight:1.7}}>{entry.description}</p>
+          </div>
+        )}
+
+        {/* Recomendación */}
+        {entry.recommendation && (
+          <div style={{background:'#FFFBEB',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid #FDE68A'}}>
+            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#D97706',marginBottom:'0.4rem'}}>💡 Recomendación</p>
+            <p style={{fontSize:'0.9rem',color:'#78350F',lineHeight:1.7}}>{entry.recommendation}</p>
+          </div>
+        )}
+
+        {/* Elementos afectados */}
+        {entry.affected_elements && entry.affected_elements.length > 0 && (
+          <div style={{marginBottom:'1rem'}}>
+            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B6760',marginBottom:'0.5rem'}}>Elementos afectados</p>
+            <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
+              {entry.affected_elements.map(function(el, i) { return <span key={i} style={{background:'#F3F4F6',color:'#374151',padding:'0.25rem 0.65rem',borderRadius:'100px',fontSize:'0.8rem',border:'1px solid #E5E7EB'}}>{el}</span> })}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{marginTop:'2rem',paddingTop:'1.25rem',borderTop:'1px solid #E2DDD6',textAlign:'center'}}>
+          <p style={{fontSize:'0.75rem',color:'#6B6760'}}>Generado con <strong style={{color:'#2D5A3D'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={function() { setLightbox(null) }} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <img src={lightbox.images[lightbox.index].filename} alt="" onClick={function(e) { e.stopPropagation() }} style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px'}} />
+          {lightbox.images.length > 1 && <>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer'}}>‹</button>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer'}}>›</button>
+          </>}
+          <button onClick={function() { setLightbox(null) }} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer'}}>✕</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function App() {
   // Auth
   var [token, setToken] = useState(null)
@@ -1098,18 +1247,25 @@ var handleLogin = function(newToken, user) {
   }, [currentProperty])
 
   // Project handlers
-  var handleCreateProject = function() {
+  var handleCreateProject = function(onSuccess) {
     if (!newProjectName.trim()) return
     authFetch(API_URL + '/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: newProjectName.trim() }) })
       .then(function(r) { return r.json() })
-      .then(function(p) { setProjects(function(prev) { return [p].concat(prev) }); setCurrentProject(p); setNewProjectName(''); setShowNewProject(false) })
+      .then(function(p) {
+        setProjects(function(prev) { return [p].concat(prev) })
+        setCurrentProject(p)
+        setNewProjectName('')
+        setShowNewProject(false)
+        if (onSuccess) onSuccess(p)
+      })
   }
 
-  var handleDeleteProject = function(id) {
+  var handleDeleteProject = function(id, onDeleted) {
     if (!window.confirm('Eliminar este proyecto y todo su contenido?')) return
     authFetch(API_URL + '/projects/' + id, { method: 'DELETE' }).then(function() {
       setProjects(function(prev) { return prev.filter(function(p) { return p.id !== id }) })
       if (currentProject && currentProject.id === id) { setCurrentProject(null) }
+      if (onDeleted) onDeleted()
     })
   }
 
@@ -1267,19 +1423,47 @@ var handleLogin = function(newToken, user) {
     loadTeam(currentProject.id)
   }
 
+  // === PROPS COMUNES PARA AppInterior ===
+  var interiorProps = {
+    token, currentUser, setCurrentUser, handleLogout,
+    projects, setProjects, currentProject, setCurrentProject,
+    properties, setProperties, currentProperty, setCurrentProperty,
+    entries, setEntries,
+    showForm, setShowForm, isAnalyzing, setIsAnalyzing,
+    showTeam, setShowTeam, team, setTeam,
+    inviteEmail, setInviteEmail, inviteLoading, setInviteLoading, inviteMsg, setInviteMsg,
+    newProjectName, setNewProjectName, showNewProject, setShowNewProject,
+    showNewProperty, setShowNewProperty, propForm, setPropForm,
+    description, setDescription, imageFiles, setImageFiles,
+    imagePreviews, setImagePreviews, isRecording, setIsRecording,
+    editingProperty, setEditingProperty, editPropForm, setEditPropForm,
+    editingEntry, setEditingEntry, editEntryForm, setEditEntryForm,
+    lightbox, setLightbox,
+    handleCreateProject, handleDeleteProject,
+    handleCreateProperty, handleDeleteProperty,
+    handleImageUpload, removeImage, toggleRecording,
+    handleSubmit, handleDeleteEntry, handleExportPDF,
+    handleSaveProperty, handleSaveEntry,
+    loadTeam, handleOpenTeam, handleInvite, handleRemoveMember, handleCancelInvite,
+    openLightbox, closeLightbox, lightboxPrev, lightboxNext,
+    fileInputRef, recognitionRef,
+    authFetch
+  }
+
   // === RUTAS ===
   return (
     <>
       <ScrollToTop />
       <Routes>
-      <Route path="/" element={<HomeScreen />} />
-      <Route path="/login" element={token ? <Navigate to="/proyectos" replace /> : <LoginScreen onLogin={handleLogin} />} />
-      <Route path="/invitacion/:token" element={token ? <Navigate to="/proyectos" replace /> : <InviteRegisterScreen onLogin={handleLogin} />} />
-      <Route path="/admin" element={<AdminScreen />} />
-      <Route path="/proyectos" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
-      <Route path="/propiedades" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
-      <Route path="/hallazgos" element={<AppInterior token={token} currentUser={currentUser} setCurrentUser={setCurrentUser} handleLogout={handleLogout} projects={projects} currentProject={currentProject} setCurrentProject={setCurrentProject} properties={properties} setProperties={setProperties} currentProperty={currentProperty} setCurrentProperty={setCurrentProperty} entries={entries} setEntries={setEntries} showForm={showForm} setShowForm={setShowForm} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} showTeam={showTeam} setShowTeam={setShowTeam} team={team} setTeam={setTeam} inviteEmail={inviteEmail} setInviteEmail={setInviteEmail} inviteLoading={inviteLoading} setInviteLoading={setInviteLoading} inviteMsg={inviteMsg} setInviteMsg={setInviteMsg} newProjectName={newProjectName} setNewProjectName={setNewProjectName} showNewProject={showNewProject} setShowNewProject={setShowNewProject} showNewProperty={showNewProperty} setShowNewProperty={setShowNewProperty} propForm={propForm} setPropForm={setPropForm} description={description} setDescription={setDescription} imageFiles={imageFiles} setImageFiles={setImageFiles} imagePreviews={imagePreviews} setImagePreviews={setImagePreviews} isRecording={isRecording} setIsRecording={setIsRecording} editingProperty={editingProperty} setEditingProperty={setEditingProperty} editPropForm={editPropForm} setEditPropForm={setEditPropForm} editingEntry={editingEntry} setEditingEntry={setEditingEntry} editEntryForm={editEntryForm} setEditEntryForm={setEditEntryForm} lightbox={lightbox} setLightbox={setLightbox} handleCreateProject={handleCreateProject} handleDeleteProject={handleDeleteProject} handleCreateProperty={handleCreateProperty} handleDeleteProperty={handleDeleteProperty} handleImageUpload={handleImageUpload} removeImage={removeImage} toggleRecording={toggleRecording} handleSubmit={handleSubmit} handleDeleteEntry={handleDeleteEntry} handleExportPDF={handleExportPDF} handleSaveProperty={handleSaveProperty} handleSaveEntry={handleSaveEntry} loadTeam={loadTeam} handleOpenTeam={handleOpenTeam} handleInvite={handleInvite} handleRemoveMember={handleRemoveMember} handleCancelInvite={handleCancelInvite} openLightbox={openLightbox} closeLightbox={closeLightbox} lightboxPrev={lightboxPrev} lightboxNext={lightboxNext} fileInputRef={fileInputRef} recognitionRef={recognitionRef} />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/" element={<HomeScreen />} />
+        <Route path="/login" element={token ? <Navigate to="/proyectos" replace /> : <LoginScreen onLogin={handleLogin} />} />
+        <Route path="/invitacion/:token" element={token ? <Navigate to="/proyectos" replace /> : <InviteRegisterScreen onLogin={handleLogin} />} />
+        <Route path="/admin" element={<AdminScreen />} />
+        <Route path="/h/:entryId" element={<PublicEntryScreen />} />
+        <Route path="/proyectos" element={<AppInterior {...interiorProps} vista="proyectos" />} />
+        <Route path="/proyectos/:projectId" element={<AppInterior {...interiorProps} vista="propiedades" />} />
+        <Route path="/proyectos/:projectId/propiedades/:propertyId" element={<AppInterior {...interiorProps} vista="hallazgos" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   )
@@ -1288,11 +1472,16 @@ var handleLogin = function(newToken, user) {
 // === COMPONENTE INTERIOR DE LA APP (fuera de App para evitar re-montaje) ===
 function AppInterior(props) {
   var navigate = useNavigate()
+  var params = useParams()
+  var vista = props.vista  // 'proyectos' | 'propiedades' | 'hallazgos'
+
   var token = props.token
+  var authFetch = props.authFetch
   var currentUser = props.currentUser
   var setCurrentUser = props.setCurrentUser
   var handleLogout = props.handleLogout
   var projects = props.projects
+  var setProjects = props.setProjects
   var currentProject = props.currentProject
   var setCurrentProject = props.setCurrentProject
   var properties = props.properties
@@ -1356,12 +1545,44 @@ function AppInterior(props) {
   var lightboxNext = props.lightboxNext
   var fileInputRef = props.fileInputRef
 
-  // Scroll al tope en cada cambio de vista interna (por id, no por referencia de objeto)
-  var currentProjectId = props.currentProject ? props.currentProject.id : null
-  var currentPropertyId = props.currentProperty ? props.currentProperty.id : null
+  // Cuando se accede a /proyectos/:projectId directamente (ej: refresh o link compartido),
+  // cargar el proyecto desde la API si aún no está en estado
+  useEffect(function() {
+    if (!token) return
+    if (vista === 'propiedades' || vista === 'hallazgos') {
+      var projectId = parseInt(params.projectId)
+      if (!currentProject || currentProject.id !== projectId) {
+        authFetch(API_URL + '/projects').then(function(r) { return r.json() }).then(function(list) {
+          var found = list.find(function(p) { return p.id === projectId })
+          if (found) { setCurrentProject(found); setProjects(list) }
+          else navigate('/proyectos', { replace: true })
+        }).catch(function() { navigate('/proyectos', { replace: true }) })
+      }
+    }
+  }, [params.projectId, token])
+
+  // Cuando se accede a /proyectos/:projectId/propiedades/:propertyId directamente,
+  // cargar la propiedad desde la API si aún no está en estado
+  useEffect(function() {
+    if (!token) return
+    if (vista === 'hallazgos') {
+      var propertyId = parseInt(params.propertyId)
+      if (!currentProperty || currentProperty.id !== propertyId) {
+        if (currentProject) {
+          authFetch(API_URL + '/projects/' + currentProject.id + '/properties').then(function(r) { return r.json() }).then(function(list) {
+            var found = list.find(function(p) { return p.id === propertyId })
+            if (found) { setProperties(list); setCurrentProperty(found) }
+            else navigate('/proyectos/' + currentProject.id, { replace: true })
+          }).catch(function() { navigate('/proyectos', { replace: true }) })
+        }
+      }
+    }
+  }, [params.propertyId, currentProject, token])
+
+  // Scroll al tope en cada cambio de vista
   useLayoutEffect(function() {
     scrollToTop()
-  }, [currentProjectId, currentPropertyId])
+  }, [vista, params.projectId, params.propertyId])
 
   // Si no hay token, redirigir a login
   if (!token) return <Navigate to="/login" replace />
@@ -1376,8 +1597,32 @@ function AppInterior(props) {
     navigate('/')
   }
 
+  // Navegación con URL
+  var goToProject = function(project) {
+    setCurrentProject(project)
+    setShowTeam(false)
+    navigate('/proyectos/' + project.id)
+  }
+
+  var goToProperty = function(prop) {
+    setCurrentProperty(prop)
+    navigate('/proyectos/' + currentProject.id + '/propiedades/' + prop.id)
+  }
+
+  var goBackToProjects = function() {
+    setCurrentProject(null)
+    setShowTeam(false)
+    navigate('/proyectos')
+  }
+
+  var goBackToProperties = function() {
+    setCurrentProperty(null)
+    setShowForm(false)
+    navigate('/proyectos/' + currentProject.id)
+  }
+
     // === VISTA 1: PROYECTOS ===
-    if (!currentProject) {
+    if (vista === 'proyectos') {
       return (
         <div className="app">
           <header className="header">
@@ -1400,9 +1645,9 @@ function AppInterior(props) {
               <button className="add-button" onClick={function() { setShowNewProject(true) }}>+ Nuevo Proyecto</button>
             ) : (
               <div className="new-project-form">
-                <input type="text" placeholder="Nombre del proyecto..." value={newProjectName} onChange={function(e) { setNewProjectName(e.target.value) }} className="text-input" autoFocus onKeyDown={function(e) { if (e.key === 'Enter') handleCreateProject() }} />
+                <input type="text" placeholder="Nombre del proyecto..." value={newProjectName} onChange={function(e) { setNewProjectName(e.target.value) }} className="text-input" autoFocus onKeyDown={function(e) { if (e.key === 'Enter') handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }} />
                 <div className="new-project-actions">
-                  <button className="submit-button" onClick={handleCreateProject}>Crear Proyecto</button>
+                  <button className="submit-button" onClick={function() { handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }}>Crear Proyecto</button>
                   <button className="cancel-button" onClick={function() { setShowNewProject(false); setNewProjectName('') }}>Cancelar</button>
                 </div>
               </div>
@@ -1414,7 +1659,7 @@ function AppInterior(props) {
               {projects.map(function(project) {
                 return (
                   <div key={project.id} className="project-card">
-                    <div className="project-card-content" onClick={function() { scrollToTop(); setCurrentProject(project) }}>
+                    <div className="project-card-content" onClick={function() { goToProject(project) }}>
                       <h3>📁 {project.name}</h3>
                       <p className="project-date">{project.property_count || 0} propiedades | Creado: {new Date(project.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                     </div>
@@ -1428,8 +1673,13 @@ function AppInterior(props) {
       )
     }
 
+    // Pantalla de carga — esperar que se hidrate currentProject desde la URL
+    if (!currentProject) {
+      return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'#6B6760'}}>Cargando...</p></main></div>
+    }
+
     // === VISTA 2: PROPIEDADES ===
-    if (!currentProperty) {
+    if (vista === 'propiedades') {
       return (
         <div className="app">
           <header className="header">
@@ -1447,7 +1697,7 @@ function AppInterior(props) {
                 </div>
               </div>
               <div className="header-row-nav">
-                <button className="back-button" onClick={function() { scrollToTop(); setCurrentProject(null); setShowTeam(false) }}>← Proyectos</button>
+                <button className="back-button" onClick={goBackToProjects}>← Proyectos</button>
                 <div className="project-name-display">{currentProject.name}</div>
               </div>
             </div>
@@ -1581,7 +1831,7 @@ function AppInterior(props) {
                 }
                 return (
                   <div key={prop.id} className="project-card property-card">
-                    <div className="project-card-content" onClick={function() { scrollToTop(); setCurrentProperty(prop) }}>
+                    <div className="project-card-content" onClick={function() { goToProperty(prop) }}>
                       <h3>🏠 {prop.unit_number}</h3>
                       <p className="property-owner">{prop.owner_name || 'Sin propietario asignado'}</p>
                       <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
@@ -1595,6 +1845,11 @@ function AppInterior(props) {
           </main>
         </div>
       )
+    }
+
+    // Pantalla de carga — esperar que se hidrate currentProperty desde la URL
+    if (!currentProperty) {
+      return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'#6B6760'}}>Cargando...</p></main></div>
     }
 
     // === VISTA 3: HALLAZGOS ===
@@ -1613,7 +1868,7 @@ function AppInterior(props) {
               </div>
             </div>
             <div className="header-row-nav">
-              <button className="back-button" onClick={function() { scrollToTop(); setCurrentProperty(null); setShowForm(false) }}>← Propiedades</button>
+              <button className="back-button" onClick={goBackToProperties}>← Propiedades</button>
               <div className="project-name-display">{currentProperty.unit_number}{currentProperty.owner_name ? ' — ' + currentProperty.owner_name : ''}</div>
             </div>
           </div>
@@ -1717,6 +1972,14 @@ function AppInterior(props) {
                 return (
                   <div key={entry.id} className="entry-card">
                     <div style={{position:'absolute', top:'0.875rem', right:'0.875rem', display:'flex', gap:'0.25rem'}}>
+                      <button className="delete-button" style={{position:'static', opacity:0.35}} title="Copiar link" onClick={function() {
+                        var url = window.location.origin + '/h/' + entry.id
+                        navigator.clipboard.writeText(url).then(function() {
+                          alert('✅ Link copiado al portapapeles')
+                        }).catch(function() {
+                          prompt('Copia este link:', url)
+                        })
+                      }}>🔗</button>
                       <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}>✏️</button>
                       <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
                     </div>
