@@ -1065,6 +1065,7 @@ function App() {
     setToken(newToken)
     setCurrentUser(user)
     setTimeout(function() { scrollToTop() }, 50)
+    navigate('/proyectos')
   }
 
   var handleLogout = function() {
