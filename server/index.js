@@ -530,7 +530,7 @@ app.post('/projects/:id/invite', authMiddleware, adminMiddleware, async function
       [emailNorm, projectId, req.user.company_id, invToken, 'pending']
     )
 
-    var inviteUrl = APP_URL + '?invite=' + invToken
+    var inviteUrl = process.env.APP_URL + '/invitacion/' + invToken
     var projectName = project.rows[0].name
 
     // Obtener nombre de la empresa
