@@ -280,7 +280,10 @@ function HomeScreen() {
   )
 }
 
-var API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3001' : 'https://bitacora-postventa-production.up.railway.app'
+var API_URL =
+  window.location.hostname === 'localhost' || window.location.hostname.startsWith('192.168.')
+    ? 'http://' + window.location.hostname + ':3001'
+    : 'https://bitacora-postventa-production.up.railway.app'
 
 var CATEGORIES = {
   estructural: { label: 'Estructural', icon: '🏗️', color: '#E74C3C' },
@@ -965,16 +968,26 @@ function AdminScreen() {
 
 // === SCROLL TO TOP GLOBAL ===
 function scrollToTop() {
-  window.scrollTo(0, 0)
-  document.documentElement.scrollTop = 0
-  document.body.scrollTop = 0
+  // iOS a veces ignora el primer scrollTo si se hace "muy temprano"
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      var el = document.getElementById('app-scroll')
+      if (el) el.scrollTop = 0
+
+      window.scrollTo(0, 0)
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    })
+  })
 }
 
 function ScrollToTop() {
   var location = useLocation()
-  useLayoutEffect(function() {
+
+  useLayoutEffect(function () {
     scrollToTop()
   }, [location.pathname])
+
   return null
 }
 
@@ -1381,7 +1394,7 @@ function AppInterior(props) {
               </div>
             </div>
           </header>
-          <main className="main">
+          <main className="main" id="app-scroll">
             <h2 className="section-title">Mis Proyectos</h2>
             {!showNewProject ? (
               <button className="add-button" onClick={function() { setShowNewProject(true) }}>+ Nuevo Proyecto</button>
@@ -1439,7 +1452,7 @@ function AppInterior(props) {
               </div>
             </div>
           </header>
-          <main className="main">
+          <main className="main" id="app-scroll">
 
             {/* PANEL DE EQUIPO */}
             {showTeam && (
@@ -1605,7 +1618,7 @@ function AppInterior(props) {
             </div>
           </div>
         </header>
-        <main className="main">
+        <main className="main" id="app-scroll">
           <div className="action-buttons">
             {!showForm && <button className="add-button" onClick={function() { setShowForm(true) }}>+ Nuevo Hallazgo</button>}
             {entries.length > 0 && !showForm && <button className="pdf-button" onClick={handleExportPDF}>📄 Descargar PDF</button>}

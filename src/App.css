@@ -822,14 +822,14 @@ body {
 
 /* ── AUTH SCREENS ── */
 .auth-screen {
-  height: 100vh;
+  height: 100svh;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--ink);
   padding: 1.25rem;
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   box-sizing: border-box;
 }
 

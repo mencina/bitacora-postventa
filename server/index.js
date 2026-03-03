@@ -150,7 +150,8 @@ app.use(cors({
     'https://bitacora-postventa.vercel.app',
     'https://bitacorapro.cl',
     'https://www.bitacorapro.cl',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    'http://192.168.6.1:5173'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true,
@@ -161,7 +162,7 @@ app.use(express.json({ limit: '50mb' }))
 var anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 var JWT_SECRET = process.env.JWT_SECRET || 'clave_secreta_temporal'
 var resend = new Resend(process.env.RESEND_API_KEY)
-var APP_URL = process.env.NODE_ENV === 'production' ? 'https://bitacora-postventa.vercel.app' : 'http://localhost:5173'
+var APP_URL = process.env.APP_URL || (process.env.NODE_ENV === 'production' ? 'https://www.bitacorapro.cl' : 'http://localhost:5173')
 
 // Middleware para verificar token
 function authMiddleware(req, res, next) {
@@ -811,7 +812,9 @@ app.post('/admin/create-company', superadminMiddleware, async function(req, res)
 
 var PORT = process.env.PORT || 3001
 initDB().then(function() {
-  app.listen(PORT, function() { console.log('Servidor corriendo en puerto ' + PORT) })
+  app.listen(PORT, '0.0.0.0', function() {
+  console.log('Servidor corriendo en puerto ' + PORT)
+})
 }).catch(function(err) {
   console.error('Error iniciando base de datos:', err)
   process.exit(1)
