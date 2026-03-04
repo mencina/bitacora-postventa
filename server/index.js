@@ -154,6 +154,15 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Tokens de vista pública de propiedad
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS property_tokens (
+      id SERIAL PRIMARY KEY,
+      property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE UNIQUE,
+      token TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
   console.log('Base de datos lista')
 }
 
@@ -674,6 +683,62 @@ function superadminMiddleware(req, res, next) {
   if (!secret || secret !== ADMIN_SECRET) return res.status(401).json({ error: 'No autorizado' })
   next()
 }
+
+// GET /properties/:id/public-token — obtener (o crear) token público de una propiedad
+app.get('/properties/:id/public-token', authMiddleware, async function(req, res) {
+  try {
+    var propertyId = req.params.id
+    var existing = await pool.query('SELECT token FROM property_tokens WHERE property_id = $1', [propertyId])
+    if (existing.rows.length > 0) return res.json({ token: existing.rows[0].token })
+    var crypto = require('crypto')
+    var token = crypto.randomBytes(20).toString('hex')
+    await pool.query('INSERT INTO property_tokens (property_id, token) VALUES ($1, $2)', [propertyId, token])
+    res.json({ token: token })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// GET /public/properties/:token — vista pública de una propiedad con todos sus hallazgos
+app.get('/public/properties/:token', async function(req, res) {
+  try {
+    var tokenResult = await pool.query(
+      `SELECT pt.property_id, p.unit_number, p.owner_name, p.project_id, proj.name AS project_name
+       FROM property_tokens pt
+       JOIN properties p ON pt.property_id = p.id
+       JOIN projects proj ON p.project_id = proj.id
+       WHERE pt.token = $1`,
+      [req.params.token]
+    )
+    if (tokenResult.rows.length === 0) return res.status(404).json({ error: 'Página no encontrada' })
+    var prop = tokenResult.rows[0]
+
+    var entriesResult = await pool.query(
+      'SELECT * FROM entries WHERE property_id = $1 ORDER BY created_at DESC',
+      [prop.property_id]
+    )
+    var entries = entriesResult.rows
+    for (var i = 0; i < entries.length; i++) {
+      var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entries[i].id])
+      entries[i].images = imgs.rows
+      entries[i].affected_elements = entries[i].affected_elements ? JSON.parse(entries[i].affected_elements) : []
+    }
+
+    var resueltos = entries.filter(function(e) { return e.status === 'resuelto' }).length
+    var en_progreso = entries.filter(function(e) { return e.status === 'en_progreso' }).length
+    var pendientes = entries.filter(function(e) { return e.status === 'pendiente' || !e.status }).length
+
+    res.json({
+      unit_number: prop.unit_number,
+      owner_name: prop.owner_name,
+      project_name: prop.project_name,
+      entries: entries,
+      summary: { total: entries.length, resueltos: resueltos, en_progreso: en_progreso, pendientes: pendientes }
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 // GET /public/entries/:entryId — vista pública de un hallazgo (sin autenticación)
 app.get('/public/entries/:entryId', async function(req, res) {

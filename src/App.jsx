@@ -1360,6 +1360,21 @@ var handleLogin = function(newToken, user) {
       .then(function(p) { setProperties(function(prev) { return prev.concat([p]) }); setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' }); setShowNewProperty(false) })
   }
 
+  var handleCopyPropertyLink = async function(propertyId) {
+    try {
+      var r = await authFetch(API_URL + '/properties/' + propertyId + '/public-token')
+      var data = await r.json()
+      if (data.token) {
+        var url = window.location.origin + '/p/' + data.token
+        navigator.clipboard.writeText(url).then(function() {
+          alert('✅ Link copiado al portapapeles')
+        }).catch(function() {
+          prompt('Copia este link:', url)
+        })
+      }
+    } catch(e) { alert('Error al obtener el link') }
+  }
+
   var handleDeleteProperty = function(id) {
     if (!window.confirm('Eliminar esta propiedad y todos sus hallazgos?')) return
     authFetch(API_URL + '/properties/' + id, { method: 'DELETE' }).then(function() {
@@ -1546,7 +1561,7 @@ var handleLogin = function(newToken, user) {
     editingEntry, setEditingEntry, editEntryForm, setEditEntryForm,
     lightbox, setLightbox,
     handleCreateProject, handleDeleteProject,
-    handleCreateProperty, handleDeleteProperty,
+    handleCreateProperty, handleDeleteProperty, handleCopyPropertyLink,
     handleImageUpload, removeImage, toggleRecording,
     handleSubmit, handleDeleteEntry, handleExportPDF,
     handleSaveProperty, handleSaveEntry, handleUpdateEntryStatus,
@@ -1566,6 +1581,7 @@ var handleLogin = function(newToken, user) {
         <Route path="/invitacion/:token" element={token ? <Navigate to="/proyectos" replace /> : <InviteRegisterScreen onLogin={handleLogin} />} />
         <Route path="/admin" element={<AdminScreen />} />
         <Route path="/h/:entryId" element={<PublicEntryScreen />} />
+        <Route path="/p/:token" element={<PublicPropertyScreen />} />
         <Route path="/reset-password/:token" element={<ResetPasswordScreen onLogin={handleLogin} />} />
         <Route path="/proyectos" element={<AppInterior {...interiorProps} vista="proyectos" />} />
         <Route path="/proyectos/:projectId" element={<AppInterior {...interiorProps} vista="propiedades" />} />
@@ -1634,6 +1650,7 @@ function AppInterior(props) {
   var handleDeleteProject = props.handleDeleteProject
   var handleCreateProperty = props.handleCreateProperty
   var handleDeleteProperty = props.handleDeleteProperty
+  var handleCopyPropertyLink = props.handleCopyPropertyLink
   var handleImageUpload = props.handleImageUpload
   var removeImage = props.removeImage
   var toggleRecording = props.toggleRecording
@@ -1948,6 +1965,7 @@ function AppInterior(props) {
                       <p className="property-owner">{prop.owner_name || 'Sin propietario asignado'}</p>
                       <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
                     </div>
+                    <button className="delete-project-button" title="Compartir vista propietario" onClick={function(e) { e.stopPropagation(); handleCopyPropertyLink(prop.id) }}>🔗</button>
                     <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
                     {currentUser && currentUser.role === 'admin' && (
                       <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
@@ -2179,6 +2197,189 @@ function AppInterior(props) {
         )}
       </div>
     )
+}
+
+function PublicPropertyScreen() {
+  var { token } = useParams()
+  var [data, setData] = useState(null)
+  var [loading, setLoading] = useState(true)
+  var [error, setError] = useState('')
+  var [lightbox, setLightbox] = useState(null)
+
+  useEffect(function() {
+    fetch(API_URL + '/public/properties/' + token)
+      .then(function(r) { return r.json() })
+      .then(function(d) {
+        if (d.error) { setError(d.error) } else { setData(d) }
+        setLoading(false)
+      })
+      .catch(function() { setError('No se pudo cargar la información'); setLoading(false) })
+  }, [token])
+
+  useEffect(function() {
+    if (!lightbox) return
+    var handler = function(e) {
+      if (e.key === 'Escape') setLightbox(null)
+      if (e.key === 'ArrowLeft') setLightbox(function(lb) { return lb ? { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } : null })
+      if (e.key === 'ArrowRight') setLightbox(function(lb) { return lb ? { images: lb.images, index: (lb.index + 1) % lb.images.length } : null })
+    }
+    window.addEventListener('keydown', handler)
+    return function() { window.removeEventListener('keydown', handler) }
+  }, [lightbox])
+
+  var severityColor = function(s) {
+    if (s === 'critico') return { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', label: 'Crítico' }
+    if (s === 'grave') return { bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412', label: 'Grave' }
+    if (s === 'moderado') return { bg: '#FEFCE8', border: '#FDE68A', text: '#92400E', label: 'Moderado' }
+    return { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534', label: 'Leve' }
+  }
+
+  var statusLabel = function(s) {
+    if (s === 'resuelto') return { label: 'Resuelto', bg: '#F0FDF4', color: '#166534', border: '#BBF7D0', dot: '#22C55E' }
+    if (s === 'en_progreso') return { label: 'En progreso', bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE', dot: '#3B82F6' }
+    return { label: 'Pendiente', bg: '#FFF7ED', color: '#9A3412', border: '#FED7AA', dot: '#F97316' }
+  }
+
+  if (loading) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0'}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'#1A1814',marginBottom:'0.5rem'}}>BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
+        <p style={{color:'#6B6760',fontSize:'0.9rem'}}>Cargando información...</p>
+      </div>
+    </div>
+  )
+
+  if (error) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0'}}>
+      <div style={{textAlign:'center',padding:'2rem'}}>
+        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'#1A1814',marginBottom:'1rem'}}>BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
+        <p style={{color:'#B91C1C'}}>{error}</p>
+      </div>
+    </div>
+  )
+
+  var summary = data.summary
+  var entries = data.entries
+
+  return (
+    <div style={{minHeight:'100vh',background:'#F7F5F0',fontFamily:"'DM Sans',system-ui,sans-serif",color:'#1A1814'}}>
+      {/* Header */}
+      <div style={{background:'#fff',borderBottom:'1px solid #E2DDD6',padding:'1rem 1.25rem',position:'sticky',top:0,zIndex:10}}>
+        <div style={{maxWidth:'680px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{fontFamily:'Georgia,serif',fontSize:'1.1rem',fontWeight:'700',color:'#1A1814'}}>BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
+          <div style={{fontSize:'0.75rem',color:'#6B6760',background:'#F7F5F0',padding:'0.3rem 0.75rem',borderRadius:'100px',border:'1px solid #E2DDD6'}}>Vista propietario</div>
+        </div>
+      </div>
+
+      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.5rem 1.25rem 4rem'}}>
+
+        {/* Info propiedad */}
+        <div style={{background:'#fff',borderRadius:'14px',border:'1px solid #E2DDD6',padding:'1.5rem',marginBottom:'1.25rem'}}>
+          <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'#2D5A3D',marginBottom:'0.25rem'}}>{data.project_name}</p>
+          <h1 style={{fontFamily:'Georgia,serif',fontSize:'1.5rem',fontWeight:'700',margin:'0 0 0.25rem'}}>{data.unit_number}</h1>
+          {data.owner_name && <p style={{color:'#6B6760',fontSize:'0.9rem',margin:0}}>{data.owner_name}</p>}
+        </div>
+
+        {/* Dashboard resumen */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'0.75rem',marginBottom:'1.5rem'}}>
+          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#1A1814'}}>{summary.total}</div>
+            <div style={{fontSize:'0.72rem',color:'#6B6760',marginTop:'0.15rem'}}>Total</div>
+          </div>
+          <div style={{background:'#FFF7ED',borderRadius:'12px',border:'1px solid #FED7AA',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#9A3412'}}>{summary.pendientes}</div>
+            <div style={{fontSize:'0.72rem',color:'#9A3412',marginTop:'0.15rem'}}>Pendiente{summary.pendientes !== 1 ? 's' : ''}</div>
+          </div>
+          <div style={{background:'#EFF6FF',borderRadius:'12px',border:'1px solid #BFDBFE',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#1D4ED8'}}>{summary.en_progreso}</div>
+            <div style={{fontSize:'0.72rem',color:'#1D4ED8',marginTop:'0.15rem'}}>En progreso</div>
+          </div>
+        </div>
+
+        {/* Barra de progreso */}
+        {summary.total > 0 && (
+          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1rem 1.25rem',marginBottom:'1.5rem'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.6rem'}}>
+              <span style={{fontSize:'0.8rem',color:'#6B6760'}}>Progreso de resolución</span>
+              <span style={{fontSize:'0.8rem',fontWeight:'600',color:'#166534'}}>{summary.resueltos} de {summary.total} resueltos</span>
+            </div>
+            <div style={{height:'8px',background:'#E2DDD6',borderRadius:'100px',overflow:'hidden'}}>
+              <div style={{height:'100%',background:'#22C55E',borderRadius:'100px',width:(summary.resueltos / summary.total * 100) + '%',transition:'width 0.5s ease'}} />
+            </div>
+          </div>
+        )}
+
+        {/* Lista hallazgos */}
+        {entries.length === 0 ? (
+          <div style={{textAlign:'center',padding:'3rem 1rem',color:'#6B6760'}}>
+            <p style={{fontSize:'2rem',marginBottom:'0.5rem'}}>✅</p>
+            <p>No hay hallazgos registrados para esta propiedad.</p>
+          </div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+            {entries.map(function(entry) {
+              var sev = severityColor(entry.severity)
+              var st = statusLabel(entry.status)
+              return (
+                <div key={entry.id} style={{background:'#fff',borderRadius:'14px',border:'1px solid #E2DDD6',overflow:'hidden'}}>
+                  {/* Header hallazgo */}
+                  <div style={{padding:'1rem 1.25rem 0.75rem',borderBottom:'1px solid #F3F0EB'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'0.75rem',marginBottom:'0.5rem'}}>
+                      <h3 style={{fontSize:'0.95rem',fontWeight:'600',margin:0,lineHeight:1.4}}>{entry.title}</h3>
+                      <span style={{flexShrink:0,fontSize:'0.7rem',fontWeight:'600',padding:'0.2rem 0.6rem',borderRadius:'100px',background:st.bg,color:st.color,border:'1px solid '+st.border,display:'flex',alignItems:'center',gap:'0.3rem'}}>
+                        <span style={{width:'6px',height:'6px',borderRadius:'50%',background:st.dot,flexShrink:0}} />
+                        {st.label}
+                      </span>
+                    </div>
+                    <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
+                      <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:sev.bg,color:sev.text,border:'1px solid '+sev.border,fontWeight:'500'}}>{sev.label}</span>
+                      {entry.category && <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:'#F3F4F6',color:'#374151',border:'1px solid #E5E7EB',textTransform:'capitalize'}}>{entry.category}</span>}
+                      {entry.location && <span style={{fontSize:'0.7rem',color:'#6B6760'}}>📍 {entry.location}</span>}
+                    </div>
+                  </div>
+                  {/* Fotos */}
+                  {entry.images && entry.images.length > 0 && (
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'2px',background:'#F3F0EB'}}>
+                      {entry.images.map(function(img, idx) {
+                        return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',cursor:'zoom-in'}} />
+                      })}
+                    </div>
+                  )}
+                  {/* Cuerpo */}
+                  <div style={{padding:'1rem 1.25rem',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
+                    {entry.description && <p style={{fontSize:'0.875rem',color:'#374151',lineHeight:1.7,margin:0}}>{entry.description}</p>}
+                    {entry.recommendation && (
+                      <div style={{background:'#FFFBEB',borderRadius:'8px',padding:'0.75rem',border:'1px solid #FDE68A'}}>
+                        <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#D97706',marginBottom:'0.3rem'}}>💡 Recomendación</p>
+                        <p style={{fontSize:'0.85rem',color:'#78350F',lineHeight:1.6,margin:0}}>{entry.recommendation}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{textAlign:'center',marginTop:'3rem',paddingTop:'1.5rem',borderTop:'1px solid #E2DDD6'}}>
+          <p style={{fontSize:'0.75rem',color:'#C0BBB5'}}>Generado con <strong style={{color:'#2D5A3D'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={function() { setLightbox(null) }} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <img src={lightbox.images[lightbox.index].filename} alt="" onClick={function(e) { e.stopPropagation() }} style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px'}} />
+          {lightbox.images.length > 1 && <>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
+          </>}
+          <button onClick={function() { setLightbox(null) }} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function ResetPasswordScreen({ onLogin }) {
