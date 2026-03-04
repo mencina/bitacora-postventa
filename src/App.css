@@ -1102,3 +1102,60 @@ body {
     padding: 1rem 0.875rem;
   }
 }
+
+/* === ESTADO DE HALLAZGO === */
+.entry-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.entry-status-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6B6760;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.entry-status-buttons {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.entry-status-btn {
+  padding: 0.3rem 0.75rem;
+  border-radius: 100px;
+  border: 1.5px solid #E2DDD6;
+  background: #F7F5F0;
+  color: #6B6760;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.entry-status-btn:hover {
+  border-color: #C0BBB5;
+  background: #EFECE8;
+}
+
+.entry-status-btn.active {
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .entry-status-buttons {
+    gap: 0.3rem;
+  }
+  .entry-status-btn {
+    font-size: 0.72rem;
+    padding: 0.28rem 0.6rem;
+  }
+}

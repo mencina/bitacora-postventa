@@ -301,6 +301,12 @@ var SEVERITIES = {
   critico: { label: 'Critico', color: '#8E44AD', bg: '#F4ECF7' },
 }
 
+var STATUSES = {
+  pendiente:   { label: 'Pendiente',   color: '#B45309', bg: '#FEF3C7', icon: '🔴' },
+  en_progreso: { label: 'En progreso', color: '#1D4ED8', bg: '#DBEAFE', icon: '🔵' },
+  resuelto:    { label: 'Resuelto',    color: '#15803D', bg: '#DCFCE7', icon: '🟢' },
+}
+
 function hexToRgb(hex) {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]
 }
@@ -415,6 +421,17 @@ async function generatePDF(projectName, property, entries) {
     doc.roundedRect(margin + catLabelWidth, y, 4, 4, 1, 1, 'F')
     doc.setTextColor(sevColor[0], sevColor[1], sevColor[2])
     doc.text(sev.label, margin + catLabelWidth + 7, y + 3.5)
+    // Estado
+    var statusLabels = { pendiente: 'Pendiente', en_progreso: 'En progreso', resuelto: 'Resuelto' }
+    var statusColors = { pendiente: '#B45309', en_progreso: '#1D4ED8', resuelto: '#15803D' }
+    var entryStatusKey = entry.status || 'pendiente'
+    var statusLabel = statusLabels[entryStatusKey] || 'Pendiente'
+    var statusColor = hexToRgb(statusColors[entryStatusKey] || statusColors.pendiente)
+    var sevLabelWidth = catLabelWidth + doc.getTextWidth(sev.label) + 12
+    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2])
+    doc.roundedRect(margin + sevLabelWidth, y, 4, 4, 1, 1, 'F')
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2])
+    doc.text(statusLabel, margin + sevLabelWidth + 7, y + 3.5)
     y += 12
 
     doc.setTextColor(80, 80, 80)
@@ -1067,6 +1084,7 @@ function PublicEntryScreen() {
 
   var CATS = { estructural: { label: 'Estructural', color: '#DC2626', icon: '🏗️' }, humedad: { label: 'Humedad', color: '#2563EB', icon: '💧' }, electrico: { label: 'Eléctrico', color: '#D97706', icon: '⚡' }, terminaciones: { label: 'Terminaciones', color: '#7C3AED', icon: '🎨' }, instalaciones: { label: 'Instalaciones', color: '#059669', icon: '🔧' }, otro: { label: 'Otro', color: '#6B7280', icon: '📋' } }
   var SEVS = { leve: { label: 'Leve', color: '#16A34A', bg: '#F0FDF4' }, moderado: { label: 'Moderado', color: '#D97706', bg: '#FFFBEB' }, grave: { label: 'Grave', color: '#DC2626', bg: '#FEF2F2' }, critico: { label: 'Crítico', color: '#7C3AED', bg: '#FAF5FF' } }
+  var PUB_STATUSES = { pendiente: { label: 'Pendiente', color: '#B45309', bg: '#FEF3C7', icon: '🔴' }, en_progreso: { label: 'En progreso', color: '#1D4ED8', bg: '#DBEAFE', icon: '🔵' }, resuelto: { label: 'Resuelto', color: '#15803D', bg: '#DCFCE7', icon: '🟢' } }
 
   if (loading) return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
@@ -1109,6 +1127,10 @@ function PublicEntryScreen() {
         <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap',marginBottom:'0.875rem'}}>
           <span style={{background:cat.color+'18',color:cat.color,border:'1px solid '+cat.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{cat.icon} {cat.label}</span>
           <span style={{background:sev.bg,color:sev.color,border:'1px solid '+sev.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{sev.label}</span>
+          {(function() {
+            var st = PUB_STATUSES[entry.status] || PUB_STATUSES.pendiente
+            return <span style={{background:st.bg,color:st.color,border:'1px solid '+st.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{st.icon} {st.label}</span>
+          })()}
           {entry.ai_generated === 1 && <span style={{background:'#EEF2FF',color:'#4F46E5',border:'1px solid #C7D2FE',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>🤖 Generado con IA</span>}
         </div>
 
@@ -1430,6 +1452,19 @@ var handleLogin = function(newToken, user) {
       .catch(function() { alert('Error al guardar') })
   }
 
+  var handleUpdateEntryStatus = function(entryId, newStatus) {
+    authFetch(API_URL + '/entries/' + entryId, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+      .then(function(r) { return r.json() })
+      .then(function(updated) {
+        setEntries(function(prev) { return prev.map(function(e) { return e.id === updated.id ? Object.assign({}, e, { status: updated.status }) : e }) })
+      })
+      .catch(function() { alert('Error al actualizar estado') })
+  }
+
   var loadTeam = function(projectId) {
     authFetch(API_URL + '/projects/' + projectId + '/team')
       .then(function(r) { return r.json() })
@@ -1492,7 +1527,7 @@ var handleLogin = function(newToken, user) {
     handleCreateProperty, handleDeleteProperty,
     handleImageUpload, removeImage, toggleRecording,
     handleSubmit, handleDeleteEntry, handleExportPDF,
-    handleSaveProperty, handleSaveEntry,
+    handleSaveProperty, handleSaveEntry, handleUpdateEntryStatus,
     loadTeam, handleOpenTeam, handleInvite, handleRemoveMember, handleCancelInvite,
     openLightbox, closeLightbox, lightboxPrev, lightboxNext,
     fileInputRef, recognitionRef,
@@ -1585,6 +1620,7 @@ function AppInterior(props) {
   var handleExportPDF = props.handleExportPDF
   var handleSaveProperty = props.handleSaveProperty
   var handleSaveEntry = props.handleSaveEntry
+  var handleUpdateEntryStatus = props.handleUpdateEntryStatus
   var handleOpenTeam = props.handleOpenTeam
   var handleInvite = props.handleInvite
   var handleRemoveMember = props.handleRemoveMember
@@ -2046,6 +2082,31 @@ function AppInterior(props) {
                       <span className="tag severity-tag" style={{ background: sev.bg, color: sev.color, border: '1px solid ' + sev.color + '33' }}>{sev.label}</span>
                       {entry.ai_generated === 1 && <span className="tag ai-tag">🤖 IA</span>}
                     </div>
+                    {/* SELECTOR DE ESTADO */}
+                    {(function() {
+                      var entryStatus = entry.status || 'pendiente'
+                      var st = STATUSES[entryStatus] || STATUSES.pendiente
+                      return (
+                        <div className="entry-status-row">
+                          <span className="entry-status-label">Estado:</span>
+                          <div className="entry-status-buttons">
+                            {Object.entries(STATUSES).map(function(pair) {
+                              var key = pair[0]
+                              var val = pair[1]
+                              var isActive = entryStatus === key
+                              return (
+                                <button
+                                  key={key}
+                                  className={'entry-status-btn' + (isActive ? ' active' : '')}
+                                  style={isActive ? { background: val.bg, color: val.color, border: '1.5px solid ' + val.color + '55', fontWeight: '600' } : {}}
+                                  onClick={function() { if (!isActive) handleUpdateEntryStatus(entry.id, key) }}
+                                >{val.icon} {val.label}</button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })()}
                     <h4 className="entry-title">{entry.title}</h4>
                     <div className="entry-header">
                       <span className="entry-unit">📍 {entry.location || 'Sin ubicacion'}</span>

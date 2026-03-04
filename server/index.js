@@ -69,6 +69,8 @@ async function initDB() {
   `)
   // Migración: agregar columna must_change_password si no existe
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE`)
+  // Migración: agregar columna status en entries si no existe
+  await pool.query(`ALTER TABLE entries ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'pendiente'`)
   // Proyectos
   await pool.query(`
     CREATE TABLE IF NOT EXISTS projects (
@@ -457,9 +459,11 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
 app.put('/entries/:id', authMiddleware, async function(req, res) {
   try {
     var b = req.body
+    var validStatuses = ['pendiente', 'en_progreso', 'resuelto']
+    var newStatus = b.status && validStatuses.includes(b.status) ? b.status : null
     await pool.query(
-      'UPDATE entries SET title = $1, description = $2, recommendation = $3, category = $4, severity = $5, location = $6 WHERE id = $7',
-      [b.title || '', b.description || '', b.recommendation || '', b.category || 'otro', b.severity || 'leve', b.location || '', req.params.id]
+      `UPDATE entries SET title = $1, description = $2, recommendation = $3, category = $4, severity = $5, location = $6, status = CASE WHEN $8::text IS NOT NULL THEN $8::text ELSE status END WHERE id = $7`,
+      [b.title || '', b.description || '', b.recommendation || '', b.category || 'otro', b.severity || 'leve', b.location || '', req.params.id, newStatus]
     )
     var result = await pool.query(
       'SELECT e.*, array_to_json(array(SELECT row_to_json(i) FROM images i WHERE i.entry_id = e.id)) as images_raw FROM entries e WHERE e.id = $1',
