@@ -2339,7 +2339,7 @@ function PublicPropertyScreen() {
                   </div>
                   {/* Fotos */}
                   {entry.images && entry.images.length > 0 && (
-                    <div style={{padding:'0 1.25rem 0.75rem'}}>
+                    <div style={{padding:'0.75rem 1.25rem 0'}}>
                       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'0.4rem'}}>
                         {entry.images.map(function(img, idx) {
                           return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',cursor:'zoom-in',borderRadius:'8px',border:'1px solid #E2DDD6'}} />
