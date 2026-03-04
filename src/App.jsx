@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import './App.css'
@@ -1252,6 +1252,19 @@ function App() {
   var [editingEntry, setEditingEntry] = useState(null)
   var [editEntryForm, setEditEntryForm] = useState({})
 
+  // Acta de entrega
+  var [deliveryAct, setDeliveryAct] = useState(null)
+  var deliveryActRef = useRef(null)
+  var entriesRef = useRef([])
+  // Sync deliveryActRef with deliveryAct so useCallback closures stay fresh
+  useEffect(function() { deliveryActRef.current = deliveryAct }, [deliveryAct])
+  useEffect(function() { entriesRef.current = entries }, [entries])
+  var [showAct, setShowAct] = useState(false)
+  var [actToast, setActToast] = useState('')
+  var [actFormData, setActFormData] = useState(null)
+  var [cameFromAct, setCameFromAct] = useState(false)
+  var stableSetActFormData = useCallback(function(val) { setActFormData(val) }, [])
+
   // Lightbox
   var [lightbox, setLightbox] = useState(null)
 
@@ -1326,7 +1339,8 @@ var handleLogin = function(newToken, user) {
   useEffect(function() {
     if (currentProperty && token) {
       authFetch(API_URL + '/properties/' + currentProperty.id + '/entries').then(function(r) { return r.json() }).then(setEntries).catch(console.error)
-    } else { setEntries([]) }
+      loadDeliveryAct(currentProperty.id)
+    } else { setEntries([]); setDeliveryAct(null) }
   }, [currentProperty])
 
   // Project handlers
@@ -1360,7 +1374,34 @@ var handleLogin = function(newToken, user) {
       .then(function(p) { setProperties(function(prev) { return prev.concat([p]) }); setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' }); setShowNewProperty(false) })
   }
 
-  var handleCopyPropertyLink = async function(propertyId) {
+  var loadDeliveryAct = useCallback(async function(propertyId) {
+    try {
+      var r = await authFetch(API_URL + '/properties/' + propertyId + '/delivery-act')
+      var data = await r.json()
+      setDeliveryAct(data)
+    } catch(e) { console.error(e) }
+  }, [])
+
+  var saveDeliveryAct = useCallback(async function(propertyId, updates, signNow, entriesSnapshot) {
+    try {
+      var existing = deliveryActRef.current
+      var method = existing ? 'PUT' : 'POST'
+      var url = API_URL + '/properties/' + propertyId + '/delivery-act'
+      var body = existing
+        ? Object.assign({}, updates, signNow ? { sign_now: true } : {}, entriesSnapshot ? { entries_snapshot: entriesSnapshot } : {})
+        : { data: updates.data || {} }
+      var r = await authFetch(url, {
+        method: method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      var data = await r.json()
+      setDeliveryAct(data)
+      return data
+    } catch(e) { console.error(e); return null }
+  }, [])
+
+    var handleCopyPropertyLink = async function(propertyId) {
     try {
       var r = await authFetch(API_URL + '/properties/' + propertyId + '/public-token')
       var data = await r.json()
@@ -1433,6 +1474,13 @@ var handleLogin = function(newToken, user) {
       if (data.success) {
         setEntries(function(prev) { return [data.entry].concat(prev) })
         setDescription(''); setImageFiles([]); setImagePreviews([]); setShowForm(false)
+        // Si venimos del acta, volver al acta con toast
+        if (cameFromAct) {
+          setCameFromAct(false)
+          setShowAct(true)
+          setActToast('✅ Hallazgo registrado')
+          setTimeout(function() { setActToast('') }, 2500)
+        }
       } else { alert('Error: ' + data.error) }
     } catch (error) { alert('No se pudo conectar con el servidor'); console.error(error) }
     setIsAnalyzing(false)
@@ -1562,6 +1610,11 @@ var handleLogin = function(newToken, user) {
     lightbox, setLightbox,
     handleCreateProject, handleDeleteProject,
     handleCreateProperty, handleDeleteProperty, handleCopyPropertyLink,
+    deliveryAct, setDeliveryAct, showAct, setShowAct, actToast, setActToast,
+    actFormData, setActFormData: stableSetActFormData,
+    cameFromAct, setCameFromAct,
+    loadDeliveryAct, saveDeliveryAct,
+    deliveryActRef, entriesRef,
     handleImageUpload, removeImage, toggleRecording,
     handleSubmit, handleDeleteEntry, handleExportPDF,
     handleSaveProperty, handleSaveEntry, handleUpdateEntryStatus,
@@ -1651,6 +1704,20 @@ function AppInterior(props) {
   var handleCreateProperty = props.handleCreateProperty
   var handleDeleteProperty = props.handleDeleteProperty
   var handleCopyPropertyLink = props.handleCopyPropertyLink
+  var deliveryAct = props.deliveryAct
+  var setDeliveryAct = props.setDeliveryAct
+  var showAct = props.showAct
+  var setShowAct = props.setShowAct
+  var actToast = props.actToast
+  var setActToast = props.setActToast
+  var actFormData = props.actFormData
+  var setActFormData = props.setActFormData
+  var cameFromAct = props.cameFromAct
+  var setCameFromAct = props.setCameFromAct
+  var loadDeliveryAct = props.loadDeliveryAct
+  var saveDeliveryAct = props.saveDeliveryAct
+  var deliveryActRef = props.deliveryActRef
+  var entriesRef = props.entriesRef
   var handleImageUpload = props.handleImageUpload
   var removeImage = props.removeImage
   var toggleRecording = props.toggleRecording
@@ -1709,6 +1776,8 @@ function AppInterior(props) {
     scrollToTop()
   }, [vista, params.projectId, params.propertyId])
 
+
+
   // Si no hay token, redirigir a login
   if (!token) return <Navigate to="/login" replace />
 
@@ -1745,6 +1814,12 @@ function AppInterior(props) {
     setShowForm(false)
     navigate('/proyectos/' + currentProject.id)
   }
+
+  // Callbacks estables para DeliveryActScreen (evitan re-mount)
+  var stableOnCloseAct = useCallback(function() { setShowAct(false) }, [])
+  var stableOnRegisterEntry = useCallback(function() { setCameFromAct(true); setShowAct(false); setShowForm(true) }, [])
+  var stableSetActFormData = useCallback(function(val) { setActFormData(val) }, [])
+  var stableSetActToast = useCallback(function(val) { setActToast(val) }, [])
 
     // === VISTA 1: PROYECTOS ===
     if (vista === 'proyectos') {
@@ -1985,8 +2060,30 @@ function AppInterior(props) {
     }
 
     // === VISTA 3: HALLAZGOS ===
+
+    // useEffect para abrir form de hallazgo desde el acta
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     return (
       <div className="app">
+        {/* ACTA DE ENTREGA — fullscreen overlay */}
+        {showAct && (
+          <DeliveryActScreen
+            property={currentProperty}
+            project={currentProject}
+            currentUser={currentUser}
+            deliveryActRef={deliveryActRef}
+            saveDeliveryAct={saveDeliveryAct}
+            entriesRef={entriesRef}
+            entriesCount={entries.length}
+            onClose={stableOnCloseAct}
+            onRegisterEntry={stableOnRegisterEntry}
+            actFormData={actFormData}
+            setActFormData={stableSetActFormData}
+            setActToast={stableSetActToast}
+            authFetch={authFetch}
+          />
+        )}
         <header className="header">
           <div className="header-content">
             <div className="header-row-top">
@@ -2006,9 +2103,52 @@ function AppInterior(props) {
           </div>
         </header>
         <main className="main" id="app-scroll">
+          {/* TOAST ACTA */}
+          {actToast && (
+            <div style={{position:'fixed',top:'1rem',left:'50%',transform:'translateX(-50%)',zIndex:500,background:'#1A1814',color:'#fff',padding:'0.6rem 1.25rem',borderRadius:'100px',fontSize:'0.875rem',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,0.2)',pointerEvents:'none'}}>
+              {actToast}
+            </div>
+          )}
+
+          {/* BOTÓN INICIAR ACTA — solo si no hay acta firmada ni en progreso */}
+          {!deliveryAct && !showAct && !showForm && (
+            <div style={{marginBottom:'0.75rem'}}>
+              <button onClick={function() { setShowAct(true) }} style={{width:'100%',padding:'0.75rem',background:'#F7F5F0',border:'1.5px dashed #C0BBB5',borderRadius:'10px',color:'#6B6760',fontSize:'0.875rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem'}}>
+                📋 Iniciar acta de entrega
+              </button>
+            </div>
+          )}
+
+          {/* BADGE ACTA FIRMADA */}
+          {deliveryAct && deliveryAct.signed_at && !showAct && !showForm && (
+            <div style={{marginBottom:'0.75rem'}}>
+              <button onClick={function() { setShowAct(true) }} style={{width:'100%',padding:'0.75rem 1rem',background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:'10px',color:'#166534',fontSize:'0.875rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <span style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+                  <span>✅</span>
+                  <span style={{fontWeight:'500'}}>Acta firmada</span>
+                  <span style={{color:'#6B6760',fontWeight:'400'}}>· {new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', {day:'2-digit',month:'short',year:'numeric'})}</span>
+                </span>
+                <span style={{fontSize:'0.75rem',color:'#2D5A3D'}}>Ver →</span>
+              </button>
+            </div>
+          )}
+
+          {/* ACTA EN PROGRESO — badge */}
+          {deliveryAct && !deliveryAct.signed_at && !showAct && !showForm && (
+            <div style={{marginBottom:'0.75rem'}}>
+              <button onClick={function() { setShowAct(true) }} style={{width:'100%',padding:'0.75rem 1rem',background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:'10px',color:'#92400E',fontSize:'0.875rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <span style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+                  <span>📋</span>
+                  <span style={{fontWeight:'500'}}>Acta en progreso</span>
+                </span>
+                <span style={{fontSize:'0.75rem'}}>Continuar →</span>
+              </button>
+            </div>
+          )}
+
           <div className="action-buttons">
-            {!showForm && <button className="add-button" onClick={function() { setShowForm(true) }}>+ Nuevo Hallazgo</button>}
-            {entries.length > 0 && !showForm && <button className="pdf-button" onClick={handleExportPDF}>📄 Descargar PDF</button>}
+            {!showForm && !showAct && <button className="add-button" onClick={function() { setShowForm(true) }}>+ Nuevo Hallazgo</button>}
+            {entries.length > 0 && !showForm && !showAct && <button className="pdf-button" onClick={handleExportPDF}>📄 Descargar PDF</button>}
           </div>
 
           {showForm && (
@@ -2198,6 +2338,376 @@ function AppInterior(props) {
       </div>
     )
 }
+
+var ACT_SI_NO_NA = ['', 'si', 'no', 'na']
+var ACT_CONF_LABELS = { '': '\u2014', 'si': 'S\u00ed', 'no': 'No', 'na': 'N/A' }
+
+function ActSection({ title, children }) {
+  return (
+    <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',marginBottom:'1rem',overflow:'hidden'}}>
+      <div style={{padding:'0.875rem 1.25rem',borderBottom:'1px solid #F3F0EB',background:'#FAFAF9'}}>
+        <h3 style={{margin:0,fontSize:'0.875rem',fontWeight:'700',color:'#1A1814'}}>{title}</h3>
+      </div>
+      <div style={{padding:'0 1.25rem'}}>{children}</div>
+    </div>
+  )
+}
+
+function ActSigCanvas({ value, onChange, label, disabled }) {
+  var canvasRef = React.useRef(null)
+  var drawing = React.useRef(false)
+  var [hasDrawn, setHasDrawn] = React.useState(!!value)
+  React.useEffect(function() {
+    var canvas = canvasRef.current
+    if (!canvas) return
+    var ctx = canvas.getContext('2d')
+    canvas.width = canvas.offsetWidth * window.devicePixelRatio
+    canvas.height = canvas.offsetHeight * window.devicePixelRatio
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+    ctx.strokeStyle = '#1A1814'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    if (value) { var img = new Image(); img.onload = function() { ctx.drawImage(img, 0, 0, canvas.offsetWidth, canvas.offsetHeight) }; img.src = value }
+  }, [])
+  function getPos(e, c) { var r = c.getBoundingClientRect(); var cx = e.touches ? e.touches[0].clientX : e.clientX; var cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx-r.left, y: cy-r.top } }
+  function startDraw(e) { if (disabled) return; e.preventDefault(); drawing.current = true; var c = canvasRef.current; var ctx = c.getContext('2d'); var p = getPos(e,c); ctx.beginPath(); ctx.moveTo(p.x,p.y) }
+  function draw(e) { if (!drawing.current||disabled) return; e.preventDefault(); var c = canvasRef.current; var ctx = c.getContext('2d'); var p = getPos(e,c); ctx.lineTo(p.x,p.y); ctx.stroke(); setHasDrawn(true) }
+  function endDraw() { if (!drawing.current) return; drawing.current = false; onChange(canvasRef.current.toDataURL('image/png')) }
+  function clearSig() { var c = canvasRef.current; c.getContext('2d').clearRect(0,0,c.width,c.height); setHasDrawn(false); onChange(null) }
+  return (
+    <div style={{marginBottom:'1rem'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.4rem'}}>
+        <label style={{fontSize:'0.8rem',fontWeight:'600',color:'#6B6760'}}>{label}</label>
+        {hasDrawn && !disabled && <button onClick={clearSig} style={{background:'none',border:'none',color:'#B91C1C',fontSize:'0.75rem',cursor:'pointer',padding:0}}>Borrar</button>}
+      </div>
+      <canvas ref={canvasRef}
+        onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw}
+        onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={endDraw}
+        style={{width:'100%',height:'100px',border:'1.5px solid '+(hasDrawn?'#2D5A3D':'#E2DDD6'),borderRadius:'8px',background:'#FAFAF9',cursor:disabled?'default':'crosshair',display:'block',touchAction:'none'}} />
+      {!hasDrawn && !disabled && <p style={{fontSize:'0.72rem',color:'#C0BBB5',marginTop:'0.25rem',textAlign:'center'}}>Firma aqu\u00ed con el dedo</p>}
+    </div>
+  )
+}
+
+function ActTriToggle({ field, options, labels, form, set, isSigned }) {
+  var opts = options || ACT_SI_NO_NA
+  var lbls = labels || ACT_CONF_LABELS
+  var val = form[field] || ''
+  return (
+    <div style={{display:'flex',gap:'0.35rem'}}>
+      {opts.filter(function(o) { return o !== '' }).map(function(opt) {
+        var active = val === opt
+        var colors = { si: {bg:'#F0FDF4',border:'#22C55E',text:'#166534'}, no: {bg:'#FEF2F2',border:'#FCA5A5',text:'#991B1B'}, na: {bg:'#F3F4F6',border:'#D1D5DB',text:'#6B7280'} }
+        var c = active ? colors[opt] : { bg:'#fff', border:'#E2DDD6', text:'#6B6760' }
+        return (
+          <button key={opt} disabled={!!isSigned} onClick={function() { set(field)({ target: { value: active ? '' : opt } }) }}
+            style={{padding:'0.2rem 0.6rem',borderRadius:'6px',border:'1.5px solid '+c.border,background:c.bg,color:c.text,fontSize:'0.72rem',fontWeight:'600',cursor:isSigned?'default':'pointer',opacity:isSigned&&!active?0.4:1}}>
+            {lbls[opt]}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function ActRow({ label, field, options, labels, form, set, isSigned }) {
+  return (
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0.6rem 0',borderBottom:'1px solid #F3F0EB'}}>
+      <span style={{fontSize:'0.875rem',color:'#1A1814',flex:1,paddingRight:'0.5rem'}}>{label}</span>
+      <ActTriToggle field={field} options={options} labels={labels} form={form} set={set} isSigned={isSigned} />
+    </div>
+  )
+}
+
+var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, project, currentUser, deliveryActRef, saveDeliveryAct, entriesRef, entriesCount, onClose, setActToast, authFetch, onRegisterEntry, actFormData, setActFormData }) {
+  var deliveryAct = deliveryActRef.current
+  var entries = entriesRef.current
+  var ownerSigRef = React.useRef(null)
+  var inspectorSigRef = React.useRef(null)
+  var [ownerSigData, setOwnerSigData] = React.useState(deliveryAct && deliveryAct.signature_owner ? deliveryAct.signature_owner : null)
+  var [inspectorSigData, setInspectorSigData] = React.useState(deliveryAct && deliveryAct.signature_inspector ? deliveryAct.signature_inspector : null)
+  var [saving, setSaving] = React.useState(false)
+  var [signing, setSigning] = React.useState(false)
+  var isSigned = deliveryAct && deliveryAct.signed_at
+
+  var defaultData = {
+    inspector_nombre: (currentUser && currentUser.name) || '',
+    proyecto_etapa: (project && project.name) || '',
+    owner_name: property.owner_name || '',
+    owner_rut: property.owner_rut || '',
+    owner_email: property.owner_email || '',
+    owner_phone: property.owner_phone || '',
+    direccion: '', bodega: '', estacionamiento: '',
+    // II. Documentación
+    doc_garantia: '', doc_manual: '', doc_llaves_principal: '', doc_llaves_bodega: '',
+    doc_llaves_estacionamiento: '', doc_llaves_dormitorios: '', doc_llaves_closet: '',
+    doc_control_porton: '', doc_kit_accesorios: '', doc_garantias_artefactos: '',
+    // III. Artefactos
+    art_calefon: '', art_encimera: '', art_horno: '', art_campana: '', art_estufa: '',
+    art_lavavajillas: '', art_refrigerador: '', art_lavadora: '', art_aire: '',
+    art_alarma: '', art_citofono: '', art_porton: '', art_calefaccion: '',
+    // IV. Medidores
+    med_agua_fria_num: '', med_agua_fria_val: '',
+    med_agua_caliente_num: '', med_agua_caliente_val: '',
+    med_gas_num: '', med_gas_val: '',
+    med_luz_num: '', med_luz_val: '',
+    // V. Conformidad
+    conf_horario: '', conf_documentos: '', conf_garantia: '', conf_artefactos: '',
+    conf_tablero: '', conf_emergencias: '',
+    // Observaciones
+    observaciones: ''
+  }
+
+  // Form state local — evita re-render del padre en cada tecla
+  var [form, setForm] = React.useState(function() {
+    // Prioridad: actFormData (si ya se abrió antes) > deliveryAct.data > defaultData
+    if (actFormData) return Object.assign({}, defaultData, actFormData)
+    if (deliveryAct && deliveryAct.data) return Object.assign({}, defaultData, deliveryAct.data)
+    return defaultData
+  })
+
+  var set = function(field) { return function(e) { var v = e.target.value; setForm(function(f) { return Object.assign({}, f, { [field]: v }) }) } }
+
+  // Sincronizar hacia arriba para persistencia entre open/close (no en cada tecla)
+  var saveTimeout = React.useRef(null)
+  React.useEffect(function() {
+    if (isSigned) return
+    clearTimeout(saveTimeout.current)
+    saveTimeout.current = setTimeout(async function() {
+      setActFormData(form)
+      await saveDeliveryAct(property.id, { data: form }, false, null)
+    }, 1200)
+    return function() { clearTimeout(saveTimeout.current) }
+  }, [form])
+
+  var handleSign = async function() {
+    if (!ownerSigData) { alert('Falta la firma del propietario'); return }
+    if (!inspectorSigData) { alert('Falta la firma del inspector'); return }
+    setSigning(true)
+    var snapshot = entries.map(function(e) { return { id: e.id, title: e.title, category: e.category, severity: e.severity, location: e.location, status: e.status } })
+    await saveDeliveryAct(property.id, {
+      data: form,
+      signature_owner: ownerSigData,
+      signature_inspector: inspectorSigData,
+      signed_by_name: property.owner_name || 'Propietario',
+      entries_snapshot: snapshot
+    }, true, snapshot)
+    setSigning(false)
+    onClose()
+    setActToast('✅ Acta firmada correctamente')
+    setTimeout(function() { setActToast('') }, 3000)
+  }
+
+  // Canvas de firma
+
+  return (
+    <div style={{position:'fixed',inset:0,zIndex:300,background:'#F7F5F0',overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+      {/* Header */}
+      <div style={{position:'sticky',top:0,zIndex:10,background:'#fff',borderBottom:'1px solid #E2DDD6',padding:'0.875rem 1.25rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div>
+          <div style={{fontSize:'0.7rem',color:'#6B6760',marginBottom:'0.1rem'}}>Acta de entrega</div>
+          <div style={{fontWeight:'700',fontSize:'0.95rem',color:'#1A1814'}}>{property.unit_number}{property.owner_name ? ' — ' + property.owner_name : ''}</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+          {isSigned && <span style={{fontSize:'0.7rem',background:'#F0FDF4',color:'#166534',border:'1px solid #BBF7D0',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>✅ Firmada</span>}
+          {!isSigned && <span style={{fontSize:'0.7rem',background:'#FFFBEB',color:'#92400E',border:'1px solid #FDE68A',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>En progreso</span>}
+          <button onClick={onClose} style={{background:'none',border:'none',fontSize:'1.1rem',cursor:'pointer',color:'#6B6760',padding:'0.25rem',lineHeight:1}}>✕</button>
+        </div>
+      </div>
+
+      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1rem 1rem 6rem'}}>
+
+        {/* I. Datos generales */}
+        <ActSection title="I. Datos generales">
+          <div style={{padding:'0.75rem 0'}}>
+            {[
+              {label:'Nombre propietario', field:'owner_name'},
+              {label:'RUT', field:'owner_rut'},
+              {label:'Correo', field:'owner_email'},
+              {label:'Teléfono', field:'owner_phone'},
+            ].map(function(item) {
+              return (
+                <div key={item.field} style={{marginBottom:'0.5rem'}}>
+                  <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>{item.label}</label>
+                  <input disabled={!!isSigned} className="text-input" value={form[item.field] || ''} onChange={set(item.field)} style={{fontSize:'0.875rem'}} />
+                </div>
+              )
+            })}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem',marginTop:'0.5rem'}}>
+              <div>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Proyecto / Etapa</label>
+                <input disabled={!!isSigned} className="text-input" value={form.proyecto_etapa} onChange={set('proyecto_etapa')} style={{fontSize:'0.875rem'}} />
+              </div>
+              <div>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Inspector</label>
+                <input disabled={!!isSigned} className="text-input" value={form.inspector_nombre} onChange={set('inspector_nombre')} style={{fontSize:'0.875rem'}} />
+              </div>
+              <div>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Bodega</label>
+                <input disabled={!!isSigned} className="text-input" value={form.bodega} onChange={set('bodega')} placeholder="N° bodega" style={{fontSize:'0.875rem'}} />
+              </div>
+              <div>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Estacionamiento</label>
+                <input disabled={!!isSigned} className="text-input" value={form.estacionamiento} onChange={set('estacionamiento')} placeholder="N° estac." style={{fontSize:'0.875rem'}} />
+              </div>
+
+            </div>
+          </div>
+        </ActSection>
+
+        {/* II. Documentación */}
+        <ActSection title="II. Documentación entregada">
+          {[
+            {label:'Programa de garantía', field:'doc_garantia'},
+            {label:'Manual de uso y mantención', field:'doc_manual'},
+            {label:'Llaves puerta principal', field:'doc_llaves_principal'},
+            {label:'Llaves bodega', field:'doc_llaves_bodega'},
+            {label:'Llaves estacionamiento', field:'doc_llaves_estacionamiento'},
+            {label:'Llaves dormitorios', field:'doc_llaves_dormitorios'},
+            {label:'Llaves closet', field:'doc_llaves_closet'},
+            {label:'Control remoto portón', field:'doc_control_porton'},
+            {label:'Kit de accesorios', field:'doc_kit_accesorios'},
+            {label:'Garantías de artefactos', field:'doc_garantias_artefactos'},
+          ].map(function(item) { return <ActRow key={item.field} label={item.label} field={item.field} form={form} set={set} isSigned={isSigned} /> })}
+        </ActSection>
+
+        {/* III. Artefactos */}
+        <ActSection title="III. Recepción de artefactos">
+          {[
+            {label:'Calefón / Caldera', field:'art_calefon'},
+            {label:'Encimera', field:'art_encimera'},
+            {label:'Horno', field:'art_horno'},
+            {label:'Campana extractora', field:'art_campana'},
+            {label:'Estufa / Cocina', field:'art_estufa'},
+            {label:'Lavavajillas', field:'art_lavavajillas'},
+            {label:'Refrigerador', field:'art_refrigerador'},
+            {label:'Lavadora / Secadora', field:'art_lavadora'},
+            {label:'Aire acondicionado / Climatización', field:'art_aire'},
+            {label:'Alarma de seguridad', field:'art_alarma'},
+            {label:'Citófono / Videoportero', field:'art_citofono'},
+            {label:'Portón automático', field:'art_porton'},
+            {label:'Calefacción central / Piso radiante', field:'art_calefaccion'},
+          ].map(function(item) {
+            return <ActRow key={item.field} label={item.label} field={item.field}
+              options={['', 'si', 'no', 'na']}
+              labels={{'':'—', 'si':'Conforme', 'no':'No conforme', 'na':'N/A'}} form={form} set={set} isSigned={isSigned} />
+          })}
+        </ActSection>
+
+        {/* IV. Medidores */}
+        <ActSection title="IV. Lectura de medidores">
+          <div style={{padding:'0.75rem 0'}}>
+            {[
+              {label:'Agua fría', num:'med_agua_fria_num', val:'med_agua_fria_val'},
+              {label:'Agua caliente', num:'med_agua_caliente_num', val:'med_agua_caliente_val'},
+              {label:'Gas', num:'med_gas_num', val:'med_gas_val'},
+              {label:'Electricidad', num:'med_luz_num', val:'med_luz_val'},
+            ].map(function(item) {
+              return (
+                <div key={item.label} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0.5rem',alignItems:'center',marginBottom:'0.75rem'}}>
+                  <span style={{fontSize:'0.875rem',color:'#1A1814'}}>{item.label}</span>
+                  <input disabled={!!isSigned} className="text-input" value={form[item.num]} onChange={set(item.num)} placeholder="N° medidor" style={{fontSize:'0.8rem'}} />
+                  <input disabled={!!isSigned} className="text-input" inputMode="decimal" value={form[item.val]} onChange={set(item.val)} placeholder="Lectura" style={{fontSize:'0.8rem'}} />
+                </div>
+              )
+            })}
+          </div>
+        </ActSection>
+
+        {/* V. Conformidad */}
+        <ActSection title="V. Conformidad del proceso">
+          {[
+            {label:'¿Se inició en el horario acordado?', field:'conf_horario'},
+            {label:'¿Se explicaron los documentos de entrega?', field:'conf_documentos'},
+            {label:'¿Se explicó el programa de garantía y plazos?', field:'conf_garantia'},
+            {label:'¿Se realizó la prueba de artefactos?', field:'conf_artefactos'},
+            {label:'¿Se explicó tablero, corte de agua y gas?', field:'conf_tablero'},
+            {label:'¿Se explicaron los teléfonos de emergencia?', field:'conf_emergencias'},
+          ].map(function(item) {
+            return <ActRow key={item.field} label={item.label} field={item.field}
+              options={['', 'si', 'no']}
+              labels={{'':'—', 'si':'Sí', 'no':'No'}} form={form} set={set} isSigned={isSigned} />
+          })}
+        </ActSection>
+
+        {/* Observaciones */}
+        <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',marginBottom:'1rem',overflow:'hidden'}}>
+          <div style={{padding:'0.875rem 1.25rem',borderBottom:'1px solid #F3F0EB',background:'#FAFAF9'}}>
+            <h3 style={{margin:0,fontSize:'0.875rem',fontWeight:'700',color:'#1A1814'}}>Observaciones</h3>
+          </div>
+          <div style={{padding:'1rem 1.25rem'}}>
+            <textarea disabled={!!isSigned} className="text-area" rows={3} value={form.observaciones} onChange={set('observaciones')} placeholder="Observaciones generales al momento de la entrega..." style={{fontSize:'0.875rem'}} />
+          </div>
+        </div>
+
+        {/* Hallazgos adjuntos */}
+        {entries.length > 0 && (
+          <div style={{background:'#F7F5F0',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1rem 1.25rem',marginBottom:'1rem'}}>
+            <p style={{fontSize:'0.8rem',fontWeight:'600',color:'#6B6760',margin:'0 0 0.5rem'}}>
+              {isSigned ? 'Anexo I — Hallazgos declarados al firmar' : 'Se adjuntarán ' + entriesCount + ' hallazgo' + (entriesCount !== 1 ? 's' : '') + ' al acta como Anexo I'}
+            </p>
+            {(isSigned && deliveryAct.entries_snapshot ? deliveryAct.entries_snapshot : entries).map(function(e) {
+              return (
+                <div key={e.id} style={{display:'flex',justifyContent:'space-between',fontSize:'0.8rem',padding:'0.3rem 0',borderBottom:'1px solid #E2DDD6',color:'#374151'}}>
+                  <span>{e.title}</span>
+                  <span style={{color:'#6B6760',textTransform:'capitalize'}}>{e.severity}</span>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Firmas */}
+        {!isSigned && (
+          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1.25rem',marginBottom:'1rem'}}>
+            <h3 style={{margin:'0 0 1rem',fontSize:'0.875rem',fontWeight:'700',color:'#1A1814'}}>Firmas</h3>
+            <ActSigCanvas label={'Firma del propietario' + (property.owner_name ? ' (' + property.owner_name + ')' : '')} value={ownerSigData} onChange={setOwnerSigData} disabled={false} />
+            <ActSigCanvas label={'Firma del inspector (' + (form.inspector_nombre || currentUser.name) + ')'} value={inspectorSigData} onChange={setInspectorSigData} disabled={false} />
+            <button onClick={handleSign} disabled={signing || !ownerSigData || !inspectorSigData}
+              style={{width:'100%',padding:'0.875rem',background: (ownerSigData && inspectorSigData) ? '#1A1814' : '#E2DDD6',color: (ownerSigData && inspectorSigData) ? '#fff' : '#6B6760',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:(ownerSigData && inspectorSigData)?'pointer':'default',marginTop:'0.5rem'}}>
+              {signing ? 'Firmando...' : '✅ Firmar y cerrar acta'}
+            </button>
+          </div>
+        )}
+
+        {/* Vista firmas si ya está firmada */}
+        {isSigned && (
+          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #BBF7D0',padding:'1.25rem',marginBottom:'1rem'}}>
+            <h3 style={{margin:'0 0 1rem',fontSize:'0.875rem',fontWeight:'700',color:'#166534'}}>✅ Acta firmada el {new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', {day:'2-digit',month:'long',year:'numeric'})}</h3>
+            {deliveryAct.edited_after_signing && (
+              <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:'8px',padding:'0.6rem 0.875rem',marginBottom:'1rem',fontSize:'0.8rem',color:'#92400E'}}>
+                ⚠️ Este acta fue modificada después de ser firmada.
+              </div>
+            )}
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
+              {deliveryAct.signature_owner && (
+                <div>
+                  <p style={{fontSize:'0.72rem',color:'#6B6760',marginBottom:'0.4rem'}}>Propietario</p>
+                  <img src={deliveryAct.signature_owner} alt="Firma propietario" style={{width:'100%',border:'1px solid #E2DDD6',borderRadius:'8px',background:'#FAFAF9'}} />
+                </div>
+              )}
+              {deliveryAct.signature_inspector && (
+                <div>
+                  <p style={{fontSize:'0.72rem',color:'#6B6760',marginBottom:'0.4rem'}}>Inspector</p>
+                  <img src={deliveryAct.signature_inspector} alt="Firma inspector" style={{width:'100%',border:'1px solid #E2DDD6',borderRadius:'8px',background:'#FAFAF9'}} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      {/* Sticky bottom — botón registrar hallazgo (solo cuando no está firmada) */}
+      {!isSigned && (
+        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'0.875rem 1rem',background:'rgba(247,245,240,0.95)',backdropFilter:'blur(8px)',borderTop:'1px solid #E2DDD6',zIndex:20}}>
+          <button onClick={function() { onRegisterEntry() }}
+            style={{width:'100%',padding:'0.875rem',background:'#2D5A3D',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:'pointer'}}>
+            + Registrar hallazgo
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}) // end React.memo DeliveryActScreen
 
 function PublicPropertyScreen() {
   var { token } = useParams()

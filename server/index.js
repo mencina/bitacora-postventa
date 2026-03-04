@@ -163,6 +163,22 @@ async function initDB() {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+  // Actas de entrega
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS delivery_acts (
+      id SERIAL PRIMARY KEY,
+      property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE UNIQUE,
+      data JSONB NOT NULL DEFAULT '{}',
+      signature_owner TEXT,
+      signature_inspector TEXT,
+      signed_at TIMESTAMP,
+      signed_by_name TEXT,
+      edited_after_signing BOOLEAN NOT NULL DEFAULT FALSE,
+      entries_snapshot JSONB,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
   console.log('Base de datos lista')
 }
 
@@ -683,6 +699,83 @@ function superadminMiddleware(req, res, next) {
   if (!secret || secret !== ADMIN_SECRET) return res.status(401).json({ error: 'No autorizado' })
   next()
 }
+
+// === ACTAS DE ENTREGA ===
+
+// GET /properties/:id/delivery-act — obtener acta (o null si no existe)
+app.get('/properties/:id/delivery-act', authMiddleware, async function(req, res) {
+  try {
+    var result = await pool.query('SELECT * FROM delivery_acts WHERE property_id = $1', [req.params.id])
+    if (result.rows.length === 0) return res.json(null)
+    res.json(result.rows[0])
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// POST /properties/:id/delivery-act — crear acta
+app.post('/properties/:id/delivery-act', authMiddleware, async function(req, res) {
+  try {
+    var existing = await pool.query('SELECT id FROM delivery_acts WHERE property_id = $1', [req.params.id])
+    if (existing.rows.length > 0) return res.status(400).json({ error: 'Ya existe un acta para esta propiedad' })
+    var result = await pool.query(
+      'INSERT INTO delivery_acts (property_id, data) VALUES ($1, $2) RETURNING *',
+      [req.params.id, JSON.stringify(req.body.data || {})]
+    )
+    res.json(result.rows[0])
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// PUT /properties/:id/delivery-act — actualizar acta
+app.put('/properties/:id/delivery-act', authMiddleware, async function(req, res) {
+  try {
+    var existing = await pool.query('SELECT * FROM delivery_acts WHERE property_id = $1', [req.params.id])
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Acta no encontrada' })
+    var act = existing.rows[0]
+    var wasSigned = !!act.signed_at
+    var { data, signature_owner, signature_inspector, signed_by_name, sign_now, entries_snapshot } = req.body
+
+    var signedAt = act.signed_at
+    var editedAfterSigning = act.edited_after_signing
+
+    // Si se está firmando ahora
+    if (sign_now && !wasSigned) {
+      signedAt = new Date()
+    }
+    // Si ya estaba firmada y se editan datos
+    if (wasSigned && !sign_now && data) {
+      editedAfterSigning = true
+    }
+
+    var result = await pool.query(
+      `UPDATE delivery_acts SET
+        data = COALESCE($1::jsonb, data),
+        signature_owner = COALESCE($2, signature_owner),
+        signature_inspector = COALESCE($3, signature_inspector),
+        signed_by_name = COALESCE($4, signed_by_name),
+        signed_at = $5,
+        edited_after_signing = $6,
+        entries_snapshot = COALESCE($7::jsonb, entries_snapshot),
+        updated_at = NOW()
+      WHERE property_id = $8 RETURNING *`,
+      [
+        data ? JSON.stringify(data) : null,
+        signature_owner || null,
+        signature_inspector || null,
+        signed_by_name || null,
+        signedAt,
+        editedAfterSigning,
+        entries_snapshot ? JSON.stringify(entries_snapshot) : null,
+        req.params.id
+      ]
+    )
+    res.json(result.rows[0])
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 
 // GET /properties/:id/public-token — obtener (o crear) token público de una propiedad
 app.get('/properties/:id/public-token', authMiddleware, async function(req, res) {
