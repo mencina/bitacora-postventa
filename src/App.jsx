@@ -1297,6 +1297,18 @@ var handleLogin = function(newToken, user) {
     setEntries([])
   }
 
+  // Rehidratar usuario desde /auth/me si hay token pero no hay currentUser (ej: refresh)
+  useEffect(function() {
+    if (!token || currentUser) return
+    authFetch(API_URL + '/auth/me')
+      .then(function(r) {
+        if (r.status === 401) { handleLogout(); return null }
+        return r.json()
+      })
+      .then(function(data) { if (data) setCurrentUser(data) })
+      .catch(console.error)
+  }, [token])
+
   // Load projects
   useEffect(function() {
     if (!token) return
