@@ -1465,10 +1465,20 @@ var handleLogin = function(newToken, user) {
   }
 
   var handleUpdateEntryStatus = function(entryId, newStatus) {
+    var entry = entries.find(function(e) { return e.id === entryId })
+    if (!entry) return
     authFetch(API_URL + '/entries/' + entryId, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
+      body: JSON.stringify({
+        title: entry.title || '',
+        description: entry.description || '',
+        recommendation: entry.recommendation || '',
+        category: entry.category || 'otro',
+        severity: entry.severity || 'leve',
+        location: entry.location || '',
+        status: newStatus
+      })
     })
       .then(function(r) { return r.json() })
       .then(function(updated) {
