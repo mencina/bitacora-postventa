@@ -2282,17 +2282,17 @@ function PublicPropertyScreen() {
 
         {/* Dashboard resumen */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'0.75rem',marginBottom:'1.5rem'}}>
-          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#1A1814'}}>{summary.total}</div>
-            <div style={{fontSize:'0.72rem',color:'#6B6760',marginTop:'0.15rem'}}>Total</div>
-          </div>
-          <div style={{background:'#FFF7ED',borderRadius:'12px',border:'1px solid #FED7AA',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#9A3412'}}>{summary.pendientes}</div>
-            <div style={{fontSize:'0.72rem',color:'#9A3412',marginTop:'0.15rem'}}>Pendiente{summary.pendientes !== 1 ? 's' : ''}</div>
+          <div style={{background:'#F0FDF4',borderRadius:'12px',border:'1px solid #BBF7D0',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#166534'}}>{summary.resueltos}</div>
+            <div style={{fontSize:'0.72rem',color:'#166534',marginTop:'0.15rem'}}>Resuelto{summary.resueltos !== 1 ? 's' : ''}</div>
           </div>
           <div style={{background:'#EFF6FF',borderRadius:'12px',border:'1px solid #BFDBFE',padding:'1rem',textAlign:'center'}}>
             <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#1D4ED8'}}>{summary.en_progreso}</div>
             <div style={{fontSize:'0.72rem',color:'#1D4ED8',marginTop:'0.15rem'}}>En progreso</div>
+          </div>
+          <div style={{background:'#FFF7ED',borderRadius:'12px',border:'1px solid #FED7AA',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#9A3412'}}>{summary.pendientes}</div>
+            <div style={{fontSize:'0.72rem',color:'#9A3412',marginTop:'0.15rem'}}>Pendiente{summary.pendientes !== 1 ? 's' : ''}</div>
           </div>
         </div>
 
@@ -2339,10 +2339,12 @@ function PublicPropertyScreen() {
                   </div>
                   {/* Fotos */}
                   {entry.images && entry.images.length > 0 && (
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'2px',background:'#F3F0EB'}}>
-                      {entry.images.map(function(img, idx) {
-                        return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',cursor:'zoom-in'}} />
-                      })}
+                    <div style={{padding:'0 1.25rem 0.75rem'}}>
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'0.4rem'}}>
+                        {entry.images.map(function(img, idx) {
+                          return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',cursor:'zoom-in',borderRadius:'8px',border:'1px solid #E2DDD6'}} />
+                        })}
+                      </div>
                     </div>
                   )}
                   {/* Cuerpo */}
