@@ -307,200 +307,394 @@ var STATUSES = {
   resuelto:    { label: 'Resuelto',    color: '#15803D', bg: '#DCFCE7', icon: '🟢' },
 }
 
-function hexToRgb(hex) {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]
-}
-
-function wrapText(doc, text, x, y, maxWidth, lineHeight) {
-  var words = text.split(' ')
-  var line = ''
-  var currentY = y
-  for (var i = 0; i < words.length; i++) {
-    var testLine = line + words[i] + ' '
-    if (doc.getTextWidth(testLine) > maxWidth && line !== '') {
-      doc.text(line.trim(), x, currentY)
-      line = words[i] + ' '
-      currentY = currentY + lineHeight
-    } else { line = testLine }
-  }
-  doc.text(line.trim(), x, currentY)
-  return currentY + lineHeight
-}
-
-async function loadImageAsBase64(url) {
-  try {
-    var response = await fetch(url)
-    var blob = await response.blob()
-    return new Promise(function(resolve) {
-      var reader = new FileReader()
-      reader.onload = function() { resolve(reader.result) }
-      reader.readAsDataURL(blob)
-    })
-  } catch (err) { return null }
-}
-
-async function generatePDF(projectName, property, entries) {
+async function generateActaPDF(deliveryAct, property, projectName) {
   var doc = new jsPDF('p', 'mm', 'a4')
   var pageWidth = 210
   var pageHeight = 297
-  var margin = 20
+  var margin = 16
   var contentWidth = pageWidth - margin * 2
+  var INK = [26, 24, 20]
+  var GREEN = [45, 90, 61]
+  var MUTED = [107, 103, 96]
+  var LINE = [226, 221, 214]
+  var BG = [247, 245, 240]
+  var WHITE = [255, 255, 255]
 
-  doc.setFillColor(26, 26, 46)
-  doc.rect(0, 0, pageWidth, pageHeight, 'F')
-  doc.setFillColor(233, 69, 96)
-  doc.rect(0, 120, pageWidth, 4, 'F')
-  doc.setTextColor(255, 255, 255)
-  doc.setFontSize(32)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Bitacora Post Venta', pageWidth / 2, 60, { align: 'center' })
-  doc.setFontSize(20)
-  doc.setFont('helvetica', 'normal')
-  doc.text(projectName || 'Proyecto', pageWidth / 2, 85, { align: 'center' })
-  doc.setFontSize(16)
-  doc.setTextColor(233, 69, 96)
-  doc.text('Propiedad: ' + (property.unit_number || ''), pageWidth / 2, 105, { align: 'center' })
+  var form = deliveryAct.data || {}
+  var signedAt = deliveryAct.signed_at ? new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }) : ''
 
-  doc.setFontSize(11)
-  doc.setTextColor(180, 180, 200)
-  var infoY = 140
-  if (property.owner_name) { doc.text('Propietario: ' + property.owner_name, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
-  if (property.owner_rut) { doc.text('RUT: ' + property.owner_rut, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
-  if (property.owner_email) { doc.text('Email: ' + property.owner_email, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
-  if (property.owner_phone) { doc.text('Telefono: ' + property.owner_phone, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
+  // Helpers
+  function setColor(rgb) { doc.setTextColor(rgb[0], rgb[1], rgb[2]) }
+  function setFill(rgb) { doc.setFillColor(rgb[0], rgb[1], rgb[2]) }
+  function setDraw(rgb) { doc.setDrawColor(rgb[0], rgb[1], rgb[2]) }
 
-  infoY += 10
-  var dateStr = new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
-  doc.text('Fecha: ' + dateStr, pageWidth / 2, infoY, { align: 'center' })
-  doc.text('Total hallazgos: ' + entries.length, pageWidth / 2, infoY + 10, { align: 'center' })
-
-  var sevCounts = { leve: 0, moderado: 0, grave: 0, critico: 0 }
-  entries.forEach(function(e) { if (sevCounts[e.severity] !== undefined) sevCounts[e.severity]++ })
-  var sevY = infoY + 30
-  doc.setTextColor(39, 174, 96); doc.text('Leves: ' + sevCounts.leve, pageWidth / 2 - 40, sevY)
-  doc.setTextColor(243, 156, 18); doc.text('Moderados: ' + sevCounts.moderado, pageWidth / 2 - 40, sevY + 10)
-  doc.setTextColor(231, 76, 60); doc.text('Graves: ' + sevCounts.grave, pageWidth / 2 + 20, sevY)
-  doc.setTextColor(142, 68, 173); doc.text('Criticos: ' + sevCounts.critico, pageWidth / 2 + 20, sevY + 10)
-
-  doc.setFontSize(9)
-  doc.setTextColor(120, 120, 140)
-  doc.text('Generado automaticamente con IA - Bitacora Post Venta', pageWidth / 2, 270, { align: 'center' })
-
-  for (var idx = 0; idx < entries.length; idx++) {
-    var entry = entries[idx]
-    doc.addPage()
-    var y = margin
-    var cat = CATEGORIES[entry.category] || CATEGORIES.otro
-    var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
-
-    doc.setFillColor(26, 26, 46)
-    doc.rect(0, 0, pageWidth, 40, 'F')
-    doc.setFillColor(233, 69, 96)
-    doc.rect(0, 40, pageWidth, 2, 'F')
-    doc.setTextColor(255, 255, 255)
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'normal')
-    doc.text('Hallazgo #' + (idx + 1) + ' de ' + entries.length + '  |  ' + property.unit_number, margin, 15)
-    doc.setFontSize(14)
-    doc.setFont('helvetica', 'bold')
-    var titleText = entry.title || 'Sin titulo'
-    if (titleText.length > 60) titleText = titleText.substring(0, 57) + '...'
-    doc.text(titleText, margin, 28)
-    y = 52
-
-    var catColor = hexToRgb(cat.color)
-    doc.setFillColor(catColor[0], catColor[1], catColor[2])
-    doc.roundedRect(margin, y, 4, 4, 1, 1, 'F')
-    doc.setTextColor(catColor[0], catColor[1], catColor[2])
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'bold')
-    doc.text(cat.label, margin + 7, y + 3.5)
-    var sevColor = hexToRgb(sev.color)
-    var catLabelWidth = doc.getTextWidth(cat.label) + 12
-    doc.setFillColor(sevColor[0], sevColor[1], sevColor[2])
-    doc.roundedRect(margin + catLabelWidth, y, 4, 4, 1, 1, 'F')
-    doc.setTextColor(sevColor[0], sevColor[1], sevColor[2])
-    doc.text(sev.label, margin + catLabelWidth + 7, y + 3.5)
-    // Estado
-    var statusLabels = { pendiente: 'Pendiente', en_progreso: 'En progreso', resuelto: 'Resuelto' }
-    var statusColors = { pendiente: '#B45309', en_progreso: '#1D4ED8', resuelto: '#15803D' }
-    var entryStatusKey = entry.status || 'pendiente'
-    var statusLabel = statusLabels[entryStatusKey] || 'Pendiente'
-    var statusColor = hexToRgb(statusColors[entryStatusKey] || statusColors.pendiente)
-    var sevLabelWidth = catLabelWidth + doc.getTextWidth(sev.label) + 12
-    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2])
-    doc.roundedRect(margin + sevLabelWidth, y, 4, 4, 1, 1, 'F')
-    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2])
-    doc.text(statusLabel, margin + sevLabelWidth + 7, y + 3.5)
-    y += 12
-
-    doc.setTextColor(80, 80, 80)
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    if (entry.location) doc.text('Ubicacion: ' + entry.location, margin, y)
-    var entryDate = new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-    doc.text('Fecha: ' + entryDate, pageWidth - margin - doc.getTextWidth('Fecha: ' + entryDate), y)
-    y += 10
-
-    if (entry.images && entry.images.length > 0) {
-      var imgCount = Math.min(entry.images.length, 3)
-      var imgWidth = (contentWidth - (imgCount - 1) * 5) / imgCount
-      var imgHeight = imgWidth * 0.7
-      for (var ii = 0; ii < imgCount; ii++) {
-        try {
-          var imgData = await loadImageAsBase64(entry.images[ii].filename)
-          if (imgData) doc.addImage(imgData, 'JPEG', margin + ii * (imgWidth + 5), y, imgWidth, imgHeight)
-        } catch (err) {}
-      }
-      y += imgHeight + 10
-    }
-
-    if (entry.inspector_note) {
-      if (y > pageHeight - 60) { doc.addPage(); y = margin }
-      var noteH = Math.ceil(doc.getTextWidth(entry.inspector_note) / contentWidth) * 5 + 14
-      doc.setFillColor(240, 247, 255)
-      doc.roundedRect(margin, y, contentWidth, noteH, 3, 3, 'F')
-      doc.setTextColor(44, 82, 130); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
-      doc.text('Nota del inspector:', margin + 5, y + 7)
-      doc.setFont('helvetica', 'normal')
-      y = wrapText(doc, entry.inspector_note, margin + 5, y + 14, contentWidth - 10, 5) + 5
-    }
-
-    if (entry.description) {
-      if (y > pageHeight - 60) { doc.addPage(); y = margin }
-      var descH = Math.ceil(doc.getTextWidth(entry.description) / contentWidth) * 5 + 14
-      doc.setFillColor(247, 250, 252)
-      doc.roundedRect(margin, y, contentWidth, descH, 3, 3, 'F')
-      doc.setTextColor(60, 60, 60); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
-      doc.text('Analisis:', margin + 5, y + 7)
-      doc.setFont('helvetica', 'normal'); doc.setTextColor(74, 85, 104)
-      y = wrapText(doc, entry.description, margin + 5, y + 14, contentWidth - 10, 5) + 5
-    }
-
-    if (entry.recommendation) {
-      if (y > pageHeight - 60) { doc.addPage(); y = margin }
-      var recH = Math.ceil(doc.getTextWidth(entry.recommendation) / contentWidth) * 5 + 14
-      doc.setFillColor(255, 251, 235)
-      doc.roundedRect(margin, y, contentWidth, recH, 3, 3, 'F')
-      doc.setTextColor(146, 64, 14); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
-      doc.text('Recomendacion:', margin + 5, y + 7)
-      doc.setFont('helvetica', 'normal')
-      y = wrapText(doc, entry.recommendation, margin + 5, y + 14, contentWidth - 10, 5) + 5
-    }
-
-    if (entry.affected_elements && entry.affected_elements.length > 0) {
-      if (y > pageHeight - 30) { doc.addPage(); y = margin }
-      doc.setTextColor(80, 80, 80); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
-      doc.text('Elementos afectados:', margin, y + 5)
-      doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 100, 100)
-      doc.text(entry.affected_elements.join(', '), margin + doc.getTextWidth('Elementos afectados: ') + 2, y + 5)
-    }
-
-    doc.setTextColor(180, 180, 180); doc.setFontSize(8)
-    doc.text('Bitacora Post Venta - ' + (projectName || 'Proyecto') + ' - ' + property.unit_number, pageWidth / 2, pageHeight - 10, { align: 'center' })
+  function checkPageBreak(y, needed) {
+    if (y + needed > pageHeight - 20) { doc.addPage(); return margin + 8 }
+    return y
   }
 
-  var fileName = 'Bitacora_' + (projectName || 'Proyecto').replace(/\s+/g, '_') + '_' + property.unit_number.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf'
+  function sectionHeader(y, title) {
+    y = checkPageBreak(y, 14)
+    setFill(INK)
+    doc.rect(margin, y, contentWidth, 8, 'F')
+    setColor(WHITE)
+    doc.setFontSize(8)
+    doc.setFont('helvetica', 'bold')
+    doc.text(title.toUpperCase(), margin + 4, y + 5.5)
+    return y + 8
+  }
+
+  function dataRow(y, label, value, shade) {
+    y = checkPageBreak(y, 7)
+    if (shade) { setFill(BG); doc.rect(margin, y, contentWidth, 7, 'F') }
+    setColor(MUTED)
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'normal')
+    doc.text(label, margin + 3, y + 4.8)
+    setColor(INK)
+    doc.setFont('helvetica', 'bold')
+    doc.text(String(value || '—'), margin + 55, y + 4.8)
+    return y + 7
+  }
+
+  function triRow(y, label, value, shade) {
+    y = checkPageBreak(y, 7)
+    if (shade) { setFill(BG); doc.rect(margin, y, contentWidth, 7, 'F') }
+    setColor(INK)
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'normal')
+    doc.text(label, margin + 3, y + 4.8)
+    var displayVal = { 'si': 'Sí', 'no': 'No', 'na': 'N/A', 'Conforme': 'Conforme', 'No conforme': 'No conforme' }[value] || value || '—'
+    var valColor = value === 'si' ? [22, 101, 52] : value === 'no' ? [153, 27, 27] : MUTED
+    setColor(valColor)
+    doc.setFont('helvetica', 'bold')
+    doc.text(displayVal, pageWidth - margin - 3, y + 4.8, { align: 'right' })
+    return y + 7
+  }
+
+  function confRow(y, label, value, shade) {
+    return triRow(y, label, value === 'si' ? 'Sí' : value === 'no' ? 'No' : value, shade)
+  }
+
+  function wrapBlock(y, label, text, bgRgb) {
+    if (!text) return y
+    var lines = doc.splitTextToSize(text, contentWidth - 10)
+    var blockH = lines.length * 5 + 10
+    y = checkPageBreak(y, blockH + 2)
+    setFill(bgRgb)
+    setDraw(LINE)
+    doc.roundedRect(margin, y, contentWidth, blockH, 2, 2, 'FD')
+    setColor(MUTED)
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'bold')
+    doc.text(label, margin + 4, y + 6)
+    setColor(INK)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(8)
+    doc.text(lines, margin + 4, y + 12)
+    return y + blockH + 3
+  }
+
+  function footer(pageNum) {
+    setColor(MUTED)
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'normal')
+    doc.text('BitácoraPro — Acta de entrega  |  ' + (projectName || '') + '  |  ' + (property.unit_number || ''), margin, pageHeight - 8)
+    doc.text('Pág. ' + pageNum, pageWidth - margin, pageHeight - 8, { align: 'right' })
+  }
+
+  // =====================
+  // PORTADA
+  // =====================
+  setFill(INK)
+  doc.rect(0, 0, pageWidth, pageHeight, 'F')
+
+  // banda verde
+  setFill(GREEN)
+  doc.rect(0, pageHeight * 0.42, pageWidth, 2, 'F')
+
+  // Logo / título
+  setColor(WHITE)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(28)
+  doc.text('BitácoraPro', pageWidth / 2, 80, { align: 'center' })
+  doc.setFontSize(13)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(192, 187, 181)
+  doc.text('Acta de Entrega de Propiedad', pageWidth / 2, 93, { align: 'center' })
+
+  // Datos principales
+  var coverY = pageHeight * 0.42 + 18
+  setColor(WHITE)
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.text(property.unit_number || '', pageWidth / 2, coverY, { align: 'center' })
+  coverY += 10
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(192, 187, 181)
+  doc.text(projectName || '', pageWidth / 2, coverY, { align: 'center' })
+  coverY += 8
+  if (property.owner_name) { doc.text(property.owner_name, pageWidth / 2, coverY, { align: 'center' }); coverY += 7 }
+
+  // Fecha firma
+  if (signedAt) {
+    coverY += 8
+    setFill([45, 90, 61])
+    doc.roundedRect(pageWidth / 2 - 40, coverY - 5, 80, 12, 3, 3, 'F')
+    setColor(WHITE)
+    doc.setFontSize(8.5)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Firmada el ' + signedAt, pageWidth / 2, coverY + 2.5, { align: 'center' })
+  }
+
+  // pie portada
+  doc.setTextColor(107, 103, 96)
+  doc.setFontSize(7.5)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Documento generado con BitácoraPro', pageWidth / 2, pageHeight - 14, { align: 'center' })
+
+  // =====================
+  // PÁGINA 2 — DATOS + SECCIONES
+  // =====================
+  doc.addPage()
+  var pageNum = 2
+  var y = margin + 4
+
+  // Encabezado de página interior
+  setFill(BG)
+  doc.rect(0, 0, pageWidth, 14, 'F')
+  setColor(GREEN)
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'bold')
+  doc.text('ACTA DE ENTREGA', margin, 9)
+  setColor(MUTED)
+  doc.setFont('helvetica', 'normal')
+  doc.text(property.unit_number + (property.owner_name ? '  —  ' + property.owner_name : ''), pageWidth - margin, 9, { align: 'right' })
+  setDraw(LINE)
+  doc.line(margin, 14, pageWidth - margin, 14)
+  y = 20
+
+  // I. Datos generales
+  y = sectionHeader(y, 'I. Datos generales')
+  y = dataRow(y, 'Propietario', form.owner_name, false)
+  y = dataRow(y, 'RUT', form.owner_rut, true)
+  y = dataRow(y, 'Correo', form.owner_email, false)
+  y = dataRow(y, 'Teléfono', form.owner_phone, true)
+  y = dataRow(y, 'Proyecto / Etapa', form.proyecto_etapa, false)
+  y = dataRow(y, 'Inspector', form.inspector_nombre, true)
+  y = dataRow(y, 'Bodega', form.bodega, false)
+  y = dataRow(y, 'Estacionamiento', form.estacionamiento, true)
+  y += 4
+
+  // II. Documentación
+  y = sectionHeader(y, 'II. Documentación entregada')
+  var docItems = [
+    ['Programa de garantía', form.doc_garantia],
+    ['Manual de uso y mantención', form.doc_manual],
+    ['Llaves puerta principal', form.doc_llaves_principal],
+    ['Llaves bodega', form.doc_llaves_bodega],
+    ['Llaves estacionamiento', form.doc_llaves_estacionamiento],
+    ['Llaves dormitorios', form.doc_llaves_dormitorios],
+    ['Llaves closet', form.doc_llaves_closet],
+    ['Control remoto portón', form.doc_control_porton],
+    ['Kit de accesorios', form.doc_kit_accesorios],
+    ['Garantías de artefactos', form.doc_garantias_artefactos],
+  ]
+  docItems.forEach(function(item, i) { y = triRow(y, item[0], item[1], i % 2 === 1) })
+  y += 4
+
+  // III. Artefactos
+  y = sectionHeader(y, 'III. Recepción de artefactos')
+  var artItems = [
+    ['Calefón / Caldera', form.art_calefon],
+    ['Encimera', form.art_encimera],
+    ['Horno', form.art_horno],
+    ['Campana extractora', form.art_campana],
+    ['Estufa / Cocina', form.art_estufa],
+    ['Lavavajillas', form.art_lavavajillas],
+    ['Refrigerador', form.art_refrigerador],
+    ['Lavadora / Secadora', form.art_lavadora],
+    ['Aire acondicionado / Climatización', form.art_aire],
+    ['Alarma de seguridad', form.art_alarma],
+    ['Citófono / Videoportero', form.art_citofono],
+    ['Portón automático', form.art_porton],
+    ['Calefacción central / Piso radiante', form.art_calefaccion],
+  ]
+  var artLabels = { 'si': 'Conforme', 'no': 'No conforme', 'na': 'N/A' }
+  artItems.forEach(function(item, i) {
+    var displayVal = artLabels[item[1]] || item[1]
+    y = triRow(y, item[0], displayVal, i % 2 === 1)
+  })
+  y += 4
+
+  // IV. Medidores
+  y = sectionHeader(y, 'IV. Lectura de medidores')
+  var medItems = [
+    ['Agua fría', form.med_agua_fria_num, form.med_agua_fria_val],
+    ['Agua caliente', form.med_agua_caliente_num, form.med_agua_caliente_val],
+    ['Gas', form.med_gas_num, form.med_gas_val],
+    ['Electricidad', form.med_luz_num, form.med_luz_val],
+  ]
+  medItems.forEach(function(item, i) {
+    y = checkPageBreak(y, 7)
+    if (i % 2 === 1) { setFill(BG); doc.rect(margin, y, contentWidth, 7, 'F') }
+    setColor(INK); doc.setFontSize(7.5); doc.setFont('helvetica', 'normal')
+    doc.text(item[0], margin + 3, y + 4.8)
+    setColor(MUTED); doc.setFont('helvetica', 'normal')
+    doc.text('N° ' + (item[1] || '—'), margin + 75, y + 4.8)
+    setColor(INK); doc.setFont('helvetica', 'bold')
+    doc.text('Lectura: ' + (item[2] || '—'), pageWidth - margin - 3, y + 4.8, { align: 'right' })
+    y += 7
+  })
+  y += 4
+
+  // V. Conformidad
+  y = sectionHeader(y, 'V. Conformidad del proceso')
+  var confItems = [
+    ['¿Se inició en el horario acordado?', form.conf_horario],
+    ['¿Se explicaron los documentos de entrega?', form.conf_documentos],
+    ['¿Se explicó el programa de garantía y plazos?', form.conf_garantia],
+    ['¿Se realizó la prueba de artefactos?', form.conf_artefactos],
+    ['¿Se explicó tablero, corte de agua y gas?', form.conf_tablero],
+    ['¿Se explicaron los teléfonos de emergencia?', form.conf_emergencias],
+  ]
+  confItems.forEach(function(item, i) { y = confRow(y, item[0], item[1], i % 2 === 1) })
+  y += 4
+
+  // Observaciones
+  if (form.observaciones && form.observaciones.trim()) {
+    y = wrapBlock(y, 'OBSERVACIONES', form.observaciones, BG)
+    y += 2
+  }
+
+  footer(pageNum)
+
+  // =====================
+  // PÁGINA 3 — FIRMAS
+  // =====================
+  doc.addPage()
+  pageNum++
+  y = margin + 4
+
+  setFill(BG)
+  doc.rect(0, 0, pageWidth, 14, 'F')
+  setColor(GREEN); doc.setFontSize(8); doc.setFont('helvetica', 'bold')
+  doc.text('FIRMAS', margin, 9)
+  setColor(MUTED); doc.setFont('helvetica', 'normal')
+  doc.text('Acta firmada el ' + signedAt, pageWidth - margin, 9, { align: 'right' })
+  setDraw(LINE); doc.line(margin, 14, pageWidth - margin, 14)
+  y = 22
+
+  // Badge firmada
+  setFill(GREEN)
+  doc.roundedRect(margin, y, contentWidth, 10, 2, 2, 'F')
+  setColor(WHITE); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
+  doc.text('✅  Acta firmada el ' + signedAt + '  —  ' + (deliveryAct.signed_by_name || property.owner_name || 'Propietario'), margin + 4, y + 6.5)
+  y += 16
+
+  // Firmas en 2 columnas
+  var sigW = (contentWidth - 8) / 2
+  var sigH = 35
+
+  if (deliveryAct.signature_owner) {
+    setDraw(LINE); setFill(WHITE)
+    doc.roundedRect(margin, y, sigW, sigH + 14, 2, 2, 'FD')
+    setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
+    doc.text('PROPIETARIO', margin + 4, y + 6)
+    setColor(INK); doc.setFont('helvetica', 'normal'); doc.setFontSize(8)
+    doc.text(property.owner_name || '—', margin + 4, y + 12)
+    try { doc.addImage(deliveryAct.signature_owner, 'PNG', margin + 2, y + 15, sigW - 4, sigH - 4) } catch(e) {}
+  }
+
+  if (deliveryAct.signature_inspector) {
+    var sx = margin + sigW + 8
+    setDraw(LINE); setFill(WHITE)
+    doc.roundedRect(sx, y, sigW, sigH + 14, 2, 2, 'FD')
+    setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
+    doc.text('INSPECTOR', sx + 4, y + 6)
+    setColor(INK); doc.setFont('helvetica', 'normal'); doc.setFontSize(8)
+    doc.text(deliveryAct.data && deliveryAct.data.inspector_nombre ? deliveryAct.data.inspector_nombre : '—', sx + 4, y + 12)
+    try { doc.addImage(deliveryAct.signature_inspector, 'PNG', sx + 2, y + 15, sigW - 4, sigH - 4) } catch(e) {}
+  }
+
+  y += sigH + 14 + 10
+
+  footer(pageNum)
+
+  // =====================
+  // ANEXO I — HALLAZGOS
+  // =====================
+  var entries = deliveryAct.entries_snapshot || []
+  if (entries.length > 0) {
+    doc.addPage()
+    pageNum++
+
+    setFill(BG); doc.rect(0, 0, pageWidth, 14, 'F')
+    setColor(GREEN); doc.setFontSize(8); doc.setFont('helvetica', 'bold')
+    doc.text('ANEXO I — HALLAZGOS DECLARADOS AL FIRMAR', margin, 9)
+    setColor(MUTED); doc.setFont('helvetica', 'normal')
+    doc.text(entries.length + ' hallazgo' + (entries.length !== 1 ? 's' : ''), pageWidth - margin, 9, { align: 'right' })
+    setDraw(LINE); doc.line(margin, 14, pageWidth - margin, 14)
+    y = 20
+
+    var sevLabels = { leve: 'Leve', moderado: 'Moderado', grave: 'Grave', critico: 'Crítico' }
+    var sevColors = { leve: [22, 163, 74], moderado: [217, 119, 6], grave: [220, 38, 38], critico: [124, 58, 237] }
+    var statusLabels2 = { pendiente: 'Pendiente', en_progreso: 'En progreso', resuelto: 'Resuelto' }
+    var statusColors2 = { pendiente: [180, 83, 9], en_progreso: [29, 78, 216], resuelto: [21, 128, 61] }
+
+    entries.forEach(function(entry, idx) {
+      var rowH = 10
+      y = checkPageBreak(y, rowH + 2)
+      if (idx % 2 === 0) { setFill(BG); doc.rect(margin, y, contentWidth, rowH, 'F') }
+      else { setFill(WHITE); doc.rect(margin, y, contentWidth, rowH, 'F') }
+
+      // Número
+      setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
+      doc.text(String(idx + 1), margin + 3, y + 6.5)
+
+      // Título
+      setColor(INK); doc.setFontSize(8); doc.setFont('helvetica', 'normal')
+      var title = entry.title || 'Sin título'
+      if (title.length > 48) title = title.substring(0, 45) + '...'
+      doc.text(title, margin + 10, y + 6.5)
+
+      // Categoría
+      setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'normal')
+      var catText = entry.category ? entry.category.charAt(0).toUpperCase() + entry.category.slice(1) : ''
+      doc.text(catText, margin + 105, y + 6.5)
+
+      // Severidad
+      var sevC = sevColors[entry.severity] || sevColors.leve
+      setColor(sevC); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
+      doc.text(sevLabels[entry.severity] || '—', margin + 133, y + 6.5)
+
+      // Estado
+      var stC = statusColors2[entry.status] || statusColors2.pendiente
+      setColor(stC); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
+      doc.text(statusLabels2[entry.status] || 'Pendiente', pageWidth - margin - 3, y + 6.5, { align: 'right' })
+
+      // Ubicación si existe
+      if (entry.location) {
+        y += rowH
+        y = checkPageBreak(y, 6)
+        setColor(MUTED); doc.setFontSize(6.5); doc.setFont('helvetica', 'normal')
+        doc.text('📍 ' + entry.location, margin + 10, y + 4.5)
+        y += 6
+      } else {
+        y += rowH
+      }
+    })
+
+    // nota al pie del anexo
+    y += 6
+    setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'normal')
+    doc.text('Estos hallazgos fueron registrados y congelados al momento de la firma del acta.', margin, y)
+
+    footer(pageNum)
+  }
+
+  var fileName = 'Acta_' + (projectName || 'Proyecto').replace(/\s+/g, '_') + '_' + (property.unit_number || '').replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf'
   doc.save(fileName)
 }
 
@@ -1493,11 +1687,6 @@ var handleLogin = function(newToken, user) {
     })
   }
 
-  var handleExportPDF = function() {
-    if (entries.length === 0) { alert('No hay hallazgos para exportar'); return }
-    generatePDF(currentProject.name, currentProperty, entries)
-  }
-
   var handleSaveProperty = function() {
     if (!editPropForm.unit_number || !editPropForm.unit_number.trim()) { alert('El número de propiedad es requerido'); return }
     authFetch(API_URL + '/properties/' + editingProperty.id, {
@@ -1616,7 +1805,7 @@ var handleLogin = function(newToken, user) {
     loadDeliveryAct, saveDeliveryAct,
     deliveryActRef, entriesRef,
     handleImageUpload, removeImage, toggleRecording,
-    handleSubmit, handleDeleteEntry, handleExportPDF,
+    handleSubmit, handleDeleteEntry,
     handleSaveProperty, handleSaveEntry, handleUpdateEntryStatus,
     loadTeam, handleOpenTeam, handleInvite, handleRemoveMember, handleCancelInvite,
     openLightbox, closeLightbox, lightboxPrev, lightboxNext,
@@ -1723,7 +1912,6 @@ function AppInterior(props) {
   var toggleRecording = props.toggleRecording
   var handleSubmit = props.handleSubmit
   var handleDeleteEntry = props.handleDeleteEntry
-  var handleExportPDF = props.handleExportPDF
   var handleSaveProperty = props.handleSaveProperty
   var handleSaveEntry = props.handleSaveEntry
   var handleUpdateEntryStatus = props.handleUpdateEntryStatus
@@ -2148,7 +2336,6 @@ function AppInterior(props) {
 
           <div className="action-buttons">
             {!showForm && !showAct && <button className="add-button" onClick={function() { setShowForm(true) }}>+ Nuevo Hallazgo</button>}
-            {entries.length > 0 && !showForm && !showAct && <button className="pdf-button" onClick={handleExportPDF}>📄 Descargar PDF</button>}
           </div>
 
           {showForm && (
@@ -2508,6 +2695,13 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
         </div>
         <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
           {isSigned && <span style={{fontSize:'0.7rem',background:'#F0FDF4',color:'#166534',border:'1px solid #BBF7D0',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>✅ Firmada</span>}
+          {isSigned && (
+            <button
+              onClick={function() { generateActaPDF(deliveryAct, property, project && project.name) }}
+              style={{fontSize:'0.75rem',background:'#1A1814',color:'#fff',border:'none',padding:'0.3rem 0.75rem',borderRadius:'100px',fontWeight:'600',cursor:'pointer',display:'flex',alignItems:'center',gap:'0.3rem'}}>
+              📄 PDF
+            </button>
+          )}
           {!isSigned && <span style={{fontSize:'0.7rem',background:'#FFFBEB',color:'#92400E',border:'1px solid #FDE68A',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>En progreso</span>}
           <button onClick={onClose} style={{background:'none',border:'none',fontSize:'1.1rem',cursor:'pointer',color:'#6B6760',padding:'0.25rem',lineHeight:1}}>✕</button>
         </div>
@@ -2691,6 +2885,11 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
                 </div>
               )}
             </div>
+            <button
+              onClick={function() { generateActaPDF(deliveryAct, property, project && project.name) }}
+              style={{marginTop:'1rem',width:'100%',padding:'0.75rem',background:'#1A1814',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.9rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem'}}>
+              📄 Descargar PDF del acta
+            </button>
           </div>
         )}
 
