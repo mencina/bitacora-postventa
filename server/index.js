@@ -777,6 +777,61 @@ app.put('/properties/:id/delivery-act', authMiddleware, async function(req, res)
   }
 })
 
+// POST /properties/:id/send-delivery-act-pdf — enviar PDF del acta al propietario por email
+app.post('/properties/:id/send-delivery-act-pdf', authMiddleware, async function(req, res) {
+  try {
+    var { pdfBase64, ownerEmail, ownerName, unitNumber, projectName } = req.body
+    if (!pdfBase64) return res.status(400).json({ error: 'Falta el PDF' })
+    if (!ownerEmail) return res.status(400).json({ error: 'El acta no tiene un email de propietario registrado' })
+
+    var { error } = await resend.emails.send({
+      from: 'BitácoraPro <noreply@contacto.bitacorapro.cl>',
+      to: ownerEmail,
+      subject: 'Acta de entrega — ' + (unitNumber || 'Propiedad'),
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
+          <div style="background: #1800AD; border-radius: 10px 10px 0 0; padding: 24px 28px;">
+            <h2 style="color: #fff; margin: 0; font-size: 20px; font-weight: 700;">BitácoraPro</h2>
+          </div>
+          <div style="background: #fff; border: 1px solid #E0E2EB; border-top: none; border-radius: 0 0 10px 10px; padding: 28px;">
+            <p style="color: #0F111A; margin: 0 0 14px; font-size: 15px;">
+              Estimado/a <strong>${ownerName || 'propietario/a'}</strong>,
+            </p>
+            <p style="color: #374151; margin: 0 0 14px; font-size: 15px;">
+              Adjunto encontrará el acta de entrega de la propiedad <strong>${unitNumber || ''}</strong>
+              del proyecto <strong>${projectName || ''}</strong>, firmada por ambas partes.
+            </p>
+            <p style="color: #374151; margin: 0 0 24px; font-size: 15px;">
+              Le recomendamos guardar este documento como respaldo del proceso de entrega.
+            </p>
+            <hr style="border: none; border-top: 1px solid #E0E2EB; margin: 0 0 20px;" />
+            <p style="color: #6B6F82; font-size: 12px; margin: 0;">
+              Este correo fue enviado automáticamente por BitácoraPro.<br/>
+              Si tiene dudas, contacte directamente a su ejecutivo.
+            </p>
+          </div>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: 'Acta_' + (unitNumber || 'propiedad').replace(/\s+/g, '_') + '.pdf',
+          content: pdfBase64,
+        }
+      ]
+    })
+
+    if (error) {
+      console.error('Resend error:', error)
+      return res.status(500).json({ error: 'Error al enviar el email' })
+    }
+
+    res.json({ ok: true })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // GET /properties/:id/public-token — obtener (o crear) token público de una propiedad
 app.get('/properties/:id/public-token', authMiddleware, async function(req, res) {
   try {

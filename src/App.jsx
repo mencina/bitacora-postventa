@@ -505,6 +505,194 @@ async function generatePDF(projectName, property, entries) {
   var fileName = 'Bitacora_' + (projectName || 'Proyecto').replace(/\s+/g, '_') + '_' + property.unit_number.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf'
   doc.save(fileName)
 }
+// === GENERAR PDF DEL ACTA DE ENTREGA ===
+async function generateDeliveryActPDF(project, property, deliveryAct, form) {
+  var doc = new jsPDF('p', 'mm', 'a4')
+  var pageWidth = 210
+  var pageHeight = 297
+  var margin = 18
+  var contentWidth = pageWidth - margin * 2
+  var y = 0
+
+  function checkY(needed) { if (y + needed > pageHeight - 20) { doc.addPage(); y = margin } }
+
+  function sectionHeader(title) {
+    checkY(14)
+    doc.setFillColor(240, 241, 248)
+    doc.rect(margin, y, contentWidth, 9, 'F')
+    doc.setFontSize(8.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(24, 0, 173)
+    doc.text(title.toUpperCase(), margin + 4, y + 6.2)
+    y += 13
+  }
+
+  function rowLine(label, value) {
+    checkY(8)
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(60, 60, 80)
+    doc.text(label, margin + 2, y)
+    doc.setFont('helvetica', 'normal'); doc.setTextColor(30, 30, 50)
+    doc.text(value || '—', margin + 68, y, { maxWidth: contentWidth - 70 })
+    y += 7
+  }
+
+  function triLabel(val) {
+    var map = { 'si': 'Sí', 'no': 'No', 'conforme': 'Conforme', 'no_conforme': 'No conforme', 'na': 'N/A', '': '—' }
+    return map[val] || val || '—'
+  }
+
+  function triColor(val) {
+    if (val === 'si' || val === 'conforme') return [21, 128, 61]
+    if (val === 'no' || val === 'no_conforme') return [180, 83, 9]
+    return [107, 111, 130]
+  }
+
+  function triRow(label, val) {
+    checkY(8)
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(60, 60, 80)
+    doc.text(label, margin + 2, y)
+    var col = triColor(val)
+    doc.setTextColor(col[0], col[1], col[2]); doc.setFont('helvetica', 'bold')
+    doc.text(triLabel(val), pageWidth - margin - 2, y, { align: 'right' })
+    doc.setDrawColor(220, 222, 230); doc.setLineWidth(0.2)
+    doc.line(margin, y + 2.5, pageWidth - margin, y + 2.5)
+    y += 7.5
+  }
+
+  var signedDate = new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  // ── PORTADA ──────────────────────────────────────────────────────────────────
+  doc.setFillColor(24, 0, 173)
+  doc.rect(0, 0, pageWidth, 52, 'F')
+  doc.setTextColor(255, 255, 255); doc.setFontSize(22); doc.setFont('helvetica', 'bold')
+  doc.text('Acta de Entrega', margin, 24)
+  doc.setFontSize(11); doc.setFont('helvetica', 'normal')
+  doc.text((project && project.name) || '', margin, 34)
+  doc.setFontSize(10); doc.setTextColor(180, 190, 255)
+  doc.text('Propiedad ' + (property.unit_number || ''), margin, 43)
+  // Badge firmada
+  doc.setFillColor(34, 197, 94)
+  doc.roundedRect(pageWidth - margin - 56, 18, 56, 12, 3, 3, 'F')
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'bold'); doc.setTextColor(255, 255, 255)
+  doc.text('Firmada el ' + signedDate, pageWidth - margin - 28, 25.5, { align: 'center' })
+  y = 62
+
+  // ── I. DATOS GENERALES ────────────────────────────────────────────────────────
+  sectionHeader('I. Datos Generales')
+  rowLine('Propietario', form.owner_name || property.owner_name)
+  rowLine('RUT', form.owner_rut || property.owner_rut)
+  rowLine('Email', form.owner_email || property.owner_email)
+  rowLine('Teléfono', form.owner_phone || property.owner_phone)
+  rowLine('Proyecto / Etapa', form.proyecto_etapa || (project && project.name))
+  rowLine('Dirección', form.direccion)
+  rowLine('Bodega', form.bodega)
+  rowLine('Estacionamiento', form.estacionamiento)
+  rowLine('Inspector', form.inspector_nombre)
+  y += 2
+
+  // ── II. DOCUMENTACIÓN ─────────────────────────────────────────────────────────
+  sectionHeader('II. Documentación entregada')
+  ;[
+    ['Manual del propietario', 'doc_manual'], ['Garantía escrituración', 'doc_garantia'],
+    ['Llaves acceso principal', 'doc_llaves_principal'], ['Llaves bodega', 'doc_llaves_bodega'],
+    ['Llaves estacionamiento', 'doc_llaves_estacionamiento'], ['Llaves dormitorios', 'doc_llaves_dormitorios'],
+    ['Llaves clóset', 'doc_llaves_closet'], ['Control portón/acceso', 'doc_control_porton'],
+    ['Kit accesorios', 'doc_kit_accesorios'], ['Garantías artefactos', 'doc_garantias_artefactos'],
+  ].forEach(function(it) { triRow(it[0], form[it[1]]) })
+  y += 2
+
+  // ── III. ARTEFACTOS ───────────────────────────────────────────────────────────
+  sectionHeader('III. Recepción de artefactos')
+  ;[
+    ['Calefón', 'art_calefon'], ['Encimera', 'art_encimera'], ['Horno', 'art_horno'],
+    ['Campana extractora', 'art_campana'], ['Estufa', 'art_estufa'], ['Lavavajillas', 'art_lavavajillas'],
+    ['Refrigerador', 'art_refrigerador'], ['Lavadora', 'art_lavadora'], ['Climatización (AC)', 'art_aire'],
+    ['Alarma', 'art_alarma'], ['Citófono', 'art_citofono'], ['Portón automático', 'art_porton'],
+    ['Sistema calefacción', 'art_calefaccion'],
+  ].forEach(function(it) { triRow(it[0], form[it[1]]) })
+  y += 2
+
+  // ── IV. MEDIDORES ─────────────────────────────────────────────────────────────
+  sectionHeader('IV. Lectura de medidores')
+  ;[
+    ['Agua fría — N° medidor', 'med_agua_fria_num'], ['Agua fría — Lectura', 'med_agua_fria_val'],
+    ['Agua caliente — N° medidor', 'med_agua_caliente_num'], ['Agua caliente — Lectura', 'med_agua_caliente_val'],
+    ['Gas — N° medidor', 'med_gas_num'], ['Gas — Lectura', 'med_gas_val'],
+    ['Electricidad — N° medidor', 'med_luz_num'], ['Electricidad — Lectura', 'med_luz_val'],
+  ].forEach(function(it) { rowLine(it[0], form[it[1]]) })
+  y += 2
+
+  // ── V. CONFORMIDAD ────────────────────────────────────────────────────────────
+  sectionHeader('V. Conformidad del proceso')
+  ;[
+    ['¿Se inició en el horario acordado?', 'conf_horario'],
+    ['¿Se explicaron los documentos de entrega?', 'conf_documentos'],
+    ['¿Se explicó el programa de garantía y plazos?', 'conf_garantia'],
+    ['¿Se realizó la prueba de artefactos?', 'conf_artefactos'],
+    ['¿Se explicó tablero, corte de agua y gas?', 'conf_tablero'],
+    ['¿Se explicaron los teléfonos de emergencia?', 'conf_emergencias'],
+  ].forEach(function(it) { triRow(it[0], form[it[1]]) })
+  y += 2
+
+  // ── OBSERVACIONES ─────────────────────────────────────────────────────────────
+  if (form.observaciones) {
+    sectionHeader('Observaciones')
+    var obsLines = doc.splitTextToSize(form.observaciones, contentWidth - 6)
+    checkY(obsLines.length * 5.5 + 6)
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(50, 50, 70)
+    doc.text(obsLines, margin + 3, y)
+    y += obsLines.length * 5.5 + 8
+  }
+
+  // ── FIRMAS ────────────────────────────────────────────────────────────────────
+  checkY(55)
+  sectionHeader('Firmas')
+  var sigY = y; var sigW = (contentWidth - 8) / 2; var sigH = 32
+  doc.setDrawColor(200, 202, 215); doc.setLineWidth(0.4)
+  doc.rect(margin, sigY, sigW, sigH)
+  if (deliveryAct.signature_owner) {
+    try { doc.addImage(deliveryAct.signature_owner, 'PNG', margin + 2, sigY + 2, sigW - 4, sigH - 8) } catch(e) {}
+  }
+  doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(107, 111, 130)
+  doc.text('Propietario: ' + (form.owner_name || property.owner_name || ''), margin + sigW / 2, sigY + sigH - 3, { align: 'center' })
+  var sig2X = margin + sigW + 8
+  doc.rect(sig2X, sigY, sigW, sigH)
+  if (deliveryAct.signature_inspector) {
+    try { doc.addImage(deliveryAct.signature_inspector, 'PNG', sig2X + 2, sigY + 2, sigW - 4, sigH - 8) } catch(e) {}
+  }
+  doc.text('Inspector: ' + (form.inspector_nombre || ''), sig2X + sigW / 2, sigY + sigH - 3, { align: 'center' })
+  doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(21, 128, 61)
+  doc.text('Firmado el ' + signedDate, pageWidth / 2, sigY + sigH + 7, { align: 'center' })
+  y = sigY + sigH + 14
+
+  // ── ANEXO I — HALLAZGOS ───────────────────────────────────────────────────────
+  var snapshot = deliveryAct.entries_snapshot
+  if (snapshot && snapshot.length > 0) {
+    checkY(20)
+    sectionHeader('Anexo I — Hallazgos declarados al firmar')
+    snapshot.forEach(function(e, i) {
+      checkY(8)
+      doc.setFontSize(8.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(50, 50, 70)
+      doc.text((i + 1) + '. ' + (e.title || 'Sin título'), margin + 2, y, { maxWidth: contentWidth - 40 })
+      var sev = SEVERITIES[e.severity]
+      if (sev) {
+        var col = hexToRgb(sev.color)
+        doc.setTextColor(col[0], col[1], col[2]); doc.setFont('helvetica', 'bold')
+        doc.text(sev.label, pageWidth - margin - 2, y, { align: 'right' })
+      }
+      y += 6.5
+    })
+  }
+
+  // ── PIE EN TODAS LAS PÁGINAS ──────────────────────────────────────────────────
+  var totalPages = doc.getNumberOfPages()
+  for (var p = 1; p <= totalPages; p++) {
+    doc.setPage(p)
+    doc.setFontSize(7.5); doc.setFont('helvetica', 'normal'); doc.setTextColor(160, 162, 175)
+    doc.text('BitácoraPro · Acta de Entrega · ' + (property.unit_number || '') + ' · ' + signedDate, pageWidth / 2, pageHeight - 8, { align: 'center' })
+    doc.text(p + ' / ' + totalPages, pageWidth - margin, pageHeight - 8, { align: 'right' })
+  }
+
+  return doc.output('datauristring').split(',')[1] // base64 puro
+}
 
 // === PANTALLA LOGIN ===
 function LoginScreen({ onLogin }) {
@@ -2873,8 +3061,8 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
   var [inspectorSigData, setInspectorSigData] = React.useState(deliveryAct && deliveryAct.signature_inspector ? deliveryAct.signature_inspector : null)
   var [saving, setSaving] = React.useState(false)
   var [signing, setSigning] = React.useState(false)
+  var [sendingPdf, setSendingPdf] = React.useState(false)
   var isSigned = deliveryAct && deliveryAct.signed_at
-
   var defaultData = {
     inspector_nombre: (currentUser && currentUser.name) || '',
     proyecto_etapa: (project && project.name) || '',
@@ -3143,15 +3331,63 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
 
       </div>
 
-      {/* Sticky bottom — botón registrar hallazgo (solo cuando no está firmada) */}
-      {!isSigned && (
-        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'0.875rem 1rem',background:'rgba(247,245,240,0.95)',backdropFilter:'blur(8px)',borderTop:'1px solid var(--border-subtle)',zIndex:20}}>
+      {/* Sticky bottom */}
+      <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'0.875rem 1rem',paddingBottom:'calc(0.875rem + env(safe-area-inset-bottom))',background:'rgba(247,245,240,0.95)',backdropFilter:'blur(8px)',borderTop:'1px solid var(--border-subtle)',zIndex:20}}>
+        {isSigned ? (
+          <button
+            disabled={sendingPdf}
+            onClick={async function() {
+              var ownerEmail = form.owner_email || property.owner_email
+              if (!ownerEmail) {
+                alert('Esta propiedad no tiene un email registrado. Agrégalo en la ficha de la propiedad.')
+                return
+              }
+              setSendingPdf(true)
+              try {
+                var pdfBase64 = await generateDeliveryActPDF(project, property, deliveryAct, form)
+                var resp = await authFetch(API_URL + '/properties/' + property.id + '/send-delivery-act-pdf', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    pdfBase64: pdfBase64,
+                    ownerEmail: ownerEmail,
+                    ownerName: form.owner_name || property.owner_name || '',
+                    unitNumber: property.unit_number || '',
+                    projectName: (project && project.name) || '',
+                  })
+                })
+                if (resp.ok) {
+                  setActToast('PDF enviado a ' + ownerEmail)
+                  setTimeout(function() { setActToast(null) }, 3500)
+                } else {
+                  var data = await resp.json()
+                  alert('Error: ' + (data.error || 'No se pudo enviar el email'))
+                }
+              } catch(err) {
+                alert('Error al generar o enviar el PDF. Intenta de nuevo.')
+              } finally {
+                setSendingPdf(false)
+              }
+            }}
+            style={{width:'100%',padding:'0.875rem',background: sendingPdf ? 'var(--border-subtle)' : 'var(--primary-700)',color: sendingPdf ? 'var(--text-tertiary)' : '#fff',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor: sendingPdf ? 'default' : 'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem',transition:'background 0.2s'}}>
+            {sendingPdf ? (
+              <span style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+                Enviando...
+              </span>
+            ) : (
+              <span style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>
+                Enviar PDF a Cliente
+              </span>
+            )}
+          </button>
+        ) : (
           <button onClick={function() { onRegisterEntry() }}
             style={{width:'100%',padding:'0.875rem',background:'var(--primary-700)',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:'pointer'}}>
             + Registrar hallazgo
           </button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }) // end React.memo DeliveryActScreen
