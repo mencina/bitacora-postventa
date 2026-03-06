@@ -1445,6 +1445,34 @@ function ResetPasswordScreen({ onLogin }) {
     </div>
   )
 }
+// Helper robusto para copiar al portapapeles (funciona en HTTP, iOS Safari y Android)
+function copyToClipboard(text, onSuccess) {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(function() {
+      copyFallback(text, onSuccess)
+    })
+  } else {
+    copyFallback(text, onSuccess)
+  }
+}
+function copyFallback(text, onSuccess) {
+  var ta = document.createElement('textarea')
+  ta.value = text
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;'
+  document.body.appendChild(ta)
+  ta.focus()
+  ta.select()
+  try {
+    var ok = document.execCommand('copy')
+    if (ok) onSuccess()
+    else prompt('Copia este link:', text)
+  } catch(e) {
+    prompt('Copia este link:', text)
+  } finally {
+    document.body.removeChild(ta)
+  }
+}
+
 function App() {
   // Auth
   var [token, setToken] = useState(function() {
@@ -1647,11 +1675,7 @@ var handleLogin = function(newToken, user) {
       var data = await r.json()
       if (data.token) {
         var url = window.location.origin + '/p/' + data.token
-        navigator.clipboard.writeText(url).then(function() {
-          alert('✅ Link copiado al portapapeles')
-        }).catch(function() {
-          prompt('Copia este link:', url)
-        })
+        copyToClipboard(url, function() { alert('✅ Link copiado al portapapeles') })
       }
     } catch(e) { alert('Error al obtener el link') }
   }
@@ -2668,11 +2692,7 @@ function AppInterior(props) {
                     <div style={{position:'absolute', top:'0.875rem', right:'0.875rem', display:'flex', gap:'0.25rem'}}>
                       <button className="delete-button" style={{position:'static', opacity:0.35}} title="Copiar link" onClick={function() {
                         var url = window.location.origin + '/h/' + entry.id
-                        navigator.clipboard.writeText(url).then(function() {
-                          alert('✅ Link copiado al portapapeles')
-                        }).catch(function() {
-                          prompt('Copia este link:', url)
-                        })
+                        copyToClipboard(url, function() { alert('✅ Link copiado al portapapeles') })
                       }}>🔗</button>
                       <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}>✏️</button>
                       {currentUser && currentUser.role === 'admin' && (
