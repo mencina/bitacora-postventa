@@ -1456,6 +1456,7 @@ function App() {
   var [projects, setProjects] = useState([])
   var [currentProject, setCurrentProject] = useState(null)
   var [properties, setProperties] = useState([])
+  var [loadingProperties, setLoadingProperties] = useState(false)
   var [currentProperty, setCurrentProperty] = useState(null)
   var [entries, setEntries] = useState([])
   var [showForm, setShowForm] = useState(false)
@@ -1569,7 +1570,8 @@ var handleLogin = function(newToken, user) {
   // Load properties when project changes
   useEffect(function() {
     if (currentProject && token) {
-      authFetch(API_URL + '/projects/' + currentProject.id + '/properties').then(function(r) { return r.json() }).then(setProperties).catch(console.error)
+      setLoadingProperties(true)
+      authFetch(API_URL + '/projects/' + currentProject.id + '/properties').then(function(r) { return r.json() }).then(function(data) { setProperties(data); setLoadingProperties(false) }).catch(function(e) { console.error(e); setLoadingProperties(false) })
     } else { setProperties([]); setCurrentProperty(null) }
   }, [currentProject])
 
@@ -1834,7 +1836,7 @@ var handleLogin = function(newToken, user) {
   var interiorProps = {
     token, currentUser, setCurrentUser, handleLogout,
     projects, setProjects, currentProject, setCurrentProject,
-    properties, setProperties, currentProperty, setCurrentProperty,
+    properties, setProperties, loadingProperties, currentProperty, setCurrentProperty,
     entries, setEntries,
     showForm, setShowForm, isAnalyzing, setIsAnalyzing,
     showTeam, setShowTeam, team, setTeam,
@@ -2008,6 +2010,7 @@ function AppInterior(props) {
   var setCurrentProject = props.setCurrentProject
   var properties = props.properties
   var setProperties = props.setProperties
+  var loadingProperties = props.loadingProperties
   var currentProperty = props.currentProperty
   var setCurrentProperty = props.setCurrentProperty
   var entries = props.entries
@@ -2369,7 +2372,7 @@ function AppInterior(props) {
               </div>
             )}
 
-            {properties.length === 0 && (
+            {!loadingProperties && properties.length === 0 && (
               <div className="welcome-message"><h2>Sin propiedades</h2><p>Agrega las propiedades del proyecto para comenzar la inspección.</p></div>
             )}
             <div className="projects-grid">
