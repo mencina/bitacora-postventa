@@ -31,14 +31,14 @@ function HomeScreen() {
   return (
     <div className="hp-root">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        /* Typography: Inter — loaded via App.css */
 
         /* VARIABLES Y BASE */
-        .hp-root{--bg:#F7F5F0;--ink:#1A1814;--muted:#6B6760;--accent:#2D5A3D;--accent-light:#EAF1EC;--line:#E2DDD6;--white:#FFFFFF;--serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',sans-serif;--gutter:max(1.25rem,5vw);font-family:var(--sans);background:var(--bg);color:var(--ink);overflow-x:hidden;font-weight:300;line-height:1.6;min-height:100vh;}
+        .hp-root{--bg:var(--surface-page);--ink:var(--text-primary);--muted:var(--text-tertiary);--accent:var(--primary-700);--accent-light:var(--primary-50);--line:var(--border-subtle);--white:var(--surface-1);--serif: var(--font-sans);--sans:var(--font-sans);--gutter:max(1.25rem,5vw);font-family:var(--sans);background:var(--bg);color:var(--ink);overflow-x:hidden;font-weight:400;line-height:1.6;min-height:100vh;}
 
         /* NAV */
         .hp-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem var(--gutter);background:rgb(255, 255, 255);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);}
-        .hp-logo{font-family:var(--serif);font-size:1.15rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:-0.02em;white-space:nowrap;}
+        .hp-logo{font-family: var(--font-sans);font-size:1.15rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:-0.02em;white-space:nowrap;}
         .hp-logo span{color:var(--accent);}
         .hp-nav-links{display:flex;align-items:center;gap:1.5rem;}
         .hp-nav-link{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.875rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
@@ -68,7 +68,7 @@ function HomeScreen() {
         .hp-hero::before{content:'';position:absolute;top:-20%;right:-10%;width:600px;height:600px;background:radial-gradient(circle,rgba(45,90,61,0.07) 0%,transparent 70%);pointer-events:none;}
         .hp-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent-light);color:var(--accent);font-size:0.75rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.4rem 1rem;border-radius:100px;margin-bottom:1.75rem;width:fit-content;animation:hp-fadeUp 0.7s 0.1s both;}
         .hp-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
-        .hp-hero-title{font-family:var(--serif);font-size:clamp(2.4rem,7vw,5.5rem);line-height:1.05;font-weight:700;letter-spacing:-0.03em;max-width:14ch;margin-bottom:1.25rem;animation:hp-fadeUp 0.8s 0.2s both;}
+        .hp-hero-title{font-family: var(--font-sans);font-size:clamp(2.4rem,7vw,5.5rem);line-height:1.05;font-weight:700;letter-spacing:-0.03em;max-width:14ch;margin-bottom:1.25rem;animation:hp-fadeUp 0.8s 0.2s both;}
         .hp-hero-title em{font-style:italic;color:var(--accent);}
         .hp-hero-sub{font-size:1rem;color:var(--muted);max-width:44ch;line-height:1.75;margin-bottom:2rem;animation:hp-fadeUp 0.8s 0.35s both;}
         .hp-hero-actions{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;animation:hp-fadeUp 0.8s 0.5s both;}
@@ -78,33 +78,33 @@ function HomeScreen() {
         .hp-btn-ghost:hover{color:var(--ink);gap:0.65rem;}
 
         /* SECCIÓN DOLORES — oscura */
-        .hp-pain{background:#1A1814;color:var(--white);padding:5rem var(--gutter);}
-        .hp-pain .hp-label{color:#7CB891;}
+        .hp-pain{background:var(--text-primary);color:var(--white);padding:5rem var(--gutter);}
+        .hp-pain .hp-label{color:var(--primary-300);}
         .hp-pain .hp-section-title{color:var(--white);}
         .hp-pain-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden;margin-top:3rem;}
-        .hp-pain-card{background:#1A1814;padding:2rem 1.75rem;transition:background 0.2s;}
+        .hp-pain-card{background:var(--text-primary);padding:2rem 1.75rem;transition:background 0.2s;}
         .hp-pain-card:hover{background:rgba(255,255,255,0.04);}
         .hp-pain-before{font-size:0.68rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:0.75rem;display:block;}
-        .hp-pain-problem{font-family:var(--serif);font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.85);margin-bottom:1rem;line-height:1.35;}
-        .hp-pain-solution{font-size:0.85rem;color:#7CB891;line-height:1.6;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:0.5rem;align-items:flex-start;}
+        .hp-pain-problem{font-family: var(--font-sans);font-size:1.05rem;font-weight:700;color:rgba(255,255,255,0.85);margin-bottom:1rem;line-height:1.35;}
+        .hp-pain-solution{font-size:0.85rem;color:var(--primary-300);line-height:1.6;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.08);display:flex;gap:0.5rem;align-items:flex-start;}
         .hp-pain-solution::before{content:'↳';opacity:0.6;flex-shrink:0;}
 
         /* CÓMO FUNCIONA */
         .hp-how{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:5rem var(--gutter);}
         .hp-label{font-size:0.72rem;font-weight:500;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);margin-bottom:0.875rem;display:block;}
-        .hp-section-title{font-family:var(--serif);font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:700;line-height:1.1;letter-spacing:-0.02em;margin-bottom:1.1rem;}
+        .hp-section-title{font-family: var(--font-sans);font-size:clamp(1.6rem,3.5vw,2.8rem);font-weight:700;line-height:1.1;letter-spacing:-0.02em;margin-bottom:1.1rem;}
         .hp-hflow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:start;gap:0;margin-top:3rem;}
         .hp-hstep{text-align:center;padding:0 0.75rem;}
         .hp-hstep-icon{width:52px;height:52px;background:var(--accent-light);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin:0 auto 0.875rem;box-shadow:0 2px 8px rgba(45,90,61,0.1);}
         .hp-hstep-num{display:block;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);margin-bottom:0.4rem;}
-        .hp-hstep-title{font-family:var(--serif);font-size:0.95rem;font-weight:700;line-height:1.2;margin-bottom:0.35rem;color:var(--ink);}
+        .hp-hstep-title{font-family: var(--font-sans);font-size:0.95rem;font-weight:700;line-height:1.2;margin-bottom:0.35rem;color:var(--ink);}
         .hp-hstep-body{font-size:0.8rem;color:var(--muted);line-height:1.55;}
         .hp-hflow-arrow{color:var(--line);font-size:1.5rem;padding:0 0.25rem;margin-top:1rem;align-self:start;}
 
         /* CTA */
         .hp-cta{text-align:center;padding:6rem var(--gutter);position:relative;overflow:hidden;}
         .hp-cta::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(45,90,61,0.06) 0%,transparent 65%);pointer-events:none;}
-        .hp-cta-title{font-family:var(--serif);font-size:clamp(1.8rem,4.5vw,4rem);font-weight:700;letter-spacing:-0.03em;line-height:1.05;margin-bottom:1.25rem;}
+        .hp-cta-title{font-family: var(--font-sans);font-size:clamp(1.8rem,4.5vw,4rem);font-weight:700;letter-spacing:-0.03em;line-height:1.05;margin-bottom:1.25rem;}
         .hp-cta-sub{font-size:0.95rem;color:var(--muted);max-width:40ch;margin:0 auto 2rem;line-height:1.7;}
         .hp-cta-actions{display:flex;flex-direction:column;align-items:center;gap:0.875rem;}
         .hp-cta-secondary{background:none;border:none;color:var(--muted);font-size:0.875rem;font-family:var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px;transition:color 0.2s;padding:0.5rem;}
@@ -112,7 +112,7 @@ function HomeScreen() {
 
         /* FOOTER */
         .hp-footer{border-top:1px solid var(--line);padding:1.75rem var(--gutter);display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;color:var(--muted);flex-wrap:wrap;gap:0.75rem;}
-        .hp-footer-logo{font-family:var(--serif);font-weight:700;color:var(--ink);font-size:1rem;}
+        .hp-footer-logo{font-family: var(--font-sans);font-weight:700;color:var(--ink);font-size:1rem;}
         .hp-footer-link{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
         .hp-footer-link:hover{color:var(--ink);}
 
@@ -286,415 +286,221 @@ var API_URL =
     : 'https://bitacora-postventa-production.up.railway.app'
 
 var CATEGORIES = {
-  estructural: { label: 'Estructural', icon: '🏗️', color: '#E74C3C' },
-  terminaciones: { label: 'Terminaciones', icon: '🎨', color: '#3498DB' },
-  instalaciones: { label: 'Instalaciones', icon: '🔧', color: '#F39C12' },
-  humedad: { label: 'Humedad / Filtraciones', icon: '💧', color: '#1ABC9C' },
-  electrico: { label: 'Electrico', icon: '⚡', color: '#9B59B6' },
-  otro: { label: 'Otro', icon: '📋', color: '#7F8C8D' },
+  estructural:  { label: 'Estructural',        icon: '', color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' },
+  terminaciones:{ label: 'Terminaciones',      icon: '', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
+  instalaciones:{ label: 'Instalaciones',      icon: '', color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
+  humedad:      { label: 'Humedad',            icon: '', color: '#0F766E', bg: '#F0FDFA', border: '#99F6E4' },
+  electrico:    { label: 'Eléctrico',          icon: '', color: '#7C3AED', bg: '#FAF5FF', border: '#DDD6FE' },
+  otro:         { label: 'Otro',               icon: '', color: '#6B6F82', bg: '#EDEEF4', border: '#C2C5D1' },
 }
 
 var SEVERITIES = {
-  leve: { label: 'Leve', color: '#27AE60', bg: '#E8F8F0' },
-  moderado: { label: 'Moderado', color: '#F39C12', bg: '#FEF5E7' },
-  grave: { label: 'Grave', color: '#E74C3C', bg: '#FDEDEC' },
-  critico: { label: 'Critico', color: '#8E44AD', bg: '#F4ECF7' },
+  leve:     { label: 'Leve',     color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
+  moderado: { label: 'Moderado', color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
+  grave:    { label: 'Grave',    color: '#9A3412', bg: '#FFF7ED', border: '#FED7AA' },
+  critico:  { label: 'Crítico',  color: '#6D28D9', bg: '#FAF5FF', border: '#DDD6FE' },
 }
 
 var STATUSES = {
-  pendiente:   { label: 'Pendiente',   color: '#B45309', bg: '#FEF3C7', icon: '🔴' },
-  en_progreso: { label: 'En progreso', color: '#1D4ED8', bg: '#DBEAFE', icon: '🔵' },
-  resuelto:    { label: 'Resuelto',    color: '#15803D', bg: '#DCFCE7', icon: '🟢' },
+  pendiente:   { label: 'Pendiente',   color: '#B45309', bg: '#FFFBEB', border: '#FDE68A' },
+  en_progreso: { label: 'En progreso', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
+  resuelto:    { label: 'Resuelto',    color: '#15803D', bg: '#F0FDF4', border: '#BBF7D0' },
 }
 
-async function generateActaPDF(deliveryAct, property, projectName) {
+function hexToRgb(hex) {
+  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)]
+}
+
+function wrapText(doc, text, x, y, maxWidth, lineHeight) {
+  var words = text.split(' ')
+  var line = ''
+  var currentY = y
+  for (var i = 0; i < words.length; i++) {
+    var testLine = line + words[i] + ' '
+    if (doc.getTextWidth(testLine) > maxWidth && line !== '') {
+      doc.text(line.trim(), x, currentY)
+      line = words[i] + ' '
+      currentY = currentY + lineHeight
+    } else { line = testLine }
+  }
+  doc.text(line.trim(), x, currentY)
+  return currentY + lineHeight
+}
+
+async function loadImageAsBase64(url) {
+  try {
+    var response = await fetch(url)
+    var blob = await response.blob()
+    return new Promise(function(resolve) {
+      var reader = new FileReader()
+      reader.onload = function() { resolve(reader.result) }
+      reader.readAsDataURL(blob)
+    })
+  } catch (err) { return null }
+}
+
+async function generatePDF(projectName, property, entries) {
   var doc = new jsPDF('p', 'mm', 'a4')
   var pageWidth = 210
   var pageHeight = 297
-  var margin = 16
+  var margin = 20
   var contentWidth = pageWidth - margin * 2
-  var INK = [26, 24, 20]
-  var GREEN = [45, 90, 61]
-  var MUTED = [107, 103, 96]
-  var LINE = [226, 221, 214]
-  var BG = [247, 245, 240]
-  var WHITE = [255, 255, 255]
 
-  var form = deliveryAct.data || {}
-  var signedAt = deliveryAct.signed_at ? new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' }) : ''
-
-  // Helpers
-  function setColor(rgb) { doc.setTextColor(rgb[0], rgb[1], rgb[2]) }
-  function setFill(rgb) { doc.setFillColor(rgb[0], rgb[1], rgb[2]) }
-  function setDraw(rgb) { doc.setDrawColor(rgb[0], rgb[1], rgb[2]) }
-
-  function checkPageBreak(y, needed) {
-    if (y + needed > pageHeight - 20) { doc.addPage(); return margin + 8 }
-    return y
-  }
-
-  function sectionHeader(y, title) {
-    y = checkPageBreak(y, 14)
-    setFill(INK)
-    doc.rect(margin, y, contentWidth, 8, 'F')
-    setColor(WHITE)
-    doc.setFontSize(8)
-    doc.setFont('helvetica', 'bold')
-    doc.text(title.toUpperCase(), margin + 4, y + 5.5)
-    return y + 8
-  }
-
-  function dataRow(y, label, value, shade) {
-    y = checkPageBreak(y, 7)
-    if (shade) { setFill(BG); doc.rect(margin, y, contentWidth, 7, 'F') }
-    setColor(MUTED)
-    doc.setFontSize(7.5)
-    doc.setFont('helvetica', 'normal')
-    doc.text(label, margin + 3, y + 4.8)
-    setColor(INK)
-    doc.setFont('helvetica', 'bold')
-    doc.text(String(value || '—'), margin + 55, y + 4.8)
-    return y + 7
-  }
-
-  function triRow(y, label, value, shade) {
-    y = checkPageBreak(y, 7)
-    if (shade) { setFill(BG); doc.rect(margin, y, contentWidth, 7, 'F') }
-    setColor(INK)
-    doc.setFontSize(7.5)
-    doc.setFont('helvetica', 'normal')
-    doc.text(label, margin + 3, y + 4.8)
-    var displayVal = { 'si': 'Sí', 'no': 'No', 'na': 'N/A', 'Conforme': 'Conforme', 'No conforme': 'No conforme' }[value] || value || '—'
-    var valColor = value === 'si' ? [22, 101, 52] : value === 'no' ? [153, 27, 27] : MUTED
-    setColor(valColor)
-    doc.setFont('helvetica', 'bold')
-    doc.text(displayVal, pageWidth - margin - 3, y + 4.8, { align: 'right' })
-    return y + 7
-  }
-
-  function confRow(y, label, value, shade) {
-    return triRow(y, label, value === 'si' ? 'Sí' : value === 'no' ? 'No' : value, shade)
-  }
-
-  function wrapBlock(y, label, text, bgRgb) {
-    if (!text) return y
-    var lines = doc.splitTextToSize(text, contentWidth - 10)
-    var blockH = lines.length * 5 + 10
-    y = checkPageBreak(y, blockH + 2)
-    setFill(bgRgb)
-    setDraw(LINE)
-    doc.roundedRect(margin, y, contentWidth, blockH, 2, 2, 'FD')
-    setColor(MUTED)
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'bold')
-    doc.text(label, margin + 4, y + 6)
-    setColor(INK)
-    doc.setFont('helvetica', 'normal')
-    doc.setFontSize(8)
-    doc.text(lines, margin + 4, y + 12)
-    return y + blockH + 3
-  }
-
-  function footer(pageNum) {
-    setColor(MUTED)
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'normal')
-    doc.text('BitácoraPro — Acta de entrega  |  ' + (projectName || '') + '  |  ' + (property.unit_number || ''), margin, pageHeight - 8)
-    doc.text('Pág. ' + pageNum, pageWidth - margin, pageHeight - 8, { align: 'right' })
-  }
-
-  // =====================
-  // PORTADA
-  // =====================
-  setFill(INK)
+  doc.setFillColor(26, 26, 46)
   doc.rect(0, 0, pageWidth, pageHeight, 'F')
-
-  // banda verde
-  setFill(GREEN)
-  doc.rect(0, pageHeight * 0.42, pageWidth, 2, 'F')
-
-  // Logo / título
-  setColor(WHITE)
+  doc.setFillColor(233, 69, 96)
+  doc.rect(0, 120, pageWidth, 4, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(32)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(28)
-  doc.text('BitácoraPro', pageWidth / 2, 80, { align: 'center' })
-  doc.setFontSize(13)
+  doc.text('Bitacora Post Venta', pageWidth / 2, 60, { align: 'center' })
+  doc.setFontSize(20)
   doc.setFont('helvetica', 'normal')
-  doc.setTextColor(192, 187, 181)
-  doc.text('Acta de Entrega de Propiedad', pageWidth / 2, 93, { align: 'center' })
+  doc.text(projectName || 'Proyecto', pageWidth / 2, 85, { align: 'center' })
+  doc.setFontSize(16)
+  doc.setTextColor(233, 69, 96)
+  doc.text('Propiedad: ' + (property.unit_number || ''), pageWidth / 2, 105, { align: 'center' })
 
-  // Datos principales
-  var coverY = pageHeight * 0.42 + 18
-  setColor(WHITE)
-  doc.setFontSize(18)
-  doc.setFont('helvetica', 'bold')
-  doc.text(property.unit_number || '', pageWidth / 2, coverY, { align: 'center' })
-  coverY += 10
-  doc.setFontSize(12)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(192, 187, 181)
-  doc.text(projectName || '', pageWidth / 2, coverY, { align: 'center' })
-  coverY += 8
-  if (property.owner_name) { doc.text(property.owner_name, pageWidth / 2, coverY, { align: 'center' }); coverY += 7 }
+  doc.setFontSize(11)
+  doc.setTextColor(180, 180, 200)
+  var infoY = 140
+  if (property.owner_name) { doc.text('Propietario: ' + property.owner_name, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
+  if (property.owner_rut) { doc.text('RUT: ' + property.owner_rut, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
+  if (property.owner_email) { doc.text('Email: ' + property.owner_email, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
+  if (property.owner_phone) { doc.text('Telefono: ' + property.owner_phone, pageWidth / 2, infoY, { align: 'center' }); infoY += 10 }
 
-  // Fecha firma
-  if (signedAt) {
-    coverY += 8
-    setFill([45, 90, 61])
-    doc.roundedRect(pageWidth / 2 - 40, coverY - 5, 80, 12, 3, 3, 'F')
-    setColor(WHITE)
-    doc.setFontSize(8.5)
-    doc.setFont('helvetica', 'bold')
-    doc.text('Firmada el ' + signedAt, pageWidth / 2, coverY + 2.5, { align: 'center' })
-  }
+  infoY += 10
+  var dateStr = new Date().toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })
+  doc.text('Fecha: ' + dateStr, pageWidth / 2, infoY, { align: 'center' })
+  doc.text('Total hallazgos: ' + entries.length, pageWidth / 2, infoY + 10, { align: 'center' })
 
-  // pie portada
-  doc.setTextColor(107, 103, 96)
-  doc.setFontSize(7.5)
-  doc.setFont('helvetica', 'normal')
-  doc.text('Documento generado con BitácoraPro', pageWidth / 2, pageHeight - 14, { align: 'center' })
+  var sevCounts = { leve: 0, moderado: 0, grave: 0, critico: 0 }
+  entries.forEach(function(e) { if (sevCounts[e.severity] !== undefined) sevCounts[e.severity]++ })
+  var sevY = infoY + 30
+  doc.setTextColor(39, 174, 96); doc.text('Leves: ' + sevCounts.leve, pageWidth / 2 - 40, sevY)
+  doc.setTextColor(243, 156, 18); doc.text('Moderados: ' + sevCounts.moderado, pageWidth / 2 - 40, sevY + 10)
+  doc.setTextColor(231, 76, 60); doc.text('Graves: ' + sevCounts.grave, pageWidth / 2 + 20, sevY)
+  doc.setTextColor(142, 68, 173); doc.text('Criticos: ' + sevCounts.critico, pageWidth / 2 + 20, sevY + 10)
 
-  // =====================
-  // PÁGINA 2 — DATOS + SECCIONES
-  // =====================
-  doc.addPage()
-  var pageNum = 2
-  var y = margin + 4
+  doc.setFontSize(9)
+  doc.setTextColor(120, 120, 140)
+  doc.text('Generado automaticamente con IA - Bitacora Post Venta', pageWidth / 2, 270, { align: 'center' })
 
-  // Encabezado de página interior
-  setFill(BG)
-  doc.rect(0, 0, pageWidth, 14, 'F')
-  setColor(GREEN)
-  doc.setFontSize(8)
-  doc.setFont('helvetica', 'bold')
-  doc.text('ACTA DE ENTREGA', margin, 9)
-  setColor(MUTED)
-  doc.setFont('helvetica', 'normal')
-  doc.text(property.unit_number + (property.owner_name ? '  —  ' + property.owner_name : ''), pageWidth - margin, 9, { align: 'right' })
-  setDraw(LINE)
-  doc.line(margin, 14, pageWidth - margin, 14)
-  y = 20
-
-  // I. Datos generales
-  y = sectionHeader(y, 'I. Datos generales')
-  y = dataRow(y, 'Propietario', form.owner_name, false)
-  y = dataRow(y, 'RUT', form.owner_rut, true)
-  y = dataRow(y, 'Correo', form.owner_email, false)
-  y = dataRow(y, 'Teléfono', form.owner_phone, true)
-  y = dataRow(y, 'Proyecto / Etapa', form.proyecto_etapa, false)
-  y = dataRow(y, 'Inspector', form.inspector_nombre, true)
-  y = dataRow(y, 'Bodega', form.bodega, false)
-  y = dataRow(y, 'Estacionamiento', form.estacionamiento, true)
-  y += 4
-
-  // II. Documentación
-  y = sectionHeader(y, 'II. Documentación entregada')
-  var docItems = [
-    ['Programa de garantía', form.doc_garantia],
-    ['Manual de uso y mantención', form.doc_manual],
-    ['Llaves puerta principal', form.doc_llaves_principal],
-    ['Llaves bodega', form.doc_llaves_bodega],
-    ['Llaves estacionamiento', form.doc_llaves_estacionamiento],
-    ['Llaves dormitorios', form.doc_llaves_dormitorios],
-    ['Llaves closet', form.doc_llaves_closet],
-    ['Control remoto portón', form.doc_control_porton],
-    ['Kit de accesorios', form.doc_kit_accesorios],
-    ['Garantías de artefactos', form.doc_garantias_artefactos],
-  ]
-  docItems.forEach(function(item, i) { y = triRow(y, item[0], item[1], i % 2 === 1) })
-  y += 4
-
-  // III. Artefactos
-  y = sectionHeader(y, 'III. Recepción de artefactos')
-  var artItems = [
-    ['Calefón / Caldera', form.art_calefon],
-    ['Encimera', form.art_encimera],
-    ['Horno', form.art_horno],
-    ['Campana extractora', form.art_campana],
-    ['Estufa / Cocina', form.art_estufa],
-    ['Lavavajillas', form.art_lavavajillas],
-    ['Refrigerador', form.art_refrigerador],
-    ['Lavadora / Secadora', form.art_lavadora],
-    ['Aire acondicionado / Climatización', form.art_aire],
-    ['Alarma de seguridad', form.art_alarma],
-    ['Citófono / Videoportero', form.art_citofono],
-    ['Portón automático', form.art_porton],
-    ['Calefacción central / Piso radiante', form.art_calefaccion],
-  ]
-  var artLabels = { 'si': 'Conforme', 'no': 'No conforme', 'na': 'N/A' }
-  artItems.forEach(function(item, i) {
-    var displayVal = artLabels[item[1]] || item[1]
-    y = triRow(y, item[0], displayVal, i % 2 === 1)
-  })
-  y += 4
-
-  // IV. Medidores
-  y = sectionHeader(y, 'IV. Lectura de medidores')
-  var medItems = [
-    ['Agua fría', form.med_agua_fria_num, form.med_agua_fria_val],
-    ['Agua caliente', form.med_agua_caliente_num, form.med_agua_caliente_val],
-    ['Gas', form.med_gas_num, form.med_gas_val],
-    ['Electricidad', form.med_luz_num, form.med_luz_val],
-  ]
-  medItems.forEach(function(item, i) {
-    y = checkPageBreak(y, 7)
-    if (i % 2 === 1) { setFill(BG); doc.rect(margin, y, contentWidth, 7, 'F') }
-    setColor(INK); doc.setFontSize(7.5); doc.setFont('helvetica', 'normal')
-    doc.text(item[0], margin + 3, y + 4.8)
-    setColor(MUTED); doc.setFont('helvetica', 'normal')
-    doc.text('N° ' + (item[1] || '—'), margin + 75, y + 4.8)
-    setColor(INK); doc.setFont('helvetica', 'bold')
-    doc.text('Lectura: ' + (item[2] || '—'), pageWidth - margin - 3, y + 4.8, { align: 'right' })
-    y += 7
-  })
-  y += 4
-
-  // V. Conformidad
-  y = sectionHeader(y, 'V. Conformidad del proceso')
-  var confItems = [
-    ['¿Se inició en el horario acordado?', form.conf_horario],
-    ['¿Se explicaron los documentos de entrega?', form.conf_documentos],
-    ['¿Se explicó el programa de garantía y plazos?', form.conf_garantia],
-    ['¿Se realizó la prueba de artefactos?', form.conf_artefactos],
-    ['¿Se explicó tablero, corte de agua y gas?', form.conf_tablero],
-    ['¿Se explicaron los teléfonos de emergencia?', form.conf_emergencias],
-  ]
-  confItems.forEach(function(item, i) { y = confRow(y, item[0], item[1], i % 2 === 1) })
-  y += 4
-
-  // Observaciones
-  if (form.observaciones && form.observaciones.trim()) {
-    y = wrapBlock(y, 'OBSERVACIONES', form.observaciones, BG)
-    y += 2
-  }
-
-  footer(pageNum)
-
-  // =====================
-  // PÁGINA 3 — FIRMAS
-  // =====================
-  doc.addPage()
-  pageNum++
-  y = margin + 4
-
-  setFill(BG)
-  doc.rect(0, 0, pageWidth, 14, 'F')
-  setColor(GREEN); doc.setFontSize(8); doc.setFont('helvetica', 'bold')
-  doc.text('FIRMAS', margin, 9)
-  setColor(MUTED); doc.setFont('helvetica', 'normal')
-  doc.text('Acta firmada el ' + signedAt, pageWidth - margin, 9, { align: 'right' })
-  setDraw(LINE); doc.line(margin, 14, pageWidth - margin, 14)
-  y = 22
-
-  // Badge firmada
-  setFill(GREEN)
-  doc.roundedRect(margin, y, contentWidth, 10, 2, 2, 'F')
-  setColor(WHITE); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
-  doc.text('✅  Acta firmada el ' + signedAt + '  —  ' + (deliveryAct.signed_by_name || property.owner_name || 'Propietario'), margin + 4, y + 6.5)
-  y += 16
-
-  // Firmas en 2 columnas
-  var sigW = (contentWidth - 8) / 2
-  var sigH = 35
-
-  if (deliveryAct.signature_owner) {
-    setDraw(LINE); setFill(WHITE)
-    doc.roundedRect(margin, y, sigW, sigH + 14, 2, 2, 'FD')
-    setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
-    doc.text('PROPIETARIO', margin + 4, y + 6)
-    setColor(INK); doc.setFont('helvetica', 'normal'); doc.setFontSize(8)
-    doc.text(property.owner_name || '—', margin + 4, y + 12)
-    try { doc.addImage(deliveryAct.signature_owner, 'PNG', margin + 2, y + 15, sigW - 4, sigH - 4) } catch(e) {}
-  }
-
-  if (deliveryAct.signature_inspector) {
-    var sx = margin + sigW + 8
-    setDraw(LINE); setFill(WHITE)
-    doc.roundedRect(sx, y, sigW, sigH + 14, 2, 2, 'FD')
-    setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
-    doc.text('INSPECTOR', sx + 4, y + 6)
-    setColor(INK); doc.setFont('helvetica', 'normal'); doc.setFontSize(8)
-    doc.text(deliveryAct.data && deliveryAct.data.inspector_nombre ? deliveryAct.data.inspector_nombre : '—', sx + 4, y + 12)
-    try { doc.addImage(deliveryAct.signature_inspector, 'PNG', sx + 2, y + 15, sigW - 4, sigH - 4) } catch(e) {}
-  }
-
-  y += sigH + 14 + 10
-
-  footer(pageNum)
-
-  // =====================
-  // ANEXO I — HALLAZGOS
-  // =====================
-  var entries = deliveryAct.entries_snapshot || []
-  if (entries.length > 0) {
+  for (var idx = 0; idx < entries.length; idx++) {
+    var entry = entries[idx]
     doc.addPage()
-    pageNum++
+    var y = margin
+    var cat = CATEGORIES[entry.category] || CATEGORIES.otro
+    var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
 
-    setFill(BG); doc.rect(0, 0, pageWidth, 14, 'F')
-    setColor(GREEN); doc.setFontSize(8); doc.setFont('helvetica', 'bold')
-    doc.text('ANEXO I — HALLAZGOS DECLARADOS AL FIRMAR', margin, 9)
-    setColor(MUTED); doc.setFont('helvetica', 'normal')
-    doc.text(entries.length + ' hallazgo' + (entries.length !== 1 ? 's' : ''), pageWidth - margin, 9, { align: 'right' })
-    setDraw(LINE); doc.line(margin, 14, pageWidth - margin, 14)
-    y = 20
+    doc.setFillColor(26, 26, 46)
+    doc.rect(0, 0, pageWidth, 40, 'F')
+    doc.setFillColor(233, 69, 96)
+    doc.rect(0, 40, pageWidth, 2, 'F')
+    doc.setTextColor(255, 255, 255)
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'normal')
+    doc.text('Hallazgo #' + (idx + 1) + ' de ' + entries.length + '  |  ' + property.unit_number, margin, 15)
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    var titleText = entry.title || 'Sin titulo'
+    if (titleText.length > 60) titleText = titleText.substring(0, 57) + '...'
+    doc.text(titleText, margin, 28)
+    y = 52
 
-    var sevLabels = { leve: 'Leve', moderado: 'Moderado', grave: 'Grave', critico: 'Crítico' }
-    var sevColors = { leve: [22, 163, 74], moderado: [217, 119, 6], grave: [220, 38, 38], critico: [124, 58, 237] }
-    var statusLabels2 = { pendiente: 'Pendiente', en_progreso: 'En progreso', resuelto: 'Resuelto' }
-    var statusColors2 = { pendiente: [180, 83, 9], en_progreso: [29, 78, 216], resuelto: [21, 128, 61] }
+    var catColor = hexToRgb(cat.color)
+    doc.setFillColor(catColor[0], catColor[1], catColor[2])
+    doc.roundedRect(margin, y, 4, 4, 1, 1, 'F')
+    doc.setTextColor(catColor[0], catColor[1], catColor[2])
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text(cat.label, margin + 7, y + 3.5)
+    var sevColor = hexToRgb(sev.color)
+    var catLabelWidth = doc.getTextWidth(cat.label) + 12
+    doc.setFillColor(sevColor[0], sevColor[1], sevColor[2])
+    doc.roundedRect(margin + catLabelWidth, y, 4, 4, 1, 1, 'F')
+    doc.setTextColor(sevColor[0], sevColor[1], sevColor[2])
+    doc.text(sev.label, margin + catLabelWidth + 7, y + 3.5)
+    // Estado
+    var statusLabels = { pendiente: 'Pendiente', en_progreso: 'En progreso', resuelto: 'Resuelto' }
+    var statusColors = { pendiente: '#B45309', en_progreso: '#1D4ED8', resuelto: '#15803D' }
+    var entryStatusKey = entry.status || 'pendiente'
+    var statusLabel = statusLabels[entryStatusKey] || 'Pendiente'
+    var statusColor = hexToRgb(statusColors[entryStatusKey] || statusColors.pendiente)
+    var sevLabelWidth = catLabelWidth + doc.getTextWidth(sev.label) + 12
+    doc.setFillColor(statusColor[0], statusColor[1], statusColor[2])
+    doc.roundedRect(margin + sevLabelWidth, y, 4, 4, 1, 1, 'F')
+    doc.setTextColor(statusColor[0], statusColor[1], statusColor[2])
+    doc.text(statusLabel, margin + sevLabelWidth + 7, y + 3.5)
+    y += 12
 
-    entries.forEach(function(entry, idx) {
-      var rowH = 10
-      y = checkPageBreak(y, rowH + 2)
-      if (idx % 2 === 0) { setFill(BG); doc.rect(margin, y, contentWidth, rowH, 'F') }
-      else { setFill(WHITE); doc.rect(margin, y, contentWidth, rowH, 'F') }
+    doc.setTextColor(80, 80, 80)
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    if (entry.location) doc.text('Ubicacion: ' + entry.location, margin, y)
+    var entryDate = new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    doc.text('Fecha: ' + entryDate, pageWidth - margin - doc.getTextWidth('Fecha: ' + entryDate), y)
+    y += 10
 
-      // Número
-      setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
-      doc.text(String(idx + 1), margin + 3, y + 6.5)
-
-      // Título
-      setColor(INK); doc.setFontSize(8); doc.setFont('helvetica', 'normal')
-      var title = entry.title || 'Sin título'
-      if (title.length > 48) title = title.substring(0, 45) + '...'
-      doc.text(title, margin + 10, y + 6.5)
-
-      // Categoría
-      setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'normal')
-      var catText = entry.category ? entry.category.charAt(0).toUpperCase() + entry.category.slice(1) : ''
-      doc.text(catText, margin + 105, y + 6.5)
-
-      // Severidad
-      var sevC = sevColors[entry.severity] || sevColors.leve
-      setColor(sevC); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
-      doc.text(sevLabels[entry.severity] || '—', margin + 133, y + 6.5)
-
-      // Estado
-      var stC = statusColors2[entry.status] || statusColors2.pendiente
-      setColor(stC); doc.setFontSize(7); doc.setFont('helvetica', 'bold')
-      doc.text(statusLabels2[entry.status] || 'Pendiente', pageWidth - margin - 3, y + 6.5, { align: 'right' })
-
-      // Ubicación si existe
-      if (entry.location) {
-        y += rowH
-        y = checkPageBreak(y, 6)
-        setColor(MUTED); doc.setFontSize(6.5); doc.setFont('helvetica', 'normal')
-        doc.text('📍 ' + entry.location, margin + 10, y + 4.5)
-        y += 6
-      } else {
-        y += rowH
+    if (entry.images && entry.images.length > 0) {
+      var imgCount = Math.min(entry.images.length, 3)
+      var imgWidth = (contentWidth - (imgCount - 1) * 5) / imgCount
+      var imgHeight = imgWidth * 0.7
+      for (var ii = 0; ii < imgCount; ii++) {
+        try {
+          var imgData = await loadImageAsBase64(entry.images[ii].filename)
+          if (imgData) doc.addImage(imgData, 'JPEG', margin + ii * (imgWidth + 5), y, imgWidth, imgHeight)
+        } catch (err) {}
       }
-    })
+      y += imgHeight + 10
+    }
 
-    // nota al pie del anexo
-    y += 6
-    setColor(MUTED); doc.setFontSize(7); doc.setFont('helvetica', 'normal')
-    doc.text('Estos hallazgos fueron registrados y congelados al momento de la firma del acta.', margin, y)
+    if (entry.inspector_note) {
+      if (y > pageHeight - 60) { doc.addPage(); y = margin }
+      var noteH = Math.ceil(doc.getTextWidth(entry.inspector_note) / contentWidth) * 5 + 14
+      doc.setFillColor(240, 247, 255)
+      doc.roundedRect(margin, y, contentWidth, noteH, 3, 3, 'F')
+      doc.setTextColor(44, 82, 130); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
+      doc.text('Nota del inspector:', margin + 5, y + 7)
+      doc.setFont('helvetica', 'normal')
+      y = wrapText(doc, entry.inspector_note, margin + 5, y + 14, contentWidth - 10, 5) + 5
+    }
 
-    footer(pageNum)
+    if (entry.description) {
+      if (y > pageHeight - 60) { doc.addPage(); y = margin }
+      var descH = Math.ceil(doc.getTextWidth(entry.description) / contentWidth) * 5 + 14
+      doc.setFillColor(247, 250, 252)
+      doc.roundedRect(margin, y, contentWidth, descH, 3, 3, 'F')
+      doc.setTextColor(60, 60, 60); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
+      doc.text('Analisis:', margin + 5, y + 7)
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(74, 85, 104)
+      y = wrapText(doc, entry.description, margin + 5, y + 14, contentWidth - 10, 5) + 5
+    }
+
+    if (entry.recommendation) {
+      if (y > pageHeight - 60) { doc.addPage(); y = margin }
+      var recH = Math.ceil(doc.getTextWidth(entry.recommendation) / contentWidth) * 5 + 14
+      doc.setFillColor(255, 251, 235)
+      doc.roundedRect(margin, y, contentWidth, recH, 3, 3, 'F')
+      doc.setTextColor(146, 64, 14); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
+      doc.text('Recomendacion:', margin + 5, y + 7)
+      doc.setFont('helvetica', 'normal')
+      y = wrapText(doc, entry.recommendation, margin + 5, y + 14, contentWidth - 10, 5) + 5
+    }
+
+    if (entry.affected_elements && entry.affected_elements.length > 0) {
+      if (y > pageHeight - 30) { doc.addPage(); y = margin }
+      doc.setTextColor(80, 80, 80); doc.setFontSize(9); doc.setFont('helvetica', 'bold')
+      doc.text('Elementos afectados:', margin, y + 5)
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 100, 100)
+      doc.text(entry.affected_elements.join(', '), margin + doc.getTextWidth('Elementos afectados: ') + 2, y + 5)
+    }
+
+    doc.setTextColor(180, 180, 180); doc.setFontSize(8)
+    doc.text('Bitacora Post Venta - ' + (projectName || 'Proyecto') + ' - ' + property.unit_number, pageWidth / 2, pageHeight - 10, { align: 'center' })
   }
 
-  var fileName = 'Acta_' + (projectName || 'Proyecto').replace(/\s+/g, '_') + '_' + (property.unit_number || '').replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf'
+  var fileName = 'Bitacora_' + (projectName || 'Proyecto').replace(/\s+/g, '_') + '_' + property.unit_number.replace(/\s+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf'
   doc.save(fileName)
 }
 
@@ -746,24 +552,24 @@ function LoginScreen({ onLogin }) {
   <div className="auth-screen">
     <div className="auth-card">
       <div className="auth-logo">
-        <span className="header-icon">📋</span>
-        <h1>BitacoraPro</h1>
+        <img src="/isotipo.svg" alt="BitácoraPro" width="40" height="40" />
+        <h1>BitácoraPro</h1>
         <p>Ingresa a tu cuenta</p>
       </div>
 
       {showForgot ? (
         <div>
-          <h2 style={{fontFamily:'Georgia,serif', marginBottom:'0.5rem'}}>Recuperar contraseña</h2>
-          <p style={{color:'#6B6760', fontSize:'0.9rem', marginBottom:'1.25rem'}}>Ingresa tu email y te enviaremos un link para restablecer tu contraseña.</p>
+          <h2 style={{marginBottom:'0.5rem'}}>Recuperar contraseña</h2>
+          <p style={{color:'var(--text-tertiary)', fontSize:'0.9rem', marginBottom:'1.25rem'}}>Ingresa tu email y te enviaremos un link para restablecer tu contraseña.</p>
           <div className="form-field">
             <label>Email</label>
             <input type="email" inputMode="email" className="text-input" value={forgotEmail} onChange={function(e) { setForgotEmail(e.target.value) }} placeholder="tu@email.com" />
           </div>
-          {forgotMsg && <p style={{fontSize:'0.875rem', color: forgotMsg.startsWith('✅') ? '#2D5A3D' : '#B91C1C', marginBottom:'1rem'}}>{forgotMsg}</p>}
+          {forgotMsg && <p style={{fontSize:'0.875rem', color: forgotMsg.startsWith('✅') ? 'var(--primary-700)' : '#B91C1C', marginBottom:'1rem'}}>{forgotMsg}</p>}
           <button className="submit-button" onClick={handleForgot} disabled={forgotLoading}>
             {forgotLoading ? 'Enviando...' : 'Enviar link →'}
           </button>
-          <button type="button" onClick={function() { setShowForgot(false); setForgotMsg('') }} style={{background:'none',border:'none',color:'#6B6760',fontSize:'0.875rem',cursor:'pointer',marginTop:'0.75rem',textDecoration:'underline',display:'block'}}>
+          <button type="button" onClick={function() { setShowForgot(false); setForgotMsg('') }} style={{background:'none',border:'none',color:'var(--text-tertiary)',fontSize:'0.875rem',cursor:'pointer',marginTop:'0.75rem',textDecoration:'underline',display:'block'}}>
             ← Volver al login
           </button>
         </div>
@@ -781,7 +587,7 @@ function LoginScreen({ onLogin }) {
           <button className="submit-button" onClick={handleLogin} disabled={loading}>
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
-          <button type="button" onClick={function() { setShowForgot(true) }} style={{background:'none', border:'none', color:'#6B6760', fontSize:'0.875rem', cursor:'pointer', marginTop:'0.75rem', textDecoration:'underline'}}>
+          <button type="button" onClick={function() { setShowForgot(true) }} style={{background:'none', border:'none', color:'var(--text-tertiary)', fontSize:'0.875rem', cursor:'pointer', marginTop:'0.75rem', textDecoration:'underline'}}>
             ¿Olvidaste tu contraseña?
           </button>
         </div>
@@ -830,23 +636,23 @@ function RegisterScreen({ onLogin }) {
         </div>
         {error && <div className="auth-error">{error}</div>}
         <div className="form-field">
-          <label>🏢 Nombre de la empresa</label>
+          <label>Nombre de la empresa</label>
           <input type="text" className="text-input" placeholder="Nombre corredora o inmobiliaria" value={form.company_name} onChange={set('company_name')} autoFocus />
         </div>
         <div className="form-field">
-          <label>👤 Tu nombre</label>
+          <label>Tu nombre</label>
           <input type="text" className="text-input" placeholder="Nombre completo" value={form.name} onChange={set('name')} />
         </div>
         <div className="form-field">
-          <label>📧 Correo electronico</label>
+          <label>Correo electronico</label>
           <input type="email" className="text-input" placeholder="correo@empresa.com" value={form.email} onChange={set('email')} />
         </div>
         <div className="form-field">
-          <label>🔒 Contraseña</label>
+          <label>Contraseña</label>
           <input type="password" className="text-input" placeholder="Minimo 6 caracteres" value={form.password} onChange={set('password')} />
         </div>
         <div className="form-field">
-          <label>🔒 Confirmar contraseña</label>
+          <label>Confirmar contraseña</label>
           <input type="password" className="text-input" placeholder="Repite la contraseña" value={form.password2} onChange={set('password2')} onKeyDown={function(e) { if (e.key === 'Enter') handleRegister() }} />
         </div>
         <button className="submit-button" onClick={handleRegister} disabled={loading}>
@@ -920,19 +726,19 @@ function InviteRegisterScreen({ onLogin }) {
           <span className="header-icon">👥</span>
           <h1>BitácoraPro</h1>
           <p>Te invitaron a <strong>{inviteData && inviteData.project_name}</strong></p>
-          <p style={{fontSize:'0.85rem',color:'#6B6760',marginTop:'0.25rem'}}>{inviteData && inviteData.company_name} · {inviteData && inviteData.email}</p>
+          <p style={{fontSize:'0.85rem',color:'var(--text-tertiary)',marginTop:'0.25rem'}}>{inviteData && inviteData.company_name} · {inviteData && inviteData.email}</p>
         </div>
         {error && <div className="auth-error">{error}</div>}
         <div className="form-field">
-          <label>👤 Tu nombre</label>
+          <label>Tu nombre</label>
           <input type="text" className="text-input" placeholder="Nombre completo" value={form.name} onChange={function(e) { setForm(Object.assign({}, form, { name: e.target.value })) }} autoFocus />
         </div>
         <div className="form-field">
-          <label>🔒 Elige una contraseña</label>
+          <label>Elige una contraseña</label>
           <input type="password" className="text-input" placeholder="Mínimo 6 caracteres" value={form.password} onChange={function(e) { setForm(Object.assign({}, form, { password: e.target.value })) }} />
         </div>
         <div className="form-field">
-          <label>🔒 Confirmar contraseña</label>
+          <label>Confirmar contraseña</label>
           <input type="password" className="text-input" placeholder="Repite la contraseña" value={form.password2} onChange={function(e) { setForm(Object.assign({}, form, { password2: e.target.value })) }} onKeyDown={function(e) { if(e.key==='Enter') handleAccept() }} />
         </div>
         <button className="submit-button" onClick={handleAccept} disabled={submitting}>
@@ -1072,18 +878,18 @@ function AdminScreen() {
 
   if (!authed) {
     return (
-      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
         <div style={{background:'#fff',borderRadius:'16px',padding:'2.5rem',width:'100%',maxWidth:'360px',boxShadow:'0 4px 24px rgba(0,0,0,0.08)'}}>
-          <h2 style={{fontFamily:'Playfair Display,serif',fontSize:'1.5rem',marginBottom:'0.25rem',color:'#1A1814'}}>Panel de Admin</h2>
-          <p style={{color:'#6B6760',fontSize:'0.85rem',marginBottom:'1.75rem'}}>Solo para uso interno de BitácoraPro.</p>
+          <h2 style={{fontFamily:'var(--font-sans)',fontSize:'1.5rem',marginBottom:'0.25rem',color:'var(--text-primary)'}}>Panel de Admin</h2>
+          <p style={{color:'var(--text-tertiary)',fontSize:'0.85rem',marginBottom:'1.75rem'}}>Solo para uso interno de BitácoraPro.</p>
           <input
             type="password" placeholder="Clave de acceso"
             value={secret} onChange={function(e) { setSecret(e.target.value) }}
             onKeyDown={function(e) { if (e.key === 'Enter') handleLogin() }}
-            style={{width:'100%',padding:'0.75rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'1rem',boxSizing:'border-box',marginBottom:'0.75rem',outline:'none'}}
+            style={{width:'100%',padding:'0.75rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'1rem',boxSizing:'border-box',marginBottom:'0.75rem',outline:'none'}}
           />
           {authError && <p style={{color:'#E74C3C',fontSize:'0.85rem',marginBottom:'0.75rem'}}>{authError}</p>}
-          <button onClick={handleLogin} disabled={loading} style={{width:'100%',padding:'0.875rem',background:'#1A1814',color:'#fff',border:'none',borderRadius:'8px',fontSize:'1rem',cursor:'pointer',fontWeight:'500'}}>
+          <button onClick={handleLogin} disabled={loading} style={{width:'100%',padding:'0.875rem',background:'var(--text-primary)',color:'#fff',border:'none',borderRadius:'8px',fontSize:'1rem',cursor:'pointer',fontWeight:'500'}}>
             {loading ? 'Verificando...' : 'Entrar →'}
           </button>
         </div>
@@ -1096,10 +902,10 @@ function AdminScreen() {
   var totalEntries = companies.reduce(function(s, c) { return s + c.entries }, 0)
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+    <div style={{minHeight:'100vh',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
       {/* Header */}
-      <div style={{background:'#1A1814',padding:'1.25rem 2rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <span style={{fontFamily:'Playfair Display,serif',color:'#fff',fontSize:'1.15rem',fontWeight:'700'}}>BitácoraPro <span style={{color:'#7CB891'}}>Admin</span></span>
+      <div style={{background:'var(--text-primary)',padding:'1.25rem 2rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontFamily:'var(--font-sans)',color:'#fff',fontSize:'1.15rem',fontWeight:'700'}}>BitácoraPro <span style={{color:'var(--primary-300)'}}>Admin</span></span>
         <button onClick={refreshStats} style={{background:'rgba(255,255,255,0.1)',border:'none',color:'#fff',padding:'0.5rem 1rem',borderRadius:'6px',cursor:'pointer',fontSize:'0.85rem'}}>↻ Actualizar</button>
       </div>
 
@@ -1116,8 +922,8 @@ function AdminScreen() {
             return (
               <div key={stat.label} style={{background:'#fff',borderRadius:'12px',padding:'1.25rem 1.5rem',boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
                 <div style={{fontSize:'1.5rem',marginBottom:'0.4rem'}}>{stat.icon}</div>
-                <div style={{fontSize:'1.75rem',fontWeight:'700',color:'#1A1814',lineHeight:1}}>{stat.value}</div>
-                <div style={{fontSize:'0.8rem',color:'#6B6760',marginTop:'0.25rem'}}>{stat.label}</div>
+                <div style={{fontSize:'1.75rem',fontWeight:'700',color:'var(--text-primary)',lineHeight:1}}>{stat.value}</div>
+                <div style={{fontSize:'0.8rem',color:'var(--text-tertiary)',marginTop:'0.25rem'}}>{stat.label}</div>
               </div>
             )
           })}
@@ -1125,24 +931,24 @@ function AdminScreen() {
 
         {/* Botón crear cliente */}
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
-          <h3 style={{fontFamily:'Playfair Display,serif',fontSize:'1.2rem',color:'#1A1814',margin:0}}>Clientes ({companies.length})</h3>
-          <button onClick={function() { setShowCreate(true); setCreateMsg('') }} style={{background:'#2D5A3D',color:'#fff',border:'none',borderRadius:'8px',padding:'0.6rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>+ Nuevo cliente</button>
+          <h3 style={{fontFamily:'var(--font-sans)',fontSize:'1.2rem',color:'var(--text-primary)',margin:0}}>Clientes ({companies.length})</h3>
+          <button onClick={function() { setShowCreate(true); setCreateMsg('') }} style={{background:'var(--primary-700)',color:'#fff',border:'none',borderRadius:'8px',padding:'0.6rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>+ Nuevo cliente</button>
         </div>
 
         {/* Modal crear cliente */}
         {showCreate && (
-          <div style={{background:'#fff',borderRadius:'12px',padding:'1.5rem',marginBottom:'1.5rem',boxShadow:'0 2px 12px rgba(0,0,0,0.08)',border:'1px solid #E2DDD6'}}>
-            <h4 style={{margin:'0 0 1.25rem',fontFamily:'Playfair Display,serif',fontSize:'1.1rem'}}>Crear nuevo cliente</h4>
+          <div style={{background:'#fff',borderRadius:'12px',padding:'1.5rem',marginBottom:'1.5rem',boxShadow:'0 2px 12px rgba(0,0,0,0.08)',border:'1px solid var(--border-subtle)'}}>
+            <h4 style={{margin:'0 0 1.25rem',fontFamily:'var(--font-sans)',fontSize:'1.1rem'}}>Crear nuevo cliente</h4>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem',marginBottom:'0.75rem'}}>
-              <input placeholder="Nombre de la empresa" value={createForm.company_name} onChange={function(e) { setCreateForm(Object.assign({},createForm,{company_name:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
-              <input placeholder="Nombre del admin" value={createForm.name} onChange={function(e) { setCreateForm(Object.assign({},createForm,{name:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
-              <input placeholder="Email del admin" type="email" value={createForm.email} onChange={function(e) { setCreateForm(Object.assign({},createForm,{email:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
-              <input placeholder="Contraseña temporal" type="text" value={createForm.password} onChange={function(e) { setCreateForm(Object.assign({},createForm,{password:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid #E2DDD6',fontSize:'0.9rem',outline:'none'}} />
+              <input placeholder="Nombre de la empresa" value={createForm.company_name} onChange={function(e) { setCreateForm(Object.assign({},createForm,{company_name:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none'}} />
+              <input placeholder="Nombre del admin" value={createForm.name} onChange={function(e) { setCreateForm(Object.assign({},createForm,{name:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none'}} />
+              <input placeholder="Email del admin" type="email" value={createForm.email} onChange={function(e) { setCreateForm(Object.assign({},createForm,{email:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none'}} />
+              <input placeholder="Contraseña temporal" type="text" value={createForm.password} onChange={function(e) { setCreateForm(Object.assign({},createForm,{password:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none'}} />
             </div>
-            {createMsg && <p style={{color: createMsg.startsWith('✅') ? '#2D5A3D' : '#E74C3C',fontSize:'0.85rem',margin:'0 0 0.75rem'}}>{createMsg}</p>}
+            {createMsg && <p style={{color: createMsg.startsWith('✅') ? 'var(--primary-700)' : '#E74C3C',fontSize:'0.85rem',margin:'0 0 0.75rem'}}>{createMsg}</p>}
             <div style={{display:'flex',gap:'0.75rem'}}>
-              <button onClick={handleCreate} disabled={creating} style={{background:'#1A1814',color:'#fff',border:'none',borderRadius:'8px',padding:'0.7rem 1.5rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>{creating ? 'Creando...' : 'Crear cliente'}</button>
-              <button onClick={function() { setShowCreate(false); setCreateMsg('') }} style={{background:'none',border:'1.5px solid #E2DDD6',borderRadius:'8px',padding:'0.7rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',color:'#6B6760'}}>Cancelar</button>
+              <button onClick={handleCreate} disabled={creating} style={{background:'var(--text-primary)',color:'#fff',border:'none',borderRadius:'8px',padding:'0.7rem 1.5rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>{creating ? 'Creando...' : 'Crear cliente'}</button>
+              <button onClick={function() { setShowCreate(false); setCreateMsg('') }} style={{background:'none',border:'1.5px solid var(--border-subtle)',borderRadius:'8px',padding:'0.7rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',color:'var(--text-tertiary)'}}>Cancelar</button>
             </div>
           </div>
         )}
@@ -1151,9 +957,9 @@ function AdminScreen() {
         <div style={{background:'#fff',borderRadius:'12px',overflow:'visible',boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.875rem'}}>
             <thead>
-              <tr style={{background:'#F7F5F0',borderBottom:'1px solid #E2DDD6'}}>
+              <tr style={{background:'var(--surface-page)',borderBottom:'1px solid var(--border-subtle)'}}>
                 {['Empresa','Admin','Usuarios','Proyectos','Propiedades','Hallazgos','Última actividad','Desde',''].map(function(h) {
-                  return <th key={h} style={{padding:'0.875rem 1rem',textAlign:'left',fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'#6B6760'}}>{h}</th>
+                  return <th key={h} style={{padding:'0.875rem 1rem',textAlign:'left',fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'var(--text-tertiary)'}}>{h}</th>
                 })}
               </tr>
             </thead>
@@ -1161,45 +967,45 @@ function AdminScreen() {
               {companies.map(function(c, i) {
                 var isRecentlyActive = c.last_activity && (Date.now() - new Date(c.last_activity).getTime()) < 7 * 24 * 60 * 60 * 1000
                 return (
-                  <tr key={c.id} style={{borderBottom: i < companies.length - 1 ? '1px solid #E2DDD6' : 'none', opacity: c.active ? 1 : 0.55}}>
-                    <td style={{padding:'1rem',fontWeight:'600',color:'#1A1814'}}>
+                  <tr key={c.id} style={{borderBottom: i < companies.length - 1 ? '1px solid var(--border-subtle)' : 'none', opacity: c.active ? 1 : 0.55}}>
+                    <td style={{padding:'1rem',fontWeight:'600',color:'var(--text-primary)'}}>
                       <div>{c.company_name}</div>
-                      <span style={{display:'inline-block',marginTop:'0.25rem',padding:'0.15rem 0.55rem',borderRadius:'100px',fontSize:'0.7rem',fontWeight:'600',background: c.active ? '#EAF1EC' : '#FEF0F0',color: c.active ? '#2D5A3D' : '#C0392B'}}>
+                      <span style={{display:'inline-block',marginTop:'0.25rem',padding:'0.15rem 0.55rem',borderRadius:'100px',fontSize:'0.7rem',fontWeight:'600',background: c.active ? 'var(--primary-50)' : '#FEF0F0',color: c.active ? 'var(--primary-700)' : '#C0392B'}}>
                         {c.active ? 'Activa' : 'Inactiva'}
                       </span>
                     </td>
                     <td style={{padding:'1rem'}}>
-                      <div style={{fontWeight:'500',color:'#1A1814'}}>{c.admin_name}</div>
-                      <div style={{fontSize:'0.78rem',color:'#6B6760'}}>{c.admin_email}</div>
+                      <div style={{fontWeight:'500',color:'var(--text-primary)'}}>{c.admin_name}</div>
+                      <div style={{fontSize:'0.78rem',color:'var(--text-tertiary)'}}>{c.admin_email}</div>
                     </td>
-                    <td style={{padding:'1rem',textAlign:'center',color:'#1A1814',fontWeight:'500'}}>{c.users}</td>
-                    <td style={{padding:'1rem',textAlign:'center',color:'#1A1814',fontWeight:'500'}}>{c.projects}</td>
-                    <td style={{padding:'1rem',textAlign:'center',color:'#1A1814',fontWeight:'500'}}>{c.properties}</td>
+                    <td style={{padding:'1rem',textAlign:'center',color:'var(--text-primary)',fontWeight:'500'}}>{c.users}</td>
+                    <td style={{padding:'1rem',textAlign:'center',color:'var(--text-primary)',fontWeight:'500'}}>{c.projects}</td>
+                    <td style={{padding:'1rem',textAlign:'center',color:'var(--text-primary)',fontWeight:'500'}}>{c.properties}</td>
                     <td style={{padding:'1rem',textAlign:'center'}}>
-                      <span style={{background: c.entries > 0 ? '#EAF1EC' : '#F7F5F0', color: c.entries > 0 ? '#2D5A3D' : '#6B6760', padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600',fontSize:'0.85rem'}}>{c.entries}</span>
+                      <span style={{background: c.entries > 0 ? 'var(--primary-50)' : 'var(--surface-page)', color: c.entries > 0 ? 'var(--primary-700)' : 'var(--text-tertiary)', padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600',fontSize:'0.85rem'}}>{c.entries}</span>
                     </td>
                     <td style={{padding:'1rem'}}>
                       {c.last_activity
-                        ? <span style={{color: isRecentlyActive ? '#2D5A3D' : '#6B6760', fontSize:'0.82rem', fontWeight: isRecentlyActive ? '600' : '400'}}>
+                        ? <span style={{color: isRecentlyActive ? 'var(--primary-700)' : 'var(--text-tertiary)', fontSize:'0.82rem', fontWeight: isRecentlyActive ? '600' : '400'}}>
                             {isRecentlyActive && '● '}{new Date(c.last_activity).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}
                           </span>
                         : <span style={{color:'#C0BBB5',fontSize:'0.82rem'}}>Sin actividad</span>
                       }
                     </td>
-                    <td style={{padding:'1rem',color:'#6B6760',fontSize:'0.82rem'}}>{new Date(c.created_at).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}</td>
+                    <td style={{padding:'1rem',color:'var(--text-tertiary)',fontSize:'0.82rem'}}>{new Date(c.created_at).toLocaleDateString('es-CL',{day:'2-digit',month:'short',year:'numeric'})}</td>
                     <td style={{padding:'1rem'}}>
                       <div style={{position:'relative'}}>
                         <button
                           onClick={function(e) { e.stopPropagation(); setOpenMenu(function(prev) { return prev === c.id ? null : c.id }) }}
-                          style={{background:'#F7F5F0',border:'1px solid #E2DDD6',borderRadius:'6px',padding:'0.4rem 0.65rem',cursor:'pointer',fontSize:'1rem',lineHeight:1,color:'#1A1814'}}
+                          style={{background:'var(--surface-page)',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.4rem 0.65rem',cursor:'pointer',fontSize:'1rem',lineHeight:1,color:'var(--text-primary)'}}
                         >⋯</button>
                         {openMenu === c.id && (
-                          <div onClick={function(e) { e.stopPropagation() }} style={{position:'absolute',right:0,bottom:'calc(100% + 4px)', top:'auto',background:'#fff',border:'1px solid #E2DDD6',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
+                          <div onClick={function(e) { e.stopPropagation() }} style={{position:'absolute',right:0,bottom:'calc(100% + 4px)', top:'auto',background:'#fff',border:'1px solid var(--border-subtle)',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
                             <button
                               onClick={function() { setOpenMenu(null); handleToggle(c) }}
-                              style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color: c.active ? '#F39C12' : '#2D5A3D',fontWeight:'500'}}
+                              style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color: c.active ? '#F39C12' : 'var(--primary-700)',fontWeight:'500'}}
                             >{c.active ? '⏸ Desactivar' : '▶ Reactivar'}</button>
-                            <div style={{height:'1px',background:'#E2DDD6',margin:'0'}}/>
+                            <div style={{height:'1px',background:'var(--border-subtle)',margin:'0'}}/>
                             <button
                               onClick={function() { setOpenMenu(null); handleDelete(c) }}
                               style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color:'#E74C3C',fontWeight:'500'}}
@@ -1214,7 +1020,7 @@ function AdminScreen() {
             </tbody>
           </table>
           {companies.length === 0 && (
-            <div style={{padding:'3rem',textAlign:'center',color:'#6B6760'}}>Aún no hay clientes registrados.</div>
+            <div style={{padding:'3rem',textAlign:'center',color:'var(--text-tertiary)'}}>Aún no hay clientes registrados.</div>
           )}
         </div>
       </div>
@@ -1281,17 +1087,17 @@ function PublicEntryScreen() {
   var PUB_STATUSES = { pendiente: { label: 'Pendiente', color: '#B45309', bg: '#FEF3C7', icon: '🔴' }, en_progreso: { label: 'En progreso', color: '#1D4ED8', bg: '#DBEAFE', icon: '🔵' }, resuelto: { label: 'Resuelto', color: '#15803D', bg: '#DCFCE7', icon: '🟢' } }
 
   if (loading) return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
-      <p style={{color:'#6B6760'}}>Cargando hallazgo...</p>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
+      <p style={{color:'var(--text-tertiary)'}}>Cargando hallazgo...</p>
     </div>
   )
 
   if (error) return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
       <div style={{textAlign:'center'}}>
         <p style={{fontSize:'2rem',marginBottom:'0.5rem'}}>🔍</p>
-        <p style={{color:'#1A1814',fontWeight:'500',marginBottom:'0.25rem'}}>Hallazgo no encontrado</p>
-        <p style={{color:'#6B6760',fontSize:'0.875rem'}}>{error}</p>
+        <p style={{color:'var(--text-primary)',fontWeight:'500',marginBottom:'0.25rem'}}>Hallazgo no encontrado</p>
+        <p style={{color:'var(--text-tertiary)',fontSize:'0.875rem'}}>{error}</p>
       </div>
     </div>
   )
@@ -1300,17 +1106,17 @@ function PublicEntryScreen() {
   var sev = SEVS[entry.severity] || SEVS.leve
 
   return (
-    <div style={{minHeight:'100vh',background:'#F7F5F0',fontFamily:'DM Sans,sans-serif'}}>
+    <div style={{minHeight:'100vh',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
       {/* Header */}
-      <div style={{background:'#1A1814',padding:'1rem 1.5rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <span style={{fontFamily:'Playfair Display,serif',color:'#fff',fontSize:'1.1rem',fontWeight:'700'}}>BitácoraPro<span style={{color:'#7CB891'}}>.</span></span>
+      <div style={{background:'var(--text-primary)',padding:'1rem 1.5rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontFamily:'var(--font-sans)',color:'#fff',fontSize:'1.1rem',fontWeight:'700'}}>BitácoraPro<span style={{color:'var(--primary-300)'}}>.</span></span>
         <span style={{color:'rgba(255,255,255,0.4)',fontSize:'0.75rem',letterSpacing:'0.05em',textTransform:'uppercase'}}>Vista de hallazgo</span>
       </div>
 
       {/* Contexto: proyecto / propiedad */}
-      <div style={{background:'#fff',borderBottom:'1px solid #E2DDD6',padding:'0.75rem 1.5rem',display:'flex',alignItems:'center',gap:'0.5rem',fontSize:'0.8rem',color:'#6B6760',flexWrap:'wrap'}}>
+      <div style={{background:'#fff',borderBottom:'1px solid var(--border-subtle)',padding:'0.75rem 1.5rem',display:'flex',alignItems:'center',gap:'0.5rem',fontSize:'0.8rem',color:'var(--text-tertiary)',flexWrap:'wrap'}}>
         <span>📁 {entry.project_name}</span>
-        <span style={{color:'#E2DDD6'}}>›</span>
+        <span style={{color:'var(--border-subtle)'}}>›</span>
         <span>🏠 {entry.unit_number}</span>
       </div>
 
@@ -1329,10 +1135,10 @@ function PublicEntryScreen() {
         </div>
 
         {/* Título */}
-        <h1 style={{fontFamily:'Playfair Display,serif',fontSize:'1.4rem',fontWeight:'700',color:'#1A1814',lineHeight:1.25,marginBottom:'0.5rem'}}>{entry.title}</h1>
+        <h1 style={{fontFamily:'var(--font-sans)',fontSize:'1.4rem',fontWeight:'700',color:'var(--text-primary)',lineHeight:1.25,marginBottom:'0.5rem'}}>{entry.title}</h1>
 
         {/* Meta */}
-        <div style={{display:'flex',gap:'1rem',fontSize:'0.8rem',color:'#6B6760',marginBottom:'1.25rem',flexWrap:'wrap'}}>
+        <div style={{display:'flex',gap:'1rem',fontSize:'0.8rem',color:'var(--text-tertiary)',marginBottom:'1.25rem',flexWrap:'wrap'}}>
           {entry.location && <span>📍 {entry.location}</span>}
           <span>🗓 {new Date(entry.created_at).toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' })}</span>
         </div>
@@ -1341,7 +1147,7 @@ function PublicEntryScreen() {
         {entry.images && entry.images.length > 0 && (
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:'0.5rem',marginBottom:'1.25rem'}}>
             {entry.images.map(function(img, idx) {
-              return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',borderRadius:'8px',cursor:'zoom-in',border:'1px solid #E2DDD6'}} />
+              return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',borderRadius:'8px',cursor:'zoom-in',border:'1px solid var(--border-subtle)'}} />
             })}
           </div>
         )}
@@ -1356,9 +1162,9 @@ function PublicEntryScreen() {
 
         {/* Descripción */}
         {entry.description && (
-          <div style={{background:'#fff',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid #E2DDD6'}}>
-            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B6760',marginBottom:'0.4rem'}}>Descripción técnica</p>
-            <p style={{fontSize:'0.9rem',color:'#1A1814',lineHeight:1.7}}>{entry.description}</p>
+          <div style={{background:'#fff',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid var(--border-subtle)'}}>
+            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-tertiary)',marginBottom:'0.4rem'}}>Descripción técnica</p>
+            <p style={{fontSize:'0.9rem',color:'var(--text-primary)',lineHeight:1.7}}>{entry.description}</p>
           </div>
         )}
 
@@ -1373,7 +1179,7 @@ function PublicEntryScreen() {
         {/* Elementos afectados */}
         {entry.affected_elements && entry.affected_elements.length > 0 && (
           <div style={{marginBottom:'1rem'}}>
-            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#6B6760',marginBottom:'0.5rem'}}>Elementos afectados</p>
+            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-tertiary)',marginBottom:'0.5rem'}}>Elementos afectados</p>
             <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
               {entry.affected_elements.map(function(el, i) { return <span key={i} style={{background:'#F3F4F6',color:'#374151',padding:'0.25rem 0.65rem',borderRadius:'100px',fontSize:'0.8rem',border:'1px solid #E5E7EB'}}>{el}</span> })}
             </div>
@@ -1381,8 +1187,8 @@ function PublicEntryScreen() {
         )}
 
         {/* Footer */}
-        <div style={{marginTop:'2rem',paddingTop:'1.25rem',borderTop:'1px solid #E2DDD6',textAlign:'center'}}>
-          <p style={{fontSize:'0.75rem',color:'#6B6760'}}>Generado con <strong style={{color:'#2D5A3D'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
+        <div style={{marginTop:'2rem',paddingTop:'1.25rem',borderTop:'1px solid var(--border-subtle)',textAlign:'center'}}>
+          <p style={{fontSize:'0.75rem',color:'var(--text-tertiary)'}}>Generado con <strong style={{color:'var(--primary-700)'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
         </div>
       </div>
 
@@ -1401,6 +1207,244 @@ function PublicEntryScreen() {
   )
 }
 
+
+function PublicPropertyScreen() {
+  var { token } = useParams()
+  var [data, setData] = useState(null)
+  var [loading, setLoading] = useState(true)
+  var [error, setError] = useState('')
+  var [lightbox, setLightbox] = useState(null)
+
+  useEffect(function() {
+    fetch(API_URL + '/public/properties/' + token)
+      .then(function(r) { return r.json() })
+      .then(function(d) {
+        if (d.error) { setError(d.error) } else { setData(d) }
+        setLoading(false)
+      })
+      .catch(function() { setError('No se pudo cargar la información'); setLoading(false) })
+  }, [token])
+
+  useEffect(function() {
+    if (!lightbox) return
+    var handler = function(e) {
+      if (e.key === 'Escape') setLightbox(null)
+      if (e.key === 'ArrowLeft') setLightbox(function(lb) { return lb ? { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } : null })
+      if (e.key === 'ArrowRight') setLightbox(function(lb) { return lb ? { images: lb.images, index: (lb.index + 1) % lb.images.length } : null })
+    }
+    window.addEventListener('keydown', handler)
+    return function() { window.removeEventListener('keydown', handler) }
+  }, [lightbox])
+
+  var severityColor = function(s) {
+    if (s === 'critico') return { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', label: 'Crítico' }
+    if (s === 'grave') return { bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412', label: 'Grave' }
+    if (s === 'moderado') return { bg: '#FEFCE8', border: '#FDE68A', text: '#92400E', label: 'Moderado' }
+    return { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534', label: 'Leve' }
+  }
+
+  var statusLabel = function(s) {
+    if (s === 'resuelto') return { label: 'Resuelto', bg: '#F0FDF4', color: '#166534', border: '#BBF7D0', dot: '#22C55E' }
+    if (s === 'en_progreso') return { label: 'En progreso', bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE', dot: '#3B82F6' }
+    return { label: 'Pendiente', bg: '#FFF7ED', color: '#9A3412', border: '#FED7AA', dot: '#F97316' }
+  }
+
+  if (loading) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)'}}>
+      <div style={{textAlign:'center'}}>
+        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'var(--text-primary)',marginBottom:'0.5rem'}}>BitácoraPro<span style={{color:'var(--primary-700)'}}>.</span></div>
+        <p style={{color:'var(--text-tertiary)',fontSize:'0.9rem'}}>Cargando información...</p>
+      </div>
+    </div>
+  )
+
+  if (error) return (
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)'}}>
+      <div style={{textAlign:'center',padding:'2rem'}}>
+        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'var(--text-primary)',marginBottom:'1rem'}}>BitácoraPro<span style={{color:'var(--primary-700)'}}>.</span></div>
+        <p style={{color:'#B91C1C'}}>{error}</p>
+      </div>
+    </div>
+  )
+
+  var summary = data.summary
+  var entries = data.entries
+
+  return (
+    <div style={{minHeight:'100vh',background:'var(--surface-page)',fontFamily:'var(--font-sans)',color:'var(--text-primary)'}}>
+      {/* Header */}
+      <div style={{background:'#fff',borderBottom:'1px solid var(--border-subtle)',padding:'1rem 1.25rem',position:'sticky',top:0,zIndex:10}}>
+        <div style={{maxWidth:'680px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{fontFamily:'Georgia,serif',fontSize:'1.1rem',fontWeight:'700',color:'var(--text-primary)'}}>BitácoraPro<span style={{color:'var(--primary-700)'}}>.</span></div>
+          <div style={{fontSize:'0.75rem',color:'var(--text-tertiary)',background:'var(--surface-page)',padding:'0.3rem 0.75rem',borderRadius:'100px',border:'1px solid var(--border-subtle)'}}>Vista propietario</div>
+        </div>
+      </div>
+
+      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.5rem 1.25rem 4rem'}}>
+
+        {/* Info propiedad */}
+        <div style={{background:'#fff',borderRadius:'14px',border:'1px solid var(--border-subtle)',padding:'1.5rem',marginBottom:'1.25rem'}}>
+          <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--primary-700)',marginBottom:'0.25rem'}}>{data.project_name}</p>
+          <h1 style={{fontFamily:'Georgia,serif',fontSize:'1.5rem',fontWeight:'700',margin:'0 0 0.25rem'}}>{data.unit_number}</h1>
+          {data.owner_name && <p style={{color:'var(--text-tertiary)',fontSize:'0.9rem',margin:0}}>{data.owner_name}</p>}
+        </div>
+
+        {/* Dashboard resumen */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'0.75rem',marginBottom:'1.5rem'}}>
+          <div style={{background:'#F0FDF4',borderRadius:'12px',border:'1px solid #BBF7D0',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#166534'}}>{summary.resueltos}</div>
+            <div style={{fontSize:'0.72rem',color:'#166534',marginTop:'0.15rem'}}>Resuelto{summary.resueltos !== 1 ? 's' : ''}</div>
+          </div>
+          <div style={{background:'#EFF6FF',borderRadius:'12px',border:'1px solid #BFDBFE',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#1D4ED8'}}>{summary.en_progreso}</div>
+            <div style={{fontSize:'0.72rem',color:'#1D4ED8',marginTop:'0.15rem'}}>En progreso</div>
+          </div>
+          <div style={{background:'#FFF7ED',borderRadius:'12px',border:'1px solid #FED7AA',padding:'1rem',textAlign:'center'}}>
+            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#9A3412'}}>{summary.pendientes}</div>
+            <div style={{fontSize:'0.72rem',color:'#9A3412',marginTop:'0.15rem'}}>Pendiente{summary.pendientes !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+
+        {/* Barra de progreso */}
+        {summary.total > 0 && (
+          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid var(--border-subtle)',padding:'1rem 1.25rem',marginBottom:'1.5rem'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.6rem'}}>
+              <span style={{fontSize:'0.8rem',color:'var(--text-tertiary)'}}>Progreso de resolución</span>
+              <span style={{fontSize:'0.8rem',fontWeight:'600',color:'#166534'}}>{summary.resueltos} de {summary.total} resueltos</span>
+            </div>
+            <div style={{height:'8px',background:'var(--border-subtle)',borderRadius:'100px',overflow:'hidden'}}>
+              <div style={{height:'100%',background:'#22C55E',borderRadius:'100px',width:(summary.resueltos / summary.total * 100) + '%',transition:'width 0.5s ease'}} />
+            </div>
+          </div>
+        )}
+
+        {/* Lista hallazgos */}
+        {entries.length === 0 ? (
+          <div style={{textAlign:'center',padding:'3rem 1rem',color:'var(--text-tertiary)'}}>
+            <p style={{fontSize:'2rem',marginBottom:'0.5rem'}}>✅</p>
+            <p>No hay hallazgos registrados para esta propiedad.</p>
+          </div>
+        ) : (
+          <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+            {entries.map(function(entry) {
+              var sev = severityColor(entry.severity)
+              var st = statusLabel(entry.status)
+              return (
+                <div key={entry.id} style={{background:'#fff',borderRadius:'14px',border:'1px solid var(--border-subtle)',overflow:'hidden'}}>
+                  {/* Header hallazgo */}
+                  <div style={{padding:'1rem 1.25rem 0.75rem',borderBottom:'1px solid #F3F0EB'}}>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'0.75rem',marginBottom:'0.5rem'}}>
+                      <h3 style={{fontSize:'0.95rem',fontWeight:'600',margin:0,lineHeight:1.4}}>{entry.title}</h3>
+                      <span style={{flexShrink:0,fontSize:'0.7rem',fontWeight:'600',padding:'0.2rem 0.6rem',borderRadius:'100px',background:st.bg,color:st.color,border:'1px solid '+st.border,display:'flex',alignItems:'center',gap:'0.3rem'}}>
+                        <span style={{width:'6px',height:'6px',borderRadius:'50%',background:st.dot,flexShrink:0}} />
+                        {st.label}
+                      </span>
+                    </div>
+                    <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
+                      <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:sev.bg,color:sev.text,border:'1px solid '+sev.border,fontWeight:'500'}}>{sev.label}</span>
+                      {entry.category && <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:'#F3F4F6',color:'#374151',border:'1px solid #E5E7EB',textTransform:'capitalize'}}>{entry.category}</span>}
+                      {entry.location && <span style={{fontSize:'0.7rem',color:'var(--text-tertiary)'}}>📍 {entry.location}</span>}
+                    </div>
+                  </div>
+                  {/* Fotos */}
+                  {entry.images && entry.images.length > 0 && (
+                    <div style={{padding:'0.75rem 1.25rem 0'}}>
+                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'0.4rem'}}>
+                        {entry.images.map(function(img, idx) {
+                          return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',cursor:'zoom-in',borderRadius:'8px',border:'1px solid var(--border-subtle)'}} />
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {/* Cuerpo */}
+                  <div style={{padding:'1rem 1.25rem',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
+                    {entry.description && <p style={{fontSize:'0.875rem',color:'#374151',lineHeight:1.7,margin:0}}>{entry.description}</p>}
+                    {entry.recommendation && (
+                      <div style={{background:'#FFFBEB',borderRadius:'8px',padding:'0.75rem',border:'1px solid #FDE68A'}}>
+                        <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#D97706',marginBottom:'0.3rem'}}>💡 Recomendación</p>
+                        <p style={{fontSize:'0.85rem',color:'#78350F',lineHeight:1.6,margin:0}}>{entry.recommendation}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{textAlign:'center',marginTop:'3rem',paddingTop:'1.5rem',borderTop:'1px solid var(--border-subtle)'}}>
+          <p style={{fontSize:'0.75rem',color:'#C0BBB5'}}>Generado con <strong style={{color:'var(--primary-700)'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
+        </div>
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div onClick={function() { setLightbox(null) }} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <img src={lightbox.images[lightbox.index].filename} alt="" onClick={function(e) { e.stopPropagation() }} style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px'}} />
+          {lightbox.images.length > 1 && <>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
+          </>}
+          <button onClick={function() { setLightbox(null) }} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ResetPasswordScreen({ onLogin }) {
+  var navigate = useNavigate()
+  var params = useParams()
+  var [password, setPassword] = useState('')
+  var [password2, setPassword2] = useState('')
+  var [loading, setLoading] = useState(false)
+  var [error, setError] = useState('')
+
+  var handleSubmit = async function() {
+    if (!password || !password2) return setError('Completa ambos campos')
+    if (password !== password2) return setError('Las contraseñas no coinciden')
+    if (password.length < 6) return setError('Mínimo 6 caracteres')
+    setLoading(true)
+    setError('')
+    try {
+      var res = await fetch(API_URL + '/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: params.token, new_password: password })
+      })
+      var data = await res.json()
+      if (!res.ok) return setError(data.error || 'Error al restablecer')
+      onLogin(data.token, data.user)
+      navigate('/proyectos', { replace: true })
+    } catch (err) {
+      setError('Error de conexión. Intenta de nuevo.')
+    }
+    setLoading(false)
+  }
+
+  return (
+    <div className="auth-screen">
+      <div className="auth-card">
+        <div className="auth-logo">BitácoraPro<span style={{color:'var(--primary-700)'}}>.</span></div>
+        <h2 style={{marginBottom:'0.5rem'}}>Nueva contraseña</h2>
+        <p style={{color:'var(--text-tertiary)', fontSize:'0.9rem', marginBottom:'1.25rem'}}>Elige una contraseña nueva para tu cuenta.</p>
+        <div className="form-field">
+          <label>Nueva contraseña</label>
+          <input type="password" className="text-input" value={password} onChange={function(e) { setPassword(e.target.value) }} placeholder="Mínimo 6 caracteres" />
+        </div>
+        <div className="form-field">
+          <label>Repetir contraseña</label>
+          <input type="password" className="text-input" value={password2} onChange={function(e) { setPassword2(e.target.value) }} placeholder="Repite la contraseña" onKeyDown={function(e) { if(e.key === 'Enter') handleSubmit() }} />
+        </div>
+        {error && <p style={{color:'#B91C1C', fontSize:'0.875rem', marginBottom:'1rem'}}>{error}</p>}
+        <button className="submit-button" onClick={handleSubmit} disabled={loading}>
+          {loading ? 'Guardando...' : 'Guardar contraseña →'}
+        </button>
+      </div>
+    </div>
+  )
+}
 function App() {
   // Auth
   var [token, setToken] = useState(function() {
@@ -1687,6 +1731,11 @@ var handleLogin = function(newToken, user) {
     })
   }
 
+  var handleExportPDF = function() {
+    if (entries.length === 0) { alert('No hay hallazgos para exportar'); return }
+    generatePDF(currentProject.name, currentProperty, entries)
+  }
+
   var handleSaveProperty = function() {
     if (!editPropForm.unit_number || !editPropForm.unit_number.trim()) { alert('El número de propiedad es requerido'); return }
     authFetch(API_URL + '/properties/' + editingProperty.id, {
@@ -1805,7 +1854,7 @@ var handleLogin = function(newToken, user) {
     loadDeliveryAct, saveDeliveryAct,
     deliveryActRef, entriesRef,
     handleImageUpload, removeImage, toggleRecording,
-    handleSubmit, handleDeleteEntry,
+    handleSubmit, handleDeleteEntry, handleExportPDF,
     handleSaveProperty, handleSaveEntry, handleUpdateEntryStatus,
     loadTeam, handleOpenTeam, handleInvite, handleRemoveMember, handleCancelInvite,
     openLightbox, closeLightbox, lightboxPrev, lightboxNext,
@@ -1826,11 +1875,119 @@ var handleLogin = function(newToken, user) {
         <Route path="/p/:token" element={<PublicPropertyScreen />} />
         <Route path="/reset-password/:token" element={<ResetPasswordScreen onLogin={handleLogin} />} />
         <Route path="/proyectos" element={<AppInterior {...interiorProps} vista="proyectos" />} />
+        <Route path="/proyectos/nuevo" element={<AppInterior {...interiorProps} vista="nuevo-proyecto" />} />
         <Route path="/proyectos/:projectId" element={<AppInterior {...interiorProps} vista="propiedades" />} />
+        <Route path="/proyectos/:projectId/propiedades/nueva" element={<AppInterior {...interiorProps} vista="nueva-propiedad" />} />
         <Route path="/proyectos/:projectId/propiedades/:propertyId" element={<AppInterior {...interiorProps} vista="hallazgos" />} />
+        <Route path="/proyectos/:projectId/propiedades/:propertyId/nuevo-hallazgo" element={<AppInterior {...interiorProps} vista="nuevo-hallazgo" />} />
+        <Route path="/proyectos/:projectId/propiedades/:propertyId/acta" element={<AppInterior {...interiorProps} vista="acta" />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
+  )
+}
+
+// === COMPONENTES DE NAVEGACIÓN ===
+
+var IsotipoSVG = function(props) {
+  var size = props.size || 26
+  return (
+    <img
+      src="/isotipo.svg"
+      alt="BitácoraPro"
+      width={size}
+      height={size}
+      style={{display:'block',flexShrink:0}}
+    />
+  )
+}
+
+function AppHeader(props) {
+  var title = props.title
+  var user = props.user
+  var onLogout = props.onLogout
+  var onTeam = props.onTeam
+  var [open, setOpen] = useState(false)
+
+  useEffect(function() {
+    if (!open) return
+    function handleClick(e) {
+      if (!e.target.closest('.app-header-menu')) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return function() { document.removeEventListener('mousedown', handleClick) }
+  }, [open])
+
+  return (
+    <header className="app-header">
+      <div className="app-header-isotipo">
+        <IsotipoSVG size={26} />
+      </div>
+      <span className="app-header-center">{title}</span>
+      <div className="app-header-right app-header-menu" style={{position:'relative'}}>
+        <button
+          onClick={function() { setOpen(function(o) { return !o }) }}
+          style={{background:'none',border:'none',cursor:'pointer',padding:'6px',borderRadius:'var(--radius-md)',display:'flex',alignItems:'center',color:'var(--text-secondary)',WebkitTapHighlightColor:'transparent'}}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>
+          </svg>
+        </button>
+        {open && (
+          <div style={{position:'absolute',top:'calc(100% + 6px)',right:0,background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',boxShadow:'var(--shadow-lg)',minWidth:'200px',zIndex:200,overflow:'hidden'}}>
+            <div style={{padding:'12px 16px',borderBottom:'1px solid var(--border-subtle)'}}>
+              <div style={{fontSize:'var(--text-sm)',fontWeight:'600',color:'var(--text-primary)'}}>{user && user.name}</div>
+              <div style={{fontSize:'var(--text-xs)',color:'var(--text-tertiary)',marginTop:'2px'}}>{user && user.company_name}</div>
+            </div>
+            <div style={{padding:'4px 0'}}>
+              {onTeam && (
+                <>
+                  <button
+                    onClick={function() { setOpen(false); onTeam() }}
+                    style={{width:'100%',display:'flex',alignItems:'center',gap:'10px',padding:'10px 16px',background:'none',border:'none',cursor:'pointer',fontSize:'var(--text-base)',color:'var(--text-primary)',fontFamily:'var(--font-sans)',textAlign:'left'}}
+                    onMouseOver={function(e) { e.currentTarget.style.background='var(--surface-2)' }}
+                    onMouseOut={function(e) { e.currentTarget.style.background='none' }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Equipo del proyecto
+                  </button>
+                  <div style={{height:'1px',background:'var(--border-subtle)',margin:'2px 16px'}} />
+                </>
+              )}
+              <button
+                onClick={function() { setOpen(false); onLogout() }}
+                style={{width:'100%',display:'flex',alignItems:'center',gap:'10px',padding:'10px 16px',background:'none',border:'none',cursor:'pointer',fontSize:'var(--text-base)',color:'var(--danger-700)',fontFamily:'var(--font-sans)',textAlign:'left'}}
+                onMouseOver={function(e) { e.currentTarget.style.background='var(--danger-50)' }}
+                onMouseOut={function(e) { e.currentTarget.style.background='none' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  )
+}
+
+function AppBreadcrumb(props) {
+  var onBack = props.onBack
+  var backLabel = props.backLabel
+  var meta = props.meta
+  return (
+    <div className="app-breadcrumb">
+      <button className="app-breadcrumb-back" onClick={onBack}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        {backLabel}
+      </button>
+      {meta && (
+        <>
+          <span className="app-breadcrumb-sep">·</span>
+          <span className="app-breadcrumb-meta">{meta}</span>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -1912,6 +2069,7 @@ function AppInterior(props) {
   var toggleRecording = props.toggleRecording
   var handleSubmit = props.handleSubmit
   var handleDeleteEntry = props.handleDeleteEntry
+  var handleExportPDF = props.handleExportPDF
   var handleSaveProperty = props.handleSaveProperty
   var handleSaveEntry = props.handleSaveEntry
   var handleUpdateEntryStatus = props.handleUpdateEntryStatus
@@ -1929,7 +2087,7 @@ function AppInterior(props) {
   // cargar el proyecto desde la API si aún no está en estado
   useEffect(function() {
     if (!token) return
-    if (vista === 'propiedades' || vista === 'hallazgos') {
+    if (vista === 'propiedades' || vista === 'hallazgos' || vista === 'nueva-propiedad' || vista === 'nuevo-hallazgo' || vista === 'acta') {
       var projectId = parseInt(params.projectId)
       if (!currentProject || currentProject.id !== projectId) {
         authFetch(API_URL + '/projects').then(function(r) { return r.json() }).then(function(list) {
@@ -1945,7 +2103,7 @@ function AppInterior(props) {
   // cargar la propiedad desde la API si aún no está en estado
   useEffect(function() {
     if (!token) return
-    if (vista === 'hallazgos') {
+    if (vista === 'hallazgos' || vista === 'nuevo-hallazgo' || vista === 'acta') {
       var propertyId = parseInt(params.propertyId)
       if (!currentProperty || currentProperty.id !== propertyId) {
         if (currentProject) {
@@ -1959,7 +2117,6 @@ function AppInterior(props) {
     }
   }, [params.propertyId, currentProject, token])
 
-  // Scroll al tope en cada cambio de vista
   useLayoutEffect(function() {
     scrollToTop()
   }, [vista, params.projectId, params.propertyId])
@@ -2009,48 +2166,65 @@ function AppInterior(props) {
   var stableSetActFormData = useCallback(function(val) { setActFormData(val) }, [])
   var stableSetActToast = useCallback(function(val) { setActToast(val) }, [])
 
+    // === VISTA: NUEVO PROYECTO ===
+    if (vista === 'nuevo-proyecto') {
+      if (!currentUser || currentUser.role !== 'admin') return <Navigate to="/proyectos" replace />
+      return (
+        <div className="app">
+          <AppHeader title="Nuevo proyecto" user={currentUser} onLogout={handleLogoutAndRedirect} />
+          <AppBreadcrumb onBack={function() { navigate('/proyectos') }} backLabel="Proyectos" />
+          <main className="main">
+            <div className="form-card">
+              <div className="form-header">
+                <h3>Nuevo Proyecto</h3>
+              </div>
+              <div className="form-field">
+                <label>Nombre del proyecto</label>
+                <input
+                  type="text"
+                  placeholder="Ej: Condominio Las Flores, Etapa 1..."
+                  value={newProjectName}
+                  onChange={function(e) { setNewProjectName(e.target.value) }}
+                  className="text-input"
+                  autoFocus
+                  onKeyDown={function(e) {
+                    if (e.key === 'Enter') handleCreateProject(function(p) { navigate('/proyectos/' + p.id, { replace: true }) })
+                  }}
+                />
+              </div>
+              <div className="form-actions">
+                <button className="submit-button" onClick={function() { handleCreateProject(function(p) { navigate('/proyectos/' + p.id, { replace: true }) }) }}>
+                  Crear Proyecto
+                </button>
+                <button className="cancel-button" onClick={function() { setNewProjectName(''); navigate('/proyectos') }}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </main>
+        </div>
+      )
+    }
+
     // === VISTA 1: PROYECTOS ===
     if (vista === 'proyectos') {
       return (
         <div className="app">
-          <header className="header">
-            <div className="header-content">
-              <div className="header-row-top">
-                <div className="header-title">
-                  <span className="header-icon">📋</span>
-                  <div><h1>BitácoraPro</h1><p className="header-subtitle">{currentUser && currentUser.company_name}</p></div>
-                </div>
-                <div className="header-info">
-                  <span className="user-name">👤 {currentUser && currentUser.name}</span>
-                  <button className="logout-button" onClick={handleLogoutAndRedirect}>Cerrar sesión</button>
-                </div>
-              </div>
-            </div>
-          </header>
-          <main className="main" id="app-scroll">
-            <h2 className="section-title">Mis Proyectos</h2>
-            {currentUser && currentUser.role === 'admin' && (
-              !showNewProject ? (
-                <button className="add-button" onClick={function() { setShowNewProject(true) }}>+ Nuevo Proyecto</button>
-              ) : (
-                <div className="new-project-form">
-                  <input type="text" placeholder="Nombre del proyecto..." value={newProjectName} onChange={function(e) { setNewProjectName(e.target.value) }} className="text-input" autoFocus onKeyDown={function(e) { if (e.key === 'Enter') handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }} />
-                  <div className="new-project-actions">
-                    <button className="submit-button" onClick={function() { handleCreateProject(function(p) { navigate('/proyectos/' + p.id) }) }}>Crear Proyecto</button>
-                    <button className="cancel-button" onClick={function() { setShowNewProject(false); setNewProjectName('') }}>Cancelar</button>
-                  </div>
-                </div>
-              )
-            )}
-            {projects.length === 0 && !showNewProject && (
-              <div className="welcome-message"><h2>👋 Bienvenido, {currentUser && currentUser.name}</h2><p>Crea tu primer proyecto para comenzar.</p></div>
+          <AppHeader
+            title="Mis Proyectos"
+            user={currentUser}
+            onLogout={handleLogoutAndRedirect}
+          />
+          <main className="main main--no-breadcrumb" id="app-scroll">
+            {projects.length === 0 && (
+              <div className="welcome-message"><h2>Sin proyectos aún</h2><p>Crea tu primer proyecto para comenzar a registrar propiedades y hallazgos.</p></div>
             )}
             <div className="projects-grid">
               {projects.map(function(project) {
                 return (
                   <div key={project.id} className="project-card">
                     <div className="project-card-content" onClick={function() { goToProject(project) }}>
-                      <h3>📁 {project.name}</h3>
+                      <h3>{project.name}</h3>
                       <p className="project-date">{project.property_count || 0} propiedades | Creado: {new Date(project.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                     </div>
                     {currentUser && currentUser.role === 'admin' && (
@@ -2061,68 +2235,117 @@ function AppInterior(props) {
               })}
             </div>
           </main>
+          {currentUser && currentUser.role === 'admin' && (
+            <div className="sticky-cta">
+              <button className="sticky-cta-btn" onClick={function() { navigate('/proyectos/nuevo') }}>Nuevo Proyecto</button>
+            </div>
+          )}
         </div>
       )
     }
 
     // Pantalla de carga — esperar que se hidrate currentProject desde la URL
     if (!currentProject) {
-      return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'#6B6760'}}>Cargando...</p></main></div>
+      return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'var(--text-tertiary)'}}>Cargando...</p></main></div>
+    }
+
+    // === VISTA: NUEVA PROPIEDAD ===
+    if (vista === 'nueva-propiedad') {
+      return (
+        <div className="app">
+          <AppHeader title={currentProject ? currentProject.name : 'Nueva propiedad'} user={currentUser} onLogout={handleLogoutAndRedirect} />
+          <AppBreadcrumb onBack={function() { navigate('/proyectos/' + (currentProject ? currentProject.id : '')) }} backLabel={currentProject ? currentProject.name : 'Proyecto'} />
+          <main className="main">
+            <div className="form-card">
+              <div className="form-header">
+                <h3>Nueva Propiedad</h3>
+              </div>
+              <div className="form-field">
+                <label>Numero / Identificador de propiedad *</label>
+                <input type="text" inputMode="text" placeholder="Ej: Casa 471, Depto 301..." value={propForm.unit_number} onChange={function(e) { setPropForm(Object.assign({}, propForm, { unit_number: e.target.value })) }} className="text-input" autoFocus />
+              </div>
+              <div className="form-field">
+                <label>Nombre del propietario</label>
+                <input type="text" placeholder="Nombre completo..." value={propForm.owner_name} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_name: e.target.value })) }} className="text-input" />
+              </div>
+              <div className="form-field">
+                <label>RUT</label>
+                <input type="text" inputMode="numeric" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
+              </div>
+              <div className="form-field">
+                <label>Correo electronico</label>
+                <input type="email" inputMode="email" placeholder="correo@ejemplo.com" value={propForm.owner_email} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_email: e.target.value })) }} className="text-input" />
+              </div>
+              <div className="form-field">
+                <label>Telefono</label>
+                <input type="tel" inputMode="tel" placeholder="+56 9 1234 5678" value={propForm.owner_phone} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_phone: e.target.value })) }} className="text-input" />
+              </div>
+              <div className="form-actions">
+                <button className="submit-button" onClick={function() {
+                  if (!propForm.unit_number.trim()) { alert('El numero de propiedad es requerido'); return }
+                  authFetch(API_URL + '/projects/' + currentProject.id + '/properties', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(propForm)
+                  })
+                    .then(function(r) { return r.json() })
+                    .then(function(p) {
+                      setProperties(function(prev) { return prev.concat([p]) })
+                      setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' })
+                      navigate('/proyectos/' + currentProject.id + '/propiedades/' + p.id, { replace: true })
+                    })
+                }}>Crear Propiedad</button>
+                <button className="cancel-button" onClick={function() {
+                  setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' })
+                  navigate('/proyectos/' + (currentProject ? currentProject.id : ''))
+                }}>Cancelar</button>
+              </div>
+            </div>
+          </main>
+        </div>
+      )
     }
 
     // === VISTA 2: PROPIEDADES ===
     if (vista === 'propiedades') {
       return (
         <div className="app">
-          <header className="header">
-            <div className="header-content">
-              <div className="header-row-top">
-                <div className="header-title">
-                  <span className="header-icon">📋</span>
-                  <div><h1>BitácoraPro</h1></div>
-                </div>
-                <div className="header-info">
-                  {currentUser && currentUser.role === 'admin' && (
-                    <button className="back-button" onClick={handleOpenTeam} style={{background:'#EAF1EC',color:'#2D5A3D',border:'1px solid #c5deca'}}>👥 Equipo</button>
-                  )}
-                  <button className="logout-button" onClick={handleLogoutAndRedirect}>Cerrar sesión</button>
-                </div>
-              </div>
-              <div className="header-row-nav">
-                <button className="back-button" onClick={goBackToProjects}>← Proyectos</button>
-                <div className="project-name-display">{currentProject.name}</div>
-              </div>
-            </div>
-          </header>
+          <AppHeader
+            title={currentProject.name}
+            user={currentUser}
+            onLogout={handleLogoutAndRedirect}
+            onTeam={currentUser && currentUser.role === 'admin' ? handleOpenTeam : null}
+          />
+          <AppBreadcrumb onBack={goBackToProjects} backLabel="Proyectos" />
           <main className="main" id="app-scroll">
 
             {/* PANEL DE EQUIPO */}
             {showTeam && (
               <div className="form-card" style={{marginBottom:'1.5rem'}}>
                 <div className="form-header">
-                  <h3>👥 Equipo del proyecto</h3>
+                  <h3>👥 Equipo del Proyecto</h3>
                   <button className="close-button" onClick={function() { setShowTeam(false); setInviteMsg('') }}>X</button>
                 </div>
                 <div className="form-field">
-                  <label>✉️ Invitar inspector por email</label>
+                  <label>Invitar inspector por email</label>
                   <div style={{display:'flex',gap:'0.5rem'}}>
                     <input type="email" inputMode="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
                     <button className="submit-button" onClick={handleInvite} disabled={inviteLoading} style={{width:'auto',padding:'0 1.25rem',flexShrink:0}}>
                       {inviteLoading ? 'Enviando...' : 'Enviar'}
                     </button>
                   </div>
-                  {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('✅') ? '#2D5A3D' : '#B91C1C'}}>{inviteMsg}</p>}
+                  {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('✅') ? 'var(--primary-700)' : '#B91C1C'}}>{inviteMsg}</p>}
                 </div>
                 {team.members && team.members.length > 0 && (
                   <div className="form-field">
                     <label>Miembros activos</label>
                     {team.members.map(function(m) {
                       return (
-                        <div key={m.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#f7f5f0',borderRadius:'8px',marginBottom:'0.4rem'}}>
+                        <div key={m.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'var(--surface-2)',borderRadius:'8px',marginBottom:'0.4rem'}}>
                           <div>
                             <span style={{fontWeight:'500',fontSize:'0.875rem'}}>{m.name}</span>
-                            <span style={{color:'#6B6760',fontSize:'0.8rem',marginLeft:'0.5rem'}}>{m.email}</span>
-                            <span style={{background: m.role==='admin'?'#1A1814':'#EAF1EC',color:m.role==='admin'?'#fff':'#2D5A3D',fontSize:'0.65rem',padding:'0.15rem 0.5rem',borderRadius:'100px',marginLeft:'0.5rem',fontWeight:'500'}}>{m.role}</span>
+                            <span style={{color:'var(--text-tertiary)',fontSize:'0.8rem',marginLeft:'0.5rem'}}>{m.email}</span>
+                            <span style={{background: m.role==='admin'?'var(--text-primary)':'var(--primary-50)',color:m.role==='admin'?'#fff':'var(--primary-700)',fontSize:'0.65rem',padding:'0.15rem 0.5rem',borderRadius:'100px',marginLeft:'0.5rem',fontWeight:'500'}}>{m.role}</span>
                           </div>
                           {m.role !== 'admin' && <button onClick={function() { handleRemoveMember(m.id, m.name) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B91C1C',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Quitar</button>}
                         </div>
@@ -2146,42 +2369,8 @@ function AppInterior(props) {
               </div>
             )}
 
-            <h2 className="section-title">Propiedades</h2>
-            {!showNewProperty ? (
-              <button className="add-button" onClick={function() { setShowNewProperty(true) }}>+ Nueva Propiedad</button>
-            ) : (
-              <div className="form-card">
-                <div className="form-header">
-                  <h3>Nueva Propiedad</h3>
-                  <button className="close-button" onClick={function() { setShowNewProperty(false); setPropForm({ unit_number: '', owner_name: '', owner_rut: '', owner_email: '', owner_phone: '' }) }}>X</button>
-                </div>
-                <div className="form-field">
-                  <label>🏠 Numero / Identificador de propiedad *</label>
-                  <input type="text" inputMode="text" placeholder="Ej: Casa 471, Depto 301..." value={propForm.unit_number} onChange={function(e) { setPropForm(Object.assign({}, propForm, { unit_number: e.target.value })) }} className="text-input" />
-                </div>
-                <div className="form-field">
-                  <label>👤 Nombre del propietario</label>
-                  <input type="text" placeholder="Nombre completo..." value={propForm.owner_name} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_name: e.target.value })) }} className="text-input" />
-                </div>
-                <div className="form-field">
-                  <label>🪪 RUT</label>
-                  <input type="text" inputMode="numeric" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
-                </div>
-                <div className="form-row">
-                  <div className="form-field form-field-half">
-                    <label>📧 Correo electronico</label>
-                    <input type="email" inputMode="email" placeholder="correo@ejemplo.com" value={propForm.owner_email} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_email: e.target.value })) }} className="text-input" />
-                  </div>
-                  <div className="form-field form-field-half">
-                    <label>📱 Telefono</label>
-                    <input type="tel" inputMode="tel" placeholder="+56 9 1234 5678" value={propForm.owner_phone} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_phone: e.target.value })) }} className="text-input" />
-                  </div>
-                </div>
-                <button className="submit-button" onClick={handleCreateProperty}>Crear Propiedad</button>
-              </div>
-            )}
-            {properties.length === 0 && !showNewProperty && (
-              <div className="welcome-message"><h2>🏠 {currentProject.name}</h2><p>Agrega las propiedades del proyecto para registrar hallazgos.</p></div>
+            {properties.length === 0 && (
+              <div className="welcome-message"><h2>Sin propiedades</h2><p>Agrega las propiedades del proyecto para comenzar la inspección.</p></div>
             )}
             <div className="projects-grid">
               {properties.map(function(prop) {
@@ -2189,32 +2378,30 @@ function AppInterior(props) {
                   return (
                     <div key={prop.id} className="form-card" style={{marginBottom:'0'}}>
                       <div className="form-header">
-                        <h3>✏️ Editar propiedad</h3>
+                        <h3>Editar propiedad</h3>
                         <button className="close-button" onClick={function() { setEditingProperty(null) }}>X</button>
                       </div>
                       <div className="form-field">
-                        <label>🏠 Número / Identificador *</label>
+                        <label>Número / Identificador *</label>
                         <input type="text" inputMode="text" className="text-input" value={editPropForm.unit_number} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { unit_number: e.target.value })) }} />
                       </div>
                       <div className="form-field">
-                        <label>👤 Nombre del propietario</label>
+                        <label>Nombre del propietario</label>
                         <input type="text" className="text-input" value={editPropForm.owner_name} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_name: e.target.value })) }} />
                       </div>
                       <div className="form-field">
-                        <label>🪪 RUT</label>
+                        <label>RUT</label>
                         <input type="text" inputMode="numeric" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
                       </div>
-                      <div className="form-row">
-                        <div className="form-field form-field-half">
-                          <label>📧 Correo</label>
+                      <div className="form-field">
+                          <label>Correo</label>
                           <input type="email" inputMode="email" className="text-input" value={editPropForm.owner_email} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_email: e.target.value })) }} />
-                        </div>
-                        <div className="form-field form-field-half">
-                          <label>📱 Teléfono</label>
-                          <input type="tel" inputMode="tel" className="text-input" value={editPropForm.owner_phone} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_phone: e.target.value })) }} />
-                        </div>
                       </div>
-                      <div style={{display:'flex', gap:'0.75rem'}}>
+                      <div className="form-field">
+                          <label>Teléfono</label>
+                          <input type="tel" inputMode="tel" className="text-input" value={editPropForm.owner_phone} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_phone: e.target.value })) }} />
+                      </div>
+                      <div className="form-actions">
                         <button className="submit-button" onClick={handleSaveProperty}>Guardar cambios</button>
                         <button className="cancel-button" onClick={function() { setEditingProperty(null) }}>Cancelar</button>
                       </div>
@@ -2224,128 +2411,53 @@ function AppInterior(props) {
                 return (
                   <div key={prop.id} className="project-card property-card">
                     <div className="project-card-content" onClick={function() { goToProperty(prop) }}>
-                      <h3>🏠 {prop.unit_number}</h3>
-                      <p className="property-owner">{prop.owner_name || 'Sin propietario asignado'}</p>
-                      <p className="project-date">{prop.entry_count || 0} hallazgos | {prop.owner_email || ''} {prop.owner_phone ? '| ' + prop.owner_phone : ''}</p>
+                      <h3>{prop.unit_number}</h3>
+                      <p className="property-owner">{prop.owner_name || <span style={{color:'var(--text-disabled)'}}>Sin propietario</span>}</p>
+                      <p className="project-date">{prop.entry_count || 0} hallazgo{(prop.entry_count || 0) !== 1 ? 's' : ''}</p>
                     </div>
-                    <button className="delete-project-button" title="Compartir vista propietario" onClick={function(e) { e.stopPropagation(); handleCopyPropertyLink(prop.id) }}>🔗</button>
-                    <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
-                    {currentUser && currentUser.role === 'admin' && (
-                      <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
-                    )}
+                    <div className="property-card-actions">
+                      <button className="delete-project-button" title="Compartir vista propietario" onClick={function(e) { e.stopPropagation(); handleCopyPropertyLink(prop.id) }}>🔗</button>
+                      <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
+                      {currentUser && currentUser.role === 'admin' && (
+                        <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
+                      )}
+                    </div>
                   </div>
                 )
               })}
             </div>
           </main>
+          <div className="sticky-cta">
+            <button className="sticky-cta-btn" onClick={function() { navigate('/proyectos/' + currentProject.id + '/propiedades/nueva') }}>Nueva Propiedad</button>
+          </div>
         </div>
       )
     }
 
     // Pantalla de carga — esperar que se hidrate currentProperty desde la URL
     if (!currentProperty) {
-      return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'#6B6760'}}>Cargando...</p></main></div>
+      return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'var(--text-tertiary)'}}>Cargando...</p></main></div>
     }
 
-    // === VISTA 3: HALLAZGOS ===
-
-    // useEffect para abrir form de hallazgo desde el acta
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-
-    return (
-      <div className="app">
-        {/* ACTA DE ENTREGA — fullscreen overlay */}
-        {showAct && (
-          <DeliveryActScreen
-            property={currentProperty}
-            project={currentProject}
-            currentUser={currentUser}
-            deliveryActRef={deliveryActRef}
-            saveDeliveryAct={saveDeliveryAct}
-            entriesRef={entriesRef}
-            entriesCount={entries.length}
-            onClose={stableOnCloseAct}
-            onRegisterEntry={stableOnRegisterEntry}
-            actFormData={actFormData}
-            setActFormData={stableSetActFormData}
-            setActToast={stableSetActToast}
-            authFetch={authFetch}
-          />
-        )}
-        <header className="header">
-          <div className="header-content">
-            <div className="header-row-top">
-              <div className="header-title">
-                <span className="header-icon">📋</span>
-                <div><h1>BitácoraPro</h1></div>
-              </div>
-              <div className="header-info">
-                <div className="entry-count">{entries.length} hallazgo{entries.length !== 1 ? 's' : ''}</div>
-                <button className="logout-button" onClick={handleLogoutAndRedirect}>Cerrar sesión</button>
-              </div>
-            </div>
-            <div className="header-row-nav">
-              <button className="back-button" onClick={goBackToProperties}>← Propiedades</button>
-              <div className="project-name-display">{currentProperty.unit_number}{currentProperty.owner_name ? ' — ' + currentProperty.owner_name : ''}</div>
-            </div>
-          </div>
-        </header>
-        <main className="main" id="app-scroll">
-          {/* TOAST ACTA */}
-          {actToast && (
-            <div style={{position:'fixed',top:'1rem',left:'50%',transform:'translateX(-50%)',zIndex:500,background:'#1A1814',color:'#fff',padding:'0.6rem 1.25rem',borderRadius:'100px',fontSize:'0.875rem',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,0.2)',pointerEvents:'none'}}>
-              {actToast}
-            </div>
-          )}
-
-          {/* BOTÓN INICIAR ACTA — solo si no hay acta firmada ni en progreso */}
-          {!deliveryAct && !showAct && !showForm && (
-            <div style={{marginBottom:'0.75rem'}}>
-              <button onClick={function() { setShowAct(true) }} style={{width:'100%',padding:'0.75rem',background:'#F7F5F0',border:'1.5px dashed #C0BBB5',borderRadius:'10px',color:'#6B6760',fontSize:'0.875rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem'}}>
-                📋 Iniciar acta de entrega
-              </button>
-            </div>
-          )}
-
-          {/* BADGE ACTA FIRMADA */}
-          {deliveryAct && deliveryAct.signed_at && !showAct && !showForm && (
-            <div style={{marginBottom:'0.75rem'}}>
-              <button onClick={function() { setShowAct(true) }} style={{width:'100%',padding:'0.75rem 1rem',background:'#F0FDF4',border:'1px solid #BBF7D0',borderRadius:'10px',color:'#166534',fontSize:'0.875rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <span style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
-                  <span>✅</span>
-                  <span style={{fontWeight:'500'}}>Acta firmada</span>
-                  <span style={{color:'#6B6760',fontWeight:'400'}}>· {new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', {day:'2-digit',month:'short',year:'numeric'})}</span>
-                </span>
-                <span style={{fontSize:'0.75rem',color:'#2D5A3D'}}>Ver →</span>
-              </button>
-            </div>
-          )}
-
-          {/* ACTA EN PROGRESO — badge */}
-          {deliveryAct && !deliveryAct.signed_at && !showAct && !showForm && (
-            <div style={{marginBottom:'0.75rem'}}>
-              <button onClick={function() { setShowAct(true) }} style={{width:'100%',padding:'0.75rem 1rem',background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:'10px',color:'#92400E',fontSize:'0.875rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-                <span style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
-                  <span>📋</span>
-                  <span style={{fontWeight:'500'}}>Acta en progreso</span>
-                </span>
-                <span style={{fontSize:'0.75rem'}}>Continuar →</span>
-              </button>
-            </div>
-          )}
-
-          <div className="action-buttons">
-            {!showForm && !showAct && <button className="add-button" onClick={function() { setShowForm(true) }}>+ Nuevo Hallazgo</button>}
-          </div>
-
-          {showForm && (
+    // === VISTA: NUEVO HALLAZGO ===
+    if (vista === 'nuevo-hallazgo') {
+      var goBackToEntries = function() {
+        setDescription('')
+        props.setImageFiles([])
+        props.setImagePreviews([])
+        navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id, { replace: true })
+      }
+      return (
+        <div className="app">
+          <AppHeader title={currentProperty ? currentProperty.unit_number : 'Nuevo hallazgo'} user={currentUser} onLogout={handleLogoutAndRedirect} />
+          <AppBreadcrumb onBack={goBackToEntries} backLabel={currentProperty ? currentProperty.unit_number : 'Propiedad'} />
+          <main className="main">
             <div className="form-card">
               <div className="form-header">
-                <h3>Nuevo Hallazgo — {currentProperty.unit_number}</h3>
-                <button className="close-button" onClick={function() { if (!isAnalyzing) setShowForm(false) }}>X</button>
+                <h3>Nuevo Hallazgo{currentProperty ? ' — ' + currentProperty.unit_number : ''}</h3>
               </div>
               <div className="form-field">
-                <label>📷 Fotos del hallazgo</label>
+                <label>Fotos del hallazgo</label>
                 <div className="upload-area" onClick={function() { if (!isAnalyzing) fileInputRef.current.click() }}>
                   <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
                   {imagePreviews.length === 0 ? (
@@ -2361,24 +2473,144 @@ function AppInterior(props) {
                 </div>
               </div>
               <div className="form-field">
-                <label>🎙️ Descripcion del inspector</label>
+                <label>Descripcion del inspector</label>
                 <div className="audio-section">
-                  <button className={'record-button' + (isRecording ? ' recording' : '')} onClick={toggleRecording} disabled={isAnalyzing} type="button">
-                    {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content">🎙️ Grabar audio</span>}
+                  <button className={'record-btn' + (isRecording ? ' recording' : '')} onClick={toggleRecording} disabled={isAnalyzing} type="button">
+                    {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content">🎙 Grabar audio</span>}
                   </button>
                   <textarea placeholder="Habla o escribe tu descripcion aqui..." value={description} onChange={function(e) { setDescription(e.target.value) }} className="text-area" rows={3} disabled={isAnalyzing} />
                   {description && <p className="audio-hint">Puedes editar el texto antes de enviar</p>}
                 </div>
               </div>
-              <button className={'submit-button' + (isAnalyzing ? ' analyzing' : '')} onClick={handleSubmit} disabled={isAnalyzing}>
-                {isAnalyzing ? <span className="analyzing-text"><span className="spinner"></span> Analizando con IA...</span> : '🤖 Analizar y Registrar'}
+              <div className="form-actions">
+                <button className={'submit-button' + (isAnalyzing ? ' analyzing' : '')} onClick={async function() {
+                  if (imageFiles.length === 0) { alert('Sube al menos una foto'); return }
+                  setIsAnalyzing(true)
+                  try {
+                    var formData = new FormData()
+                    imageFiles.forEach(function(f) { formData.append('photos', f) })
+                    formData.append('inspector_note', description.trim())
+                    formData.append('project_name', currentProject.name)
+                    formData.append('unit_number', currentProperty.unit_number)
+                    var response = await authFetch(API_URL + '/properties/' + currentProperty.id + '/entries', { method: 'POST', body: formData })
+                    var data = await response.json()
+                    if (data.success) {
+                      setEntries(function(prev) { return [data.entry].concat(prev) })
+                      setDescription(''); setImageFiles([]); setImagePreviews([])
+                      if (cameFromAct) {
+                        setCameFromAct(false)
+                        navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id + '/acta', { replace: true })
+                        setActToast('✅ Hallazgo registrado')
+                        setTimeout(function() { setActToast('') }, 2500)
+                      } else {
+                        navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id, { replace: true })
+                      }
+                    } else { alert('Error: ' + data.error) }
+                  } catch (error) { alert('No se pudo conectar con el servidor'); console.error(error) }
+                  setIsAnalyzing(false)
+                }} disabled={isAnalyzing}>
+                  {isAnalyzing ? <span className="analyzing-text"><span className="spinner"></span> Analizando con IA...</span> : 'Analizar y Registrar'}
+                </button>
+                {!isAnalyzing && (
+                  <button className="cancel-button" onClick={goBackToEntries}>Cancelar</button>
+                )}
+              </div>
+            </div>
+          </main>
+        </div>
+      )
+    }
+
+    // === VISTA: ACTA DE ENTREGA ===
+    if (vista === 'acta') {
+      if (!currentProperty || !currentProject) {
+        return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'var(--text-tertiary)'}}>Cargando...</p></main></div>
+      }
+      var actaBackUrl = '/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id
+      return (
+        <div className="app" style={{minHeight:'100vh'}}>
+          <DeliveryActScreen
+            property={currentProperty}
+            project={currentProject}
+            currentUser={currentUser}
+            deliveryActRef={deliveryActRef}
+            saveDeliveryAct={saveDeliveryAct}
+            entriesRef={entriesRef}
+            entriesCount={entries.length}
+            onClose={function() { navigate(actaBackUrl) }}
+            onRegisterEntry={function() {
+              setCameFromAct(true)
+              navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id + '/nuevo-hallazgo')
+            }}
+            actFormData={actFormData}
+            setActFormData={stableSetActFormData}
+            setActToast={stableSetActToast}
+            authFetch={authFetch}
+          />
+          {actToast && (
+            <div style={{position:'fixed',top:'1rem',left:'50%',transform:'translateX(-50%)',zIndex:500,background:'var(--text-primary)',color:'#fff',padding:'0.6rem 1.25rem',borderRadius:'100px',fontSize:'0.875rem',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,0.2)',pointerEvents:'none'}}>
+              {actToast}
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    // === VISTA 3: HALLAZGOS ===
+    if (vista === 'hallazgos') {
+      var actaUrl = '/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id + '/acta'
+      return (
+      <div className="app">
+        <AppHeader
+          title={currentProperty.unit_number}
+          user={currentUser}
+          onLogout={handleLogoutAndRedirect}
+        />
+        <AppBreadcrumb
+          onBack={goBackToProperties}
+          backLabel={currentProject.name}
+          meta={currentProperty.owner_name || null}
+        />
+        <main className="main" id="app-scroll">
+          {/* TOAST ACTA */}
+          {actToast && (
+            <div style={{position:'fixed',top:'1rem',left:'50%',transform:'translateX(-50%)',zIndex:500,background:'var(--text-primary)',color:'#fff',padding:'0.6rem 1.25rem',borderRadius:'100px',fontSize:'0.875rem',fontWeight:'500',boxShadow:'0 4px 16px rgba(0,0,0,0.2)',pointerEvents:'none'}}>
+              {actToast}
+            </div>
+          )}
+
+          {/* BOTÓN INICIAR ACTA */}
+          {!deliveryAct && (
+            <div style={{marginBottom:'12px'}}>
+              <button onClick={function() { navigate(actaUrl) }} className="acta-btn-iniciar">
+                Iniciar acta de entrega
+              </button>
+            </div>
+          )}
+
+          {/* BADGE ACTA FIRMADA */}
+          {deliveryAct && deliveryAct.signed_at && (
+            <div style={{marginBottom:'12px'}}>
+              <button onClick={function() { navigate(actaUrl) }} className="acta-btn-firmada">
+                <span style={{fontWeight:'600'}}>Acta firmada <span style={{fontWeight:'400',opacity:0.7}}>· {new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', {day:'2-digit',month:'short',year:'numeric'})}</span></span>
+                <span style={{fontSize:'var(--text-xs)',fontWeight:'500'}}>Ver →</span>
+              </button>
+            </div>
+          )}
+
+          {/* ACTA EN PROGRESO — badge */}
+          {deliveryAct && !deliveryAct.signed_at && (
+            <div style={{marginBottom:'12px'}}>
+              <button onClick={function() { navigate(actaUrl) }} className="acta-btn-progreso">
+                <span style={{fontWeight:'600'}}>Acta en progreso</span>
+                <span style={{fontSize:'var(--text-xs)',fontWeight:'500'}}>Continuar →</span>
               </button>
             </div>
           )}
 
           {entries.length > 0 && (
             <div className="entries-section">
-              <h3 className="entries-title">Hallazgos registrados</h3>
+              <h3 className="entries-title">Hallazgos Registrados</h3>
               {entries.map(function(entry) {
                 var cat = CATEGORIES[entry.category] || CATEGORIES.otro
                 var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
@@ -2409,7 +2641,7 @@ function AppInterior(props) {
                         </div>
                       </div>
                       <div className="form-field">
-                        <label>📍 Ubicación</label>
+                        <label>Ubicación</label>
                         <input type="text" className="text-input" value={editEntryForm.location || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { location: e.target.value })) }} />
                       </div>
                       <div className="form-field">
@@ -2417,10 +2649,10 @@ function AppInterior(props) {
                         <textarea className="text-area" rows={4} value={editEntryForm.description || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { description: e.target.value })) }} />
                       </div>
                       <div className="form-field">
-                        <label>💡 Recomendación</label>
+                        <label>Recomendación</label>
                         <textarea className="text-area" rows={3} value={editEntryForm.recommendation || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { recommendation: e.target.value })) }} />
                       </div>
-                      <div style={{display:'flex', gap:'0.75rem'}}>
+                      <div className="form-actions">
                         <button className="submit-button" onClick={handleSaveEntry}>Guardar cambios</button>
                         <button className="cancel-button" onClick={function() { setEditingEntry(null) }}>Cancelar</button>
                       </div>
@@ -2445,11 +2677,10 @@ function AppInterior(props) {
                       )}
                     </div>
                     <div className="entry-tags">
-                      <span className="tag category-tag" style={{ background: cat.color + '18', color: cat.color, border: '1px solid ' + cat.color + '33' }}>{cat.icon} {cat.label}</span>
-                      <span className="tag severity-tag" style={{ background: sev.bg, color: sev.color, border: '1px solid ' + sev.color + '33' }}>{sev.label}</span>
-                      {entry.ai_generated === 1 && <span className="tag ai-tag">🤖 IA</span>}
+                      <span className="tag category-tag" style={{ background: cat.bg, color: cat.color, border: '1px solid ' + cat.border }}>{cat.label}</span>
+                      <span className="tag severity-tag" style={{ background: sev.bg, color: sev.color, border: '1px solid ' + sev.border }}>{sev.label}</span>
+                      {entry.ai_generated === 1 && <span className="tag ai-tag">IA</span>}
                     </div>
-                    {/* SELECTOR DE ESTADO */}
                     {(function() {
                       var entryStatus = entry.status || 'pendiente'
                       var st = STATUSES[entryStatus] || STATUSES.pendiente
@@ -2465,9 +2696,9 @@ function AppInterior(props) {
                                 <button
                                   key={key}
                                   className={'entry-status-btn' + (isActive ? ' active' : '')}
-                                  style={isActive ? { background: val.bg, color: val.color, border: '1.5px solid ' + val.color + '55', fontWeight: '600' } : {}}
+                                  style={isActive ? { background: val.bg, color: val.color, border: '1.5px solid ' + val.border, fontWeight: '600' } : {}}
                                   onClick={function() { if (!isActive) handleUpdateEntryStatus(entry.id, key) }}
-                                >{val.icon} {val.label}</button>
+                                >{val.label}</button>
                               )
                             })}
                           </div>
@@ -2476,15 +2707,15 @@ function AppInterior(props) {
                     })()}
                     <h4 className="entry-title">{entry.title}</h4>
                     <div className="entry-header">
-                      <span className="entry-unit">📍 {entry.location || 'Sin ubicacion'}</span>
+                      <span className="entry-unit">{entry.location || 'Sin ubicación'}</span>
                       <span className="entry-date">{new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     {entry.images && entry.images.length > 0 && (
                       <div className="entry-images">{entry.images.map(function(img, idx) { return <img key={img.id} src={img.filename} alt="" className="entry-image" onClick={function() { openLightbox(entry.images, idx) }} style={{cursor:'zoom-in'}} /> })}</div>
                     )}
-                    {entry.inspector_note && <div className="inspector-note"><strong>🎙️ Nota del inspector:</strong> {entry.inspector_note}</div>}
+                    {entry.inspector_note && <div className="inspector-note"><strong>Nota del inspector:</strong> {entry.inspector_note}</div>}
                     {entry.description && <div className="entry-description-box"><p className="entry-description">{entry.description}</p></div>}
-                    {entry.recommendation && <div className="entry-recommendation"><strong>💡 Recomendacion:</strong> {entry.recommendation}</div>}
+                    {entry.recommendation && <div className="entry-recommendation"><strong>Recomendación</strong><p>{entry.recommendation}</p></div>}
                     {entry.affected_elements && entry.affected_elements.length > 0 && (
                       <div className="entry-elements">{entry.affected_elements.map(function(el, i) { return <span key={i} className="element-chip">{el}</span> })}</div>
                     )}
@@ -2494,10 +2725,13 @@ function AppInterior(props) {
             </div>
           )}
 
-          {entries.length === 0 && !showForm && (
-            <div className="welcome-message"><h2>🏠 {currentProperty.unit_number}</h2><p>No hay hallazgos. Agrega el primero.</p></div>
+          {entries.length === 0 && (
+            <div className="welcome-message"><h2>Sin hallazgos</h2><p>Registra el primer hallazgo con fotos y nota de voz.</p></div>
           )}
         </main>
+        <div className="sticky-cta">
+          <button className="sticky-cta-btn" onClick={function() { navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id + '/nuevo-hallazgo') }}>Nuevo Hallazgo</button>
+        </div>
 
         {/* LIGHTBOX */}
         {lightbox && (
@@ -2524,6 +2758,8 @@ function AppInterior(props) {
         )}
       </div>
     )
+  }
+
 }
 
 var ACT_SI_NO_NA = ['', 'si', 'no', 'na']
@@ -2531,9 +2767,9 @@ var ACT_CONF_LABELS = { '': '\u2014', 'si': 'S\u00ed', 'no': 'No', 'na': 'N/A' }
 
 function ActSection({ title, children }) {
   return (
-    <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',marginBottom:'1rem',overflow:'hidden'}}>
+    <div style={{background:'#fff',borderRadius:'12px',border:'1px solid var(--border-subtle)',marginBottom:'1rem',overflow:'hidden'}}>
       <div style={{padding:'0.875rem 1.25rem',borderBottom:'1px solid #F3F0EB',background:'#FAFAF9'}}>
-        <h3 style={{margin:0,fontSize:'0.875rem',fontWeight:'700',color:'#1A1814'}}>{title}</h3>
+        <h3 style={{margin:0,fontSize:'0.875rem',fontWeight:'700',color:'var(--text-primary)'}}>{title}</h3>
       </div>
       <div style={{padding:'0 1.25rem'}}>{children}</div>
     </div>
@@ -2551,7 +2787,7 @@ function ActSigCanvas({ value, onChange, label, disabled }) {
     canvas.width = canvas.offsetWidth * window.devicePixelRatio
     canvas.height = canvas.offsetHeight * window.devicePixelRatio
     ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
-    ctx.strokeStyle = '#1A1814'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+    ctx.strokeStyle = 'var(--text-primary)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
     if (value) { var img = new Image(); img.onload = function() { ctx.drawImage(img, 0, 0, canvas.offsetWidth, canvas.offsetHeight) }; img.src = value }
   }, [])
   function getPos(e, c) { var r = c.getBoundingClientRect(); var cx = e.touches ? e.touches[0].clientX : e.clientX; var cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx-r.left, y: cy-r.top } }
@@ -2562,13 +2798,13 @@ function ActSigCanvas({ value, onChange, label, disabled }) {
   return (
     <div style={{marginBottom:'1rem'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.4rem'}}>
-        <label style={{fontSize:'0.8rem',fontWeight:'600',color:'#6B6760'}}>{label}</label>
+        <label style={{fontSize:'0.8rem',fontWeight:'600',color:'var(--text-tertiary)'}}>{label}</label>
         {hasDrawn && !disabled && <button onClick={clearSig} style={{background:'none',border:'none',color:'#B91C1C',fontSize:'0.75rem',cursor:'pointer',padding:0}}>Borrar</button>}
       </div>
       <canvas ref={canvasRef}
         onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw}
         onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={endDraw}
-        style={{width:'100%',height:'100px',border:'1.5px solid '+(hasDrawn?'#2D5A3D':'#E2DDD6'),borderRadius:'8px',background:'#FAFAF9',cursor:disabled?'default':'crosshair',display:'block',touchAction:'none'}} />
+        style={{width:'100%',height:'100px',border:'1.5px solid '+(hasDrawn?'var(--primary-700)':'var(--border-subtle)'),borderRadius:'8px',background:'#FAFAF9',cursor:disabled?'default':'crosshair',display:'block',touchAction:'none'}} />
       {!hasDrawn && !disabled && <p style={{fontSize:'0.72rem',color:'#C0BBB5',marginTop:'0.25rem',textAlign:'center'}}>Firma aqu\u00ed con el dedo</p>}
     </div>
   )
@@ -2583,7 +2819,7 @@ function ActTriToggle({ field, options, labels, form, set, isSigned }) {
       {opts.filter(function(o) { return o !== '' }).map(function(opt) {
         var active = val === opt
         var colors = { si: {bg:'#F0FDF4',border:'#22C55E',text:'#166534'}, no: {bg:'#FEF2F2',border:'#FCA5A5',text:'#991B1B'}, na: {bg:'#F3F4F6',border:'#D1D5DB',text:'#6B7280'} }
-        var c = active ? colors[opt] : { bg:'#fff', border:'#E2DDD6', text:'#6B6760' }
+        var c = active ? colors[opt] : { bg:'#fff', border:'var(--border-subtle)', text:'var(--text-tertiary)' }
         return (
           <button key={opt} disabled={!!isSigned} onClick={function() { set(field)({ target: { value: active ? '' : opt } }) }}
             style={{padding:'0.2rem 0.6rem',borderRadius:'6px',border:'1.5px solid '+c.border,background:c.bg,color:c.text,fontSize:'0.72rem',fontWeight:'600',cursor:isSigned?'default':'pointer',opacity:isSigned&&!active?0.4:1}}>
@@ -2598,7 +2834,7 @@ function ActTriToggle({ field, options, labels, form, set, isSigned }) {
 function ActRow({ label, field, options, labels, form, set, isSigned }) {
   return (
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'0.6rem 0',borderBottom:'1px solid #F3F0EB'}}>
-      <span style={{fontSize:'0.875rem',color:'#1A1814',flex:1,paddingRight:'0.5rem'}}>{label}</span>
+      <span style={{fontSize:'0.875rem',color:'var(--text-primary)',flex:1,paddingRight:'0.5rem'}}>{label}</span>
       <ActTriToggle field={field} options={options} labels={labels} form={form} set={set} isSigned={isSigned} />
     </div>
   )
@@ -2686,24 +2922,17 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
   // Canvas de firma
 
   return (
-    <div style={{position:'fixed',inset:0,zIndex:300,background:'#F7F5F0',overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
+    <div style={{position:'fixed',inset:0,zIndex:300,background:'var(--surface-page)',overflowY:'auto',WebkitOverflowScrolling:'touch'}}>
       {/* Header */}
-      <div style={{position:'sticky',top:0,zIndex:10,background:'#fff',borderBottom:'1px solid #E2DDD6',padding:'0.875rem 1.25rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+      <div style={{position:'sticky',top:0,zIndex:10,background:'#fff',borderBottom:'1px solid var(--border-subtle)',padding:'0.875rem 1.25rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div>
-          <div style={{fontSize:'0.7rem',color:'#6B6760',marginBottom:'0.1rem'}}>Acta de entrega</div>
-          <div style={{fontWeight:'700',fontSize:'0.95rem',color:'#1A1814'}}>{property.unit_number}{property.owner_name ? ' — ' + property.owner_name : ''}</div>
+          <div style={{fontSize:'0.7rem',color:'var(--text-tertiary)',marginBottom:'0.1rem'}}>Acta de entrega</div>
+          <div style={{fontWeight:'700',fontSize:'0.95rem',color:'var(--text-primary)'}}>{property.unit_number}{property.owner_name ? ' — ' + property.owner_name : ''}</div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
           {isSigned && <span style={{fontSize:'0.7rem',background:'#F0FDF4',color:'#166534',border:'1px solid #BBF7D0',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>✅ Firmada</span>}
-          {isSigned && (
-            <button
-              onClick={function() { generateActaPDF(deliveryAct, property, project && project.name) }}
-              style={{fontSize:'0.75rem',background:'#1A1814',color:'#fff',border:'none',padding:'0.3rem 0.75rem',borderRadius:'100px',fontWeight:'600',cursor:'pointer',display:'flex',alignItems:'center',gap:'0.3rem'}}>
-              📄 PDF
-            </button>
-          )}
           {!isSigned && <span style={{fontSize:'0.7rem',background:'#FFFBEB',color:'#92400E',border:'1px solid #FDE68A',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>En progreso</span>}
-          <button onClick={onClose} style={{background:'none',border:'none',fontSize:'1.1rem',cursor:'pointer',color:'#6B6760',padding:'0.25rem',lineHeight:1}}>✕</button>
+          <button onClick={onClose} style={{background:'none',border:'none',fontSize:'1.1rem',cursor:'pointer',color:'var(--text-tertiary)',padding:'0.25rem',lineHeight:1}}>✕</button>
         </div>
       </div>
 
@@ -2720,26 +2949,26 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
             ].map(function(item) {
               return (
                 <div key={item.field} style={{marginBottom:'0.5rem'}}>
-                  <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>{item.label}</label>
+                  <label style={{fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>{item.label}</label>
                   <input disabled={!!isSigned} className="text-input" value={form[item.field] || ''} onChange={set(item.field)} style={{fontSize:'0.875rem'}} />
                 </div>
               )
             })}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0.75rem',marginTop:'0.5rem'}}>
               <div>
-                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Proyecto / Etapa</label>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Proyecto / Etapa</label>
                 <input disabled={!!isSigned} className="text-input" value={form.proyecto_etapa} onChange={set('proyecto_etapa')} style={{fontSize:'0.875rem'}} />
               </div>
               <div>
-                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Inspector</label>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Inspector</label>
                 <input disabled={!!isSigned} className="text-input" value={form.inspector_nombre} onChange={set('inspector_nombre')} style={{fontSize:'0.875rem'}} />
               </div>
               <div>
-                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Bodega</label>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Bodega</label>
                 <input disabled={!!isSigned} className="text-input" value={form.bodega} onChange={set('bodega')} placeholder="N° bodega" style={{fontSize:'0.875rem'}} />
               </div>
               <div>
-                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'#6B6760',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Estacionamiento</label>
+                <label style={{fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',textTransform:'uppercase',letterSpacing:'0.06em',display:'block',marginBottom:'0.25rem'}}>Estacionamiento</label>
                 <input disabled={!!isSigned} className="text-input" value={form.estacionamiento} onChange={set('estacionamiento')} placeholder="N° estac." style={{fontSize:'0.875rem'}} />
               </div>
 
@@ -2774,7 +3003,7 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
             {label:'Lavavajillas', field:'art_lavavajillas'},
             {label:'Refrigerador', field:'art_refrigerador'},
             {label:'Lavadora / Secadora', field:'art_lavadora'},
-            {label:'Aire acondicionado / Climatización', field:'art_aire'},
+            {label:'Climatización (AC)', field:'art_aire'},
             {label:'Alarma de seguridad', field:'art_alarma'},
             {label:'Citófono / Videoportero', field:'art_citofono'},
             {label:'Portón automático', field:'art_porton'},
@@ -2797,7 +3026,7 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
             ].map(function(item) {
               return (
                 <div key={item.label} style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0.5rem',alignItems:'center',marginBottom:'0.75rem'}}>
-                  <span style={{fontSize:'0.875rem',color:'#1A1814'}}>{item.label}</span>
+                  <span style={{fontSize:'0.875rem',color:'var(--text-primary)'}}>{item.label}</span>
                   <input disabled={!!isSigned} className="text-input" value={form[item.num]} onChange={set(item.num)} placeholder="N° medidor" style={{fontSize:'0.8rem'}} />
                   <input disabled={!!isSigned} className="text-input" inputMode="decimal" value={form[item.val]} onChange={set(item.val)} placeholder="Lectura" style={{fontSize:'0.8rem'}} />
                 </div>
@@ -2823,9 +3052,9 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
         </ActSection>
 
         {/* Observaciones */}
-        <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',marginBottom:'1rem',overflow:'hidden'}}>
+        <div style={{background:'#fff',borderRadius:'12px',border:'1px solid var(--border-subtle)',marginBottom:'1rem',overflow:'hidden'}}>
           <div style={{padding:'0.875rem 1.25rem',borderBottom:'1px solid #F3F0EB',background:'#FAFAF9'}}>
-            <h3 style={{margin:0,fontSize:'0.875rem',fontWeight:'700',color:'#1A1814'}}>Observaciones</h3>
+            <h3 style={{margin:0,fontSize:'0.875rem',fontWeight:'700',color:'var(--text-primary)'}}>Observaciones</h3>
           </div>
           <div style={{padding:'1rem 1.25rem'}}>
             <textarea disabled={!!isSigned} className="text-area" rows={3} value={form.observaciones} onChange={set('observaciones')} placeholder="Observaciones generales al momento de la entrega..." style={{fontSize:'0.875rem'}} />
@@ -2834,15 +3063,15 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
 
         {/* Hallazgos adjuntos */}
         {entries.length > 0 && (
-          <div style={{background:'#F7F5F0',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1rem 1.25rem',marginBottom:'1rem'}}>
-            <p style={{fontSize:'0.8rem',fontWeight:'600',color:'#6B6760',margin:'0 0 0.5rem'}}>
+          <div style={{background:'var(--surface-page)',borderRadius:'12px',border:'1px solid var(--border-subtle)',padding:'1rem 1.25rem',marginBottom:'1rem'}}>
+            <p style={{fontSize:'0.8rem',fontWeight:'600',color:'var(--text-tertiary)',margin:'0 0 0.5rem'}}>
               {isSigned ? 'Anexo I — Hallazgos declarados al firmar' : 'Se adjuntarán ' + entriesCount + ' hallazgo' + (entriesCount !== 1 ? 's' : '') + ' al acta como Anexo I'}
             </p>
             {(isSigned && deliveryAct.entries_snapshot ? deliveryAct.entries_snapshot : entries).map(function(e) {
               return (
-                <div key={e.id} style={{display:'flex',justifyContent:'space-between',fontSize:'0.8rem',padding:'0.3rem 0',borderBottom:'1px solid #E2DDD6',color:'#374151'}}>
+                <div key={e.id} style={{display:'flex',justifyContent:'space-between',fontSize:'0.8rem',padding:'0.3rem 0',borderBottom:'1px solid var(--border-subtle)',color:'#374151'}}>
                   <span>{e.title}</span>
-                  <span style={{color:'#6B6760',textTransform:'capitalize'}}>{e.severity}</span>
+                  <span style={{color:'var(--text-tertiary)',textTransform:'capitalize'}}>{e.severity}</span>
                 </div>
               )
             })}
@@ -2851,12 +3080,12 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
 
         {/* Firmas */}
         {!isSigned && (
-          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1.25rem',marginBottom:'1rem'}}>
-            <h3 style={{margin:'0 0 1rem',fontSize:'0.875rem',fontWeight:'700',color:'#1A1814'}}>Firmas</h3>
+          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid var(--border-subtle)',padding:'1.25rem',marginBottom:'1rem'}}>
+            <h3 style={{margin:'0 0 1rem',fontSize:'0.875rem',fontWeight:'700',color:'var(--text-primary)'}}>Firmas</h3>
             <ActSigCanvas label={'Firma del propietario' + (property.owner_name ? ' (' + property.owner_name + ')' : '')} value={ownerSigData} onChange={setOwnerSigData} disabled={false} />
             <ActSigCanvas label={'Firma del inspector (' + (form.inspector_nombre || currentUser.name) + ')'} value={inspectorSigData} onChange={setInspectorSigData} disabled={false} />
             <button onClick={handleSign} disabled={signing || !ownerSigData || !inspectorSigData}
-              style={{width:'100%',padding:'0.875rem',background: (ownerSigData && inspectorSigData) ? '#1A1814' : '#E2DDD6',color: (ownerSigData && inspectorSigData) ? '#fff' : '#6B6760',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:(ownerSigData && inspectorSigData)?'pointer':'default',marginTop:'0.5rem'}}>
+              style={{width:'100%',padding:'0.875rem',background: (ownerSigData && inspectorSigData) ? 'var(--text-primary)' : 'var(--border-subtle)',color: (ownerSigData && inspectorSigData) ? '#fff' : 'var(--text-tertiary)',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:(ownerSigData && inspectorSigData)?'pointer':'default',marginTop:'0.5rem'}}>
               {signing ? 'Firmando...' : '✅ Firmar y cerrar acta'}
             </button>
           </div>
@@ -2874,22 +3103,17 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
               {deliveryAct.signature_owner && (
                 <div>
-                  <p style={{fontSize:'0.72rem',color:'#6B6760',marginBottom:'0.4rem'}}>Propietario</p>
-                  <img src={deliveryAct.signature_owner} alt="Firma propietario" style={{width:'100%',border:'1px solid #E2DDD6',borderRadius:'8px',background:'#FAFAF9'}} />
+                  <p style={{fontSize:'0.72rem',color:'var(--text-tertiary)',marginBottom:'0.4rem'}}>Propietario</p>
+                  <img src={deliveryAct.signature_owner} alt="Firma propietario" style={{width:'100%',border:'1px solid var(--border-subtle)',borderRadius:'8px',background:'#FAFAF9'}} />
                 </div>
               )}
               {deliveryAct.signature_inspector && (
                 <div>
-                  <p style={{fontSize:'0.72rem',color:'#6B6760',marginBottom:'0.4rem'}}>Inspector</p>
-                  <img src={deliveryAct.signature_inspector} alt="Firma inspector" style={{width:'100%',border:'1px solid #E2DDD6',borderRadius:'8px',background:'#FAFAF9'}} />
+                  <p style={{fontSize:'0.72rem',color:'var(--text-tertiary)',marginBottom:'0.4rem'}}>Inspector</p>
+                  <img src={deliveryAct.signature_inspector} alt="Firma inspector" style={{width:'100%',border:'1px solid var(--border-subtle)',borderRadius:'8px',background:'#FAFAF9'}} />
                 </div>
               )}
             </div>
-            <button
-              onClick={function() { generateActaPDF(deliveryAct, property, project && project.name) }}
-              style={{marginTop:'1rem',width:'100%',padding:'0.75rem',background:'#1A1814',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.9rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'0.5rem'}}>
-              📄 Descargar PDF del acta
-            </button>
           </div>
         )}
 
@@ -2897,9 +3121,9 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
 
       {/* Sticky bottom — botón registrar hallazgo (solo cuando no está firmada) */}
       {!isSigned && (
-        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'0.875rem 1rem',background:'rgba(247,245,240,0.95)',backdropFilter:'blur(8px)',borderTop:'1px solid #E2DDD6',zIndex:20}}>
+        <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'0.875rem 1rem',background:'rgba(247,245,240,0.95)',backdropFilter:'blur(8px)',borderTop:'1px solid var(--border-subtle)',zIndex:20}}>
           <button onClick={function() { onRegisterEntry() }}
-            style={{width:'100%',padding:'0.875rem',background:'#2D5A3D',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:'pointer'}}>
+            style={{width:'100%',padding:'0.875rem',background:'var(--primary-700)',color:'#fff',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:'pointer'}}>
             + Registrar hallazgo
           </button>
         </div>
@@ -2908,242 +3132,6 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
   )
 }) // end React.memo DeliveryActScreen
 
-function PublicPropertyScreen() {
-  var { token } = useParams()
-  var [data, setData] = useState(null)
-  var [loading, setLoading] = useState(true)
-  var [error, setError] = useState('')
-  var [lightbox, setLightbox] = useState(null)
 
-  useEffect(function() {
-    fetch(API_URL + '/public/properties/' + token)
-      .then(function(r) { return r.json() })
-      .then(function(d) {
-        if (d.error) { setError(d.error) } else { setData(d) }
-        setLoading(false)
-      })
-      .catch(function() { setError('No se pudo cargar la información'); setLoading(false) })
-  }, [token])
-
-  useEffect(function() {
-    if (!lightbox) return
-    var handler = function(e) {
-      if (e.key === 'Escape') setLightbox(null)
-      if (e.key === 'ArrowLeft') setLightbox(function(lb) { return lb ? { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } : null })
-      if (e.key === 'ArrowRight') setLightbox(function(lb) { return lb ? { images: lb.images, index: (lb.index + 1) % lb.images.length } : null })
-    }
-    window.addEventListener('keydown', handler)
-    return function() { window.removeEventListener('keydown', handler) }
-  }, [lightbox])
-
-  var severityColor = function(s) {
-    if (s === 'critico') return { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', label: 'Crítico' }
-    if (s === 'grave') return { bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412', label: 'Grave' }
-    if (s === 'moderado') return { bg: '#FEFCE8', border: '#FDE68A', text: '#92400E', label: 'Moderado' }
-    return { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534', label: 'Leve' }
-  }
-
-  var statusLabel = function(s) {
-    if (s === 'resuelto') return { label: 'Resuelto', bg: '#F0FDF4', color: '#166534', border: '#BBF7D0', dot: '#22C55E' }
-    if (s === 'en_progreso') return { label: 'En progreso', bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE', dot: '#3B82F6' }
-    return { label: 'Pendiente', bg: '#FFF7ED', color: '#9A3412', border: '#FED7AA', dot: '#F97316' }
-  }
-
-  if (loading) return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0'}}>
-      <div style={{textAlign:'center'}}>
-        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'#1A1814',marginBottom:'0.5rem'}}>BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
-        <p style={{color:'#6B6760',fontSize:'0.9rem'}}>Cargando información...</p>
-      </div>
-    </div>
-  )
-
-  if (error) return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#F7F5F0'}}>
-      <div style={{textAlign:'center',padding:'2rem'}}>
-        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'#1A1814',marginBottom:'1rem'}}>BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
-        <p style={{color:'#B91C1C'}}>{error}</p>
-      </div>
-    </div>
-  )
-
-  var summary = data.summary
-  var entries = data.entries
-
-  return (
-    <div style={{minHeight:'100vh',background:'#F7F5F0',fontFamily:"'DM Sans',system-ui,sans-serif",color:'#1A1814'}}>
-      {/* Header */}
-      <div style={{background:'#fff',borderBottom:'1px solid #E2DDD6',padding:'1rem 1.25rem',position:'sticky',top:0,zIndex:10}}>
-        <div style={{maxWidth:'680px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div style={{fontFamily:'Georgia,serif',fontSize:'1.1rem',fontWeight:'700',color:'#1A1814'}}>BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
-          <div style={{fontSize:'0.75rem',color:'#6B6760',background:'#F7F5F0',padding:'0.3rem 0.75rem',borderRadius:'100px',border:'1px solid #E2DDD6'}}>Vista propietario</div>
-        </div>
-      </div>
-
-      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.5rem 1.25rem 4rem'}}>
-
-        {/* Info propiedad */}
-        <div style={{background:'#fff',borderRadius:'14px',border:'1px solid #E2DDD6',padding:'1.5rem',marginBottom:'1.25rem'}}>
-          <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'#2D5A3D',marginBottom:'0.25rem'}}>{data.project_name}</p>
-          <h1 style={{fontFamily:'Georgia,serif',fontSize:'1.5rem',fontWeight:'700',margin:'0 0 0.25rem'}}>{data.unit_number}</h1>
-          {data.owner_name && <p style={{color:'#6B6760',fontSize:'0.9rem',margin:0}}>{data.owner_name}</p>}
-        </div>
-
-        {/* Dashboard resumen */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'0.75rem',marginBottom:'1.5rem'}}>
-          <div style={{background:'#F0FDF4',borderRadius:'12px',border:'1px solid #BBF7D0',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#166534'}}>{summary.resueltos}</div>
-            <div style={{fontSize:'0.72rem',color:'#166534',marginTop:'0.15rem'}}>Resuelto{summary.resueltos !== 1 ? 's' : ''}</div>
-          </div>
-          <div style={{background:'#EFF6FF',borderRadius:'12px',border:'1px solid #BFDBFE',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#1D4ED8'}}>{summary.en_progreso}</div>
-            <div style={{fontSize:'0.72rem',color:'#1D4ED8',marginTop:'0.15rem'}}>En progreso</div>
-          </div>
-          <div style={{background:'#FFF7ED',borderRadius:'12px',border:'1px solid #FED7AA',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#9A3412'}}>{summary.pendientes}</div>
-            <div style={{fontSize:'0.72rem',color:'#9A3412',marginTop:'0.15rem'}}>Pendiente{summary.pendientes !== 1 ? 's' : ''}</div>
-          </div>
-        </div>
-
-        {/* Barra de progreso */}
-        {summary.total > 0 && (
-          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #E2DDD6',padding:'1rem 1.25rem',marginBottom:'1.5rem'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.6rem'}}>
-              <span style={{fontSize:'0.8rem',color:'#6B6760'}}>Progreso de resolución</span>
-              <span style={{fontSize:'0.8rem',fontWeight:'600',color:'#166534'}}>{summary.resueltos} de {summary.total} resueltos</span>
-            </div>
-            <div style={{height:'8px',background:'#E2DDD6',borderRadius:'100px',overflow:'hidden'}}>
-              <div style={{height:'100%',background:'#22C55E',borderRadius:'100px',width:(summary.resueltos / summary.total * 100) + '%',transition:'width 0.5s ease'}} />
-            </div>
-          </div>
-        )}
-
-        {/* Lista hallazgos */}
-        {entries.length === 0 ? (
-          <div style={{textAlign:'center',padding:'3rem 1rem',color:'#6B6760'}}>
-            <p style={{fontSize:'2rem',marginBottom:'0.5rem'}}>✅</p>
-            <p>No hay hallazgos registrados para esta propiedad.</p>
-          </div>
-        ) : (
-          <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
-            {entries.map(function(entry) {
-              var sev = severityColor(entry.severity)
-              var st = statusLabel(entry.status)
-              return (
-                <div key={entry.id} style={{background:'#fff',borderRadius:'14px',border:'1px solid #E2DDD6',overflow:'hidden'}}>
-                  {/* Header hallazgo */}
-                  <div style={{padding:'1rem 1.25rem 0.75rem',borderBottom:'1px solid #F3F0EB'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'0.75rem',marginBottom:'0.5rem'}}>
-                      <h3 style={{fontSize:'0.95rem',fontWeight:'600',margin:0,lineHeight:1.4}}>{entry.title}</h3>
-                      <span style={{flexShrink:0,fontSize:'0.7rem',fontWeight:'600',padding:'0.2rem 0.6rem',borderRadius:'100px',background:st.bg,color:st.color,border:'1px solid '+st.border,display:'flex',alignItems:'center',gap:'0.3rem'}}>
-                        <span style={{width:'6px',height:'6px',borderRadius:'50%',background:st.dot,flexShrink:0}} />
-                        {st.label}
-                      </span>
-                    </div>
-                    <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
-                      <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:sev.bg,color:sev.text,border:'1px solid '+sev.border,fontWeight:'500'}}>{sev.label}</span>
-                      {entry.category && <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:'#F3F4F6',color:'#374151',border:'1px solid #E5E7EB',textTransform:'capitalize'}}>{entry.category}</span>}
-                      {entry.location && <span style={{fontSize:'0.7rem',color:'#6B6760'}}>📍 {entry.location}</span>}
-                    </div>
-                  </div>
-                  {/* Fotos */}
-                  {entry.images && entry.images.length > 0 && (
-                    <div style={{padding:'0.75rem 1.25rem 0'}}>
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'0.4rem'}}>
-                        {entry.images.map(function(img, idx) {
-                          return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',cursor:'zoom-in',borderRadius:'8px',border:'1px solid #E2DDD6'}} />
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  {/* Cuerpo */}
-                  <div style={{padding:'1rem 1.25rem',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
-                    {entry.description && <p style={{fontSize:'0.875rem',color:'#374151',lineHeight:1.7,margin:0}}>{entry.description}</p>}
-                    {entry.recommendation && (
-                      <div style={{background:'#FFFBEB',borderRadius:'8px',padding:'0.75rem',border:'1px solid #FDE68A'}}>
-                        <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#D97706',marginBottom:'0.3rem'}}>💡 Recomendación</p>
-                        <p style={{fontSize:'0.85rem',color:'#78350F',lineHeight:1.6,margin:0}}>{entry.recommendation}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* Footer */}
-        <div style={{textAlign:'center',marginTop:'3rem',paddingTop:'1.5rem',borderTop:'1px solid #E2DDD6'}}>
-          <p style={{fontSize:'0.75rem',color:'#C0BBB5'}}>Generado con <strong style={{color:'#2D5A3D'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
-        </div>
-      </div>
-
-      {/* Lightbox */}
-      {lightbox && (
-        <div onClick={function() { setLightbox(null) }} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <img src={lightbox.images[lightbox.index].filename} alt="" onClick={function(e) { e.stopPropagation() }} style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px'}} />
-          {lightbox.images.length > 1 && <>
-            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
-            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
-          </>}
-          <button onClick={function() { setLightbox(null) }} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ResetPasswordScreen({ onLogin }) {
-  var navigate = useNavigate()
-  var params = useParams()
-  var [password, setPassword] = useState('')
-  var [password2, setPassword2] = useState('')
-  var [loading, setLoading] = useState(false)
-  var [error, setError] = useState('')
-
-  var handleSubmit = async function() {
-    if (!password || !password2) return setError('Completa ambos campos')
-    if (password !== password2) return setError('Las contraseñas no coinciden')
-    if (password.length < 6) return setError('Mínimo 6 caracteres')
-    setLoading(true)
-    setError('')
-    try {
-      var res = await fetch(API_URL + '/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: params.token, new_password: password })
-      })
-      var data = await res.json()
-      if (!res.ok) return setError(data.error || 'Error al restablecer')
-      onLogin(data.token, data.user)
-      navigate('/proyectos', { replace: true })
-    } catch (err) {
-      setError('Error de conexión. Intenta de nuevo.')
-    }
-    setLoading(false)
-  }
-
-  return (
-    <div className="auth-screen">
-      <div className="auth-card">
-        <div className="auth-logo">BitácoraPro<span style={{color:'#2D5A3D'}}>.</span></div>
-        <h2 style={{fontFamily:'Georgia,serif', marginBottom:'0.5rem'}}>Nueva contraseña</h2>
-        <p style={{color:'#6B6760', fontSize:'0.9rem', marginBottom:'1.25rem'}}>Elige una contraseña nueva para tu cuenta.</p>
-        <div className="form-field">
-          <label>Nueva contraseña</label>
-          <input type="password" className="text-input" value={password} onChange={function(e) { setPassword(e.target.value) }} placeholder="Mínimo 6 caracteres" />
-        </div>
-        <div className="form-field">
-          <label>Repetir contraseña</label>
-          <input type="password" className="text-input" value={password2} onChange={function(e) { setPassword2(e.target.value) }} placeholder="Repite la contraseña" onKeyDown={function(e) { if(e.key === 'Enter') handleSubmit() }} />
-        </div>
-        {error && <p style={{color:'#B91C1C', fontSize:'0.875rem', marginBottom:'1rem'}}>{error}</p>}
-        <button className="submit-button" onClick={handleSubmit} disabled={loading}>
-          {loading ? 'Guardando...' : 'Guardar contraseña →'}
-        </button>
-      </div>
-    </div>
-  )
-}
 
 export default App
