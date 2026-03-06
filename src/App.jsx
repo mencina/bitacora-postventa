@@ -39,7 +39,7 @@ function HomeScreen() {
         /* NAV */
         .hp-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem var(--gutter);background:rgb(255, 255, 255);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);}
         .hp-logo{font-family: var(--font-sans);font-size:1.15rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:-0.02em;white-space:nowrap;}
-        .hp-logo span{color:var(--accent);}
+        .hp-logo img {height: 20px;width: auto; margin-top: 6px;}
         .hp-nav-links{display:flex;align-items:center;gap:1.5rem;}
         .hp-nav-link{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.875rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
         .hp-nav-link:hover{color:var(--ink);}
@@ -69,7 +69,7 @@ function HomeScreen() {
         .hp-eyebrow{display:inline-flex;align-items:center;gap:0.5rem;background:var(--accent-light);color:var(--accent);font-size:0.75rem;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;padding:0.4rem 1rem;border-radius:100px;margin-bottom:1.75rem;width:fit-content;animation:hp-fadeUp 0.7s 0.1s both;}
         .hp-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;}
         .hp-hero-title{font-family: var(--font-sans);font-size:clamp(2.4rem,7vw,5.5rem);line-height:1.05;font-weight:700;letter-spacing:-0.03em;max-width:14ch;margin-bottom:1.25rem;animation:hp-fadeUp 0.8s 0.2s both;}
-        .hp-hero-title em{font-style:italic;color:var(--accent);}
+        .hp-hero-title span{color:var(--accent);}
         .hp-hero-sub{font-size:1rem;color:var(--muted);max-width:44ch;line-height:1.75;margin-bottom:2rem;animation:hp-fadeUp 0.8s 0.35s both;}
         .hp-hero-actions{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;animation:hp-fadeUp 0.8s 0.5s both;}
         .hp-btn-primary{background:var(--ink);color:var(--white);padding:0.875rem 1.75rem;border-radius:8px;font-weight:500;font-size:0.95rem;font-family:var(--sans);border:none;cursor:pointer;transition:background 0.2s,transform 0.15s,box-shadow 0.2s;display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;white-space:nowrap;min-height:44px;}
@@ -135,7 +135,7 @@ function HomeScreen() {
           .hp-hero{min-height:auto;padding:4rem 1.25rem 3rem;}
           .hp-eyebrow{font-size:0.7rem;padding:0.35rem 0.875rem;margin-bottom:1.25rem;}
           .hp-hero-title{font-size:clamp(3rem,11vw,4rem);margin-bottom:1rem;}
-          .hp-hero-title .hp-nowrap{white-space:nowrap;}
+          .hp-hero-title .hp-nowrap { white-space: nowrap;}
           .hp-hero-sub{font-size:0.95rem;margin-bottom:1.5rem;}
           .hp-hero-actions{flex-direction:column;align-items:stretch;gap:0.75rem;}
           .hp-btn-primary{justify-content:center;padding:1rem;font-size:1rem;min-height:52px;}
@@ -163,7 +163,9 @@ function HomeScreen() {
 
       {/* NAV */}
       <nav className="hp-nav">
-        <div className="hp-logo">BitácoraPro<span>.</span></div>
+        <div className="hp-logo">
+          <img src="/logotipo.svg" alt="BitácoraPro" />
+        </div>
         <div className="hp-nav-links">
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-dolores').scrollIntoView({ behavior: 'smooth' }) }}>Por qué BitácoraPro</button>
           <button className="hp-nav-link" onClick={function() { document.getElementById('hp-como').scrollIntoView({ behavior: 'smooth' }) }}>Cómo funciona</button>
@@ -189,7 +191,7 @@ function HomeScreen() {
       {/* HERO */}
       <section className="hp-hero">
         <div className="hp-eyebrow">Postventa automatizada con IA</div>
-        <h1 className="hp-hero-title">Del hallazgo al informe, <em><span className="hp-nowrap">en segundos.</span></em></h1>
+        <h1 className="hp-hero-title">Del hallazgo al informe,<br /><span className="hp-nowrap">en segundos.</span></h1>
         <p className="hp-hero-sub">Tus equipos de postventa registran fotos y notas de voz en terreno. BitácoraPro genera la documentación técnica automáticamente, en tiempo real y sin retrabajo.</p>
         <div className="hp-hero-actions">
           <button className="hp-btn-primary" onClick={function() { window.open('mailto:mario.encina.d@gmail.com?subject=Solicitud%20de%20demo', '_blank') }}>Solicitar demo →</button>
@@ -552,8 +554,7 @@ function LoginScreen({ onLogin }) {
   <div className="auth-screen">
     <div className="auth-card">
       <div className="auth-logo">
-        <img src="/isotipo.svg" alt="BitácoraPro" width="40" height="40" />
-        <h1>BitácoraPro</h1>
+        <img src="/logotipo.svg" alt="BitácoraPro" width="180" height="40" />
         <p>Ingresa a tu cuenta</p>
       </div>
 
