@@ -39,7 +39,7 @@ function HomeScreen() {
         /* NAV */
         .hp-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.1rem var(--gutter);background:rgb(255, 255, 255);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);}
         .hp-logo{font-family: var(--font-sans);font-size:1.15rem;font-weight:700;color:var(--ink);cursor:pointer;letter-spacing:-0.02em;white-space:nowrap;}
-        .hp-logo img {height: 20px;width: auto; margin-top: 6px;}
+        .hp-logo img {height: 26px;width: auto; margin-top: 7px;}
         .hp-nav-links{display:flex;align-items:center;gap:1.5rem;}
         .hp-nav-link{background:none;border:none;cursor:pointer;color:var(--muted);font-size:0.875rem;font-family:var(--sans);transition:color 0.2s;padding:0;}
         .hp-nav-link:hover{color:var(--ink);}
@@ -54,7 +54,7 @@ function HomeScreen() {
         .hp-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
 
         /* MOBILE MENU */
-        .hp-mobile-menu{display:none;position:fixed;inset:0;z-index:190;background:rgba(247,245,240,0.98);backdrop-filter:blur(20px);flex-direction:column;align-items:stretch;justify-content:center;padding:2rem 1.5rem;gap:0;}
+        .hp-mobile-menu{display:none;position:fixed;inset:0;z-index:190;background:#F5F6FA;backdrop-filter:blur(20px);flex-direction:column;align-items:stretch;justify-content:center;padding:2rem 1.5rem;gap:0;}
         .hp-mobile-menu.open{display:flex;}
         .hp-mobile-menu .hp-nav-link{font-size:1.4rem;font-weight:400;color:var(--ink);padding:1rem 0;border-bottom:1px solid var(--line);text-align:left;}
         .hp-mobile-actions{display:flex;flex-direction:column;gap:0.75rem;margin-top:2rem;}
@@ -3332,7 +3332,7 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
       </div>
 
       {/* Sticky bottom */}
-      <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'0.875rem 1rem',paddingBottom:'calc(0.875rem + env(safe-area-inset-bottom))',background:'rgba(247,245,240,0.95)',backdropFilter:'blur(8px)',borderTop:'1px solid var(--border-subtle)',zIndex:20}}>
+      <div style={{position:'fixed',bottom:0,left:0,right:0,padding:'0.875rem 1rem',paddingBottom:'calc(0.875rem + env(safe-area-inset-bottom))',background:'rgba(255,255,255,1)',backdropFilter:'blur(8px)',borderTop:'1px solid var(--border-subtle)',zIndex:20}}>
         {isSigned ? (
           <button
             disabled={sendingPdf}

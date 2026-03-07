@@ -778,6 +778,8 @@ html, body {
 }
 .main {
   width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
   padding: 16px 16px 80px;
   padding-top: calc(52px + 36px + 16px); /* header + breadcrumb + espacio */
   box-sizing: border-box;
@@ -872,7 +874,7 @@ html, body {
    ============================================================ */
 
 /* Bloquear overflow en toda la jerarquía de la app */
-.app, .app * {
+.app, .app *:not(.main) {
   max-width: 100%;
 }
 
@@ -919,7 +921,7 @@ html, body {
   right: 0;
   padding: 12px 16px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  background: rgba(245, 246, 250, 0.92);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--border-subtle);
@@ -950,6 +952,25 @@ html, body {
 /* Dar espacio en el main para que el sticky no tape contenido */
 .main {
   padding-bottom: calc(80px + env(safe-area-inset-bottom));
+}
+
+/* ============================================================
+   DESKTOP — centrar layout en pantallas anchas
+   ============================================================ */
+@media (min-width: 640px) {
+  .app-header,
+  .app-breadcrumb {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 640px;
+  }
+
+  .sticky-cta {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 640px;
+    background-color: white;
+  }
 }
 
 /* Contenedor de botones en formularios */
