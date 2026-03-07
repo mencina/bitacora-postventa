@@ -1156,6 +1156,143 @@ app.post('/admin/create-company', superadminMiddleware, async function(req, res)
   }
 })
 
+// POST /projects/:id/dashboard/ai-analysis — análisis IA de patrones
+app.post('/projects/:id/dashboard/ai-analysis', authMiddleware, async function(req, res) {
+  try {
+    var projectId = req.params.id
+    var { ai_context, project_name, total_entries, by_category, by_severity, by_status } = req.body
+
+    if (!ai_context || !total_entries) return res.status(400).json({ error: 'Datos insuficientes' })
+
+    // Construir resumen compacto de métricas para el prompt
+    var catSummary = Object.entries(by_category || {}).sort(function(a,b) { return b[1]-a[1] }).map(function(kv) { return kv[0] + ': ' + kv[1] }).join(', ')
+    var sevSummary = Object.entries(by_severity || {}).map(function(kv) { return kv[0] + ': ' + kv[1] }).join(', ')
+    var stSummary = Object.entries(by_status || {}).map(function(kv) { return kv[0] + ': ' + kv[1] }).join(', ')
+
+    var prompt = 'Eres un experto en gestión de calidad y postventa inmobiliaria en Chile. Analiza los siguientes hallazgos de inspección del proyecto "' + project_name + '" y detecta patrones que indiquen problemas sistémicos con subcontratistas o la constructora.\n\n' +
+      'RESUMEN DE MÉTRICAS:\n' +
+      '- Total hallazgos: ' + total_entries + '\n' +
+      '- Por categoría: ' + catSummary + '\n' +
+      '- Por severidad: ' + sevSummary + '\n' +
+      '- Por estado: ' + stSummary + '\n\n' +
+      'DETALLE DE HALLAZGOS (formato: categoría|severidad|ubicación|propiedad):\n' + ai_context + '\n\n' +
+      'Genera un análisis ejecutivo breve con:\n' +
+      '1. Los 2-3 patrones más preocupantes (categorías o ubicaciones que se repiten en múltiples propiedades)\n' +
+      '2. Posibles causas sistémicas (subcontratista específico, material, proceso)\n' +
+      '3. Recomendaciones concretas para el equipo de gestión\n\n' +
+      'Sé directo, usa lenguaje de negocios. Máximo 250 palabras. Sin markdown, solo texto plano con saltos de línea.'
+
+    var message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 600,
+      messages: [{ role: 'user', content: prompt }]
+    })
+
+    var analysis = message.content.filter(function(b) { return b.type === 'text' }).map(function(b) { return b.text }).join('')
+    res.json({ analysis: analysis })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// === DASHBOARD DE PROYECTO ===
+app.get('/projects/:id/dashboard', authMiddleware, async function(req, res) {
+  try {
+    var projectId = req.params.id
+
+    // Verificar acceso: admin ve todos sus proyectos, inspector solo los que fue invitado
+    var projectCheck
+    if (req.user.role === 'admin') {
+      projectCheck = await pool.query('SELECT id, name FROM projects WHERE id = $1 AND company_id = $2', [projectId, req.user.company_id])
+    } else {
+      projectCheck = await pool.query(
+        'SELECT p.id, p.name FROM projects p JOIN project_members pm ON p.id = pm.project_id WHERE p.id = $1 AND pm.user_id = $2',
+        [projectId, req.user.id]
+      )
+    }
+    if (projectCheck.rows.length === 0) return res.status(404).json({ error: 'Proyecto no encontrado' })
+
+    // Todas las propiedades del proyecto
+    var propertiesResult = await pool.query(
+      'SELECT id, unit_number, owner_name FROM properties WHERE project_id = $1 ORDER BY unit_number ASC',
+      [projectId]
+    )
+    var properties = propertiesResult.rows
+
+    // Todos los hallazgos del proyecto (datos suficientes, sin imágenes ni texto largo)
+    var entriesResult = await pool.query(
+      `SELECT e.id, e.title, e.category, e.severity, e.status, e.location, e.property_id, p.unit_number
+       FROM entries e
+       JOIN properties p ON e.property_id = p.id
+       WHERE p.project_id = $1
+       ORDER BY e.created_at DESC`,
+      [projectId]
+    )
+    var entries = entriesResult.rows
+
+    // --- Métricas calculadas ---
+    var byStatus = { pendiente: 0, en_progreso: 0, resuelto: 0 }
+    var byCategory = {}
+    var bySeverity = { leve: 0, moderado: 0, grave: 0, critico: 0 }
+    var byProperty = {}
+
+    entries.forEach(function(e) {
+      // Estado
+      var st = e.status || 'pendiente'
+      byStatus[st] = (byStatus[st] || 0) + 1
+
+      // Categoría
+      byCategory[e.category] = (byCategory[e.category] || 0) + 1
+
+      // Severidad
+      var sv = e.severity || 'leve'
+      bySeverity[sv] = (bySeverity[sv] || 0) + 1
+
+      // Por propiedad
+      if (!byProperty[e.property_id]) {
+        byProperty[e.property_id] = { unit_number: e.unit_number, total: 0, pendiente: 0, en_progreso: 0, resuelto: 0 }
+      }
+      byProperty[e.property_id].total++
+      byProperty[e.property_id][st] = (byProperty[e.property_id][st] || 0) + 1
+    })
+
+    // Progreso de propiedades: cuántas tienen todos sus hallazgos resueltos
+    var propsWithEntries = Object.values(byProperty)
+    var propsCompleted = propsWithEntries.filter(function(p) { return p.total > 0 && p.resuelto === p.total }).length
+    var propsInProgress = propsWithEntries.filter(function(p) { return p.en_progreso > 0 || (p.resuelto > 0 && p.resuelto < p.total) }).length
+    var propsPending = propsWithEntries.filter(function(p) { return p.total > 0 && p.pendiente === p.total }).length
+    var propsNoEntries = properties.length - propsWithEntries.length
+
+    // Contexto compacto para IA: solo lo necesario para detectar patrones
+    var aiContext = entries.map(function(e) {
+      return e.category + '|' + e.severity + '|' + (e.location || '') + '|' + e.unit_number
+    }).join('\n')
+
+    res.json({
+      project: projectCheck.rows[0],
+      total_entries: entries.length,
+      total_properties: properties.length,
+      by_status: byStatus,
+      by_category: byCategory,
+      by_severity: bySeverity,
+      by_property: byProperty,
+      progress: {
+        completed: propsCompleted,
+        in_progress: propsInProgress,
+        pending: propsPending,
+        no_entries: propsNoEntries
+      },
+      // Lista completa para la tabla de gestión
+      entries: entries,
+      properties: properties,
+      // Contexto compacto para análisis IA
+      ai_context: aiContext
+    })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 var PORT = process.env.PORT || 3001
 initDB().then(function() {
   app.listen(PORT, '0.0.0.0', function() {

@@ -2096,6 +2096,7 @@ var handleLogin = function(newToken, user) {
         <Route path="/proyectos/:projectId/propiedades/:propertyId" element={<AppInterior {...interiorProps} vista="hallazgos" />} />
         <Route path="/proyectos/:projectId/propiedades/:propertyId/nuevo-hallazgo" element={<AppInterior {...interiorProps} vista="nuevo-hallazgo" />} />
         <Route path="/proyectos/:projectId/propiedades/:propertyId/acta" element={<AppInterior {...interiorProps} vista="acta" />} />
+        <Route path="/proyectos/:projectId/dashboard" element={<AppInterior {...interiorProps} vista="dashboard" />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
@@ -2303,7 +2304,7 @@ function AppInterior(props) {
   // cargar el proyecto desde la API si aún no está en estado
   useEffect(function() {
     if (!token) return
-    if (vista === 'propiedades' || vista === 'hallazgos' || vista === 'nueva-propiedad' || vista === 'nuevo-hallazgo' || vista === 'acta') {
+    if (vista === 'propiedades' || vista === 'hallazgos' || vista === 'nueva-propiedad' || vista === 'nuevo-hallazgo' || vista === 'acta' || vista === 'dashboard') {
       var projectId = parseInt(params.projectId)
       if (!currentProject || currentProject.id !== projectId) {
         authFetch(API_URL + '/projects').then(function(r) { return r.json() }).then(function(list) {
@@ -2460,6 +2461,19 @@ function AppInterior(props) {
       )
     }
 
+    // === VISTA: DASHBOARD ===
+    if (vista === 'dashboard') {
+      return (
+        <div className="app app--dashboard">
+          <AppHeader title={currentProject ? currentProject.name : 'Dashboard'} user={currentUser} onLogout={handleLogoutAndRedirect} onTeam={currentUser && currentUser.role === 'admin' ? handleOpenTeam : null} />
+          <AppBreadcrumb onBack={function() { navigate('/proyectos/' + (currentProject ? currentProject.id : '')) }} backLabel={currentProject ? currentProject.name : 'Proyecto'} />
+          <main className="main main--dashboard" id="app-scroll">
+            {currentProject && <ProjectDashboardScreen project={currentProject} authFetch={authFetch} navigate={navigate} />}
+          </main>
+        </div>
+      )
+    }
+
     // Pantalla de carga — esperar que se hidrate currentProject desde la URL
     if (!currentProject) {
       return <div className="app"><main className="main" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}><p style={{color:'var(--text-tertiary)'}}>Cargando...</p></main></div>
@@ -2587,6 +2601,26 @@ function AppInterior(props) {
 
             {!loadingProperties && properties.length === 0 && (
               <div className="welcome-message"><h2>Sin propiedades</h2><p>Agrega las propiedades del proyecto para comenzar la inspección.</p></div>
+            )}
+            {/* Botón Dashboard — primer elemento de la lista */}
+            {properties.length > 0 && (
+              <div
+                onClick={function() { navigate('/proyectos/' + currentProject.id + '/dashboard') }}
+                style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',padding:'1rem 1.25rem',marginBottom:'0.75rem',cursor:'pointer',transition:'box-shadow 0.15s,border-color 0.15s'}}
+                onMouseEnter={function(e) { e.currentTarget.style.boxShadow='var(--shadow-md)'; e.currentTarget.style.borderColor='var(--primary-200)' }}
+                onMouseLeave={function(e) { e.currentTarget.style.boxShadow='none'; e.currentTarget.style.borderColor='var(--border-subtle)' }}
+              >
+                <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>
+                  <div style={{width:'36px',height:'36px',background:'var(--primary-50)',borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-700)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                  </div>
+                  <div>
+                    <p style={{margin:0,fontWeight:'600',fontSize:'0.9rem',color:'var(--text-primary)'}}>Dashboard del proyecto</p>
+                    <p style={{margin:0,fontSize:'0.8rem',color:'var(--text-tertiary)'}}>Métricas, análisis IA y gestión de hallazgos</p>
+                  </div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
             )}
             <div className="projects-grid">
               {properties.map(function(prop) {
@@ -3393,5 +3427,384 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
 }) // end React.memo DeliveryActScreen
 
 
+
+// === DASHBOARD DE PROYECTO ===
+function ProjectDashboardScreen({ project, authFetch, navigate }) {
+  var [data, setData] = useState(null)
+  var [loading, setLoading] = useState(true)
+  var [error, setError] = useState('')
+  var [aiAnalysis, setAiAnalysis] = useState('')
+  var [aiLoading, setAiLoading] = useState(false)
+  var [aiDone, setAiDone] = useState(false)
+
+  // Filtros de la tabla
+  var [filterProperty, setFilterProperty] = useState('all')
+  var [filterStatus, setFilterStatus] = useState('all')
+  var [filterCategory, setFilterCategory] = useState('all')
+  var [filterSeverity, setFilterSeverity] = useState('all')
+  var [sortField, setSortField] = useState('unit_number')
+  var [sortDir, setSortDir] = useState('asc')
+
+  var CATEGORIES = {
+    estructural: { label: 'Estructural', color: '#B91C1C' },
+    terminaciones: { label: 'Terminaciones', color: '#1D4ED8' },
+    instalaciones: { label: 'Instalaciones', color: '#B45309' },
+    humedad: { label: 'Humedad', color: '#0F766E' },
+    electrico: { label: 'Eléctrico', color: '#7C3AED' },
+    otro: { label: 'Otro', color: '#6B6F82' }
+  }
+  var SEVERITIES = {
+    leve: { label: 'Leve', color: '#15803D', bg: '#F0FDF4' },
+    moderado: { label: 'Moderado', color: '#B45309', bg: '#FFFBEB' },
+    grave: { label: 'Grave', color: '#9A3412', bg: '#FFF7ED' },
+    critico: { label: 'Crítico', color: '#6D28D9', bg: '#F5F3FF' }
+  }
+  var STATUSES = {
+    pendiente: { label: 'Pendiente', color: '#B45309', bg: '#FEF3C7' },
+    en_progreso: { label: 'En progreso', color: '#1D4ED8', bg: '#DBEAFE' },
+    resuelto: { label: 'Resuelto', color: '#15803D', bg: '#DCFCE7' }
+  }
+
+  useEffect(function() {
+    authFetch(API_URL + '/projects/' + project.id + '/dashboard')
+      .then(function(r) { return r.json() })
+      .then(function(d) {
+        if (d.error) { setError(d.error) } else { setData(d) }
+        setLoading(false)
+      })
+      .catch(function() { setError('No se pudo cargar el dashboard'); setLoading(false) })
+  }, [project.id])
+
+  var handleAiAnalysis = async function() {
+    if (!data || data.total_entries === 0) return
+    setAiLoading(true); setAiAnalysis(''); setAiDone(false)
+    try {
+      var response = await authFetch(API_URL + '/projects/' + project.id + '/dashboard/ai-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ai_context: data.ai_context, project_name: project.name, total_entries: data.total_entries, by_category: data.by_category, by_severity: data.by_severity, by_status: data.by_status })
+      })
+      var result = await response.json()
+      setAiAnalysis(result.analysis || '')
+      setAiDone(true)
+    } catch(e) { setAiAnalysis('No se pudo generar el análisis. Intenta de nuevo.'); setAiDone(true) }
+    setAiLoading(false)
+  }
+
+  var handleStatusChange = async function(entryId, newStatus) {
+    var entry = data.entries.find(function(e) { return e.id === entryId })
+    if (!entry) return
+    try {
+      var r = await authFetch(API_URL + '/entries/' + entryId, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: entry.title || '',
+          description: entry.description || '',
+          recommendation: entry.recommendation || '',
+          category: entry.category || 'otro',
+          severity: entry.severity || 'leve',
+          location: entry.location || '',
+          status: newStatus
+        })
+      })
+      if (r.ok) {
+        setData(function(prev) {
+          var newEntries = prev.entries.map(function(e) { return e.id === entryId ? Object.assign({}, e, { status: newStatus }) : e })
+          // Recalcular by_status
+          var byStatus = { pendiente: 0, en_progreso: 0, resuelto: 0 }
+          newEntries.forEach(function(e) { var st = e.status || 'pendiente'; byStatus[st] = (byStatus[st] || 0) + 1 })
+          return Object.assign({}, prev, { entries: newEntries, by_status: byStatus })
+        })
+      }
+    } catch(e) { alert('Error al actualizar estado') }
+  }
+
+  var copyEntryLink = function(entryId) {
+    var url = window.location.origin + '/h/' + entryId
+    copyToClipboard(url, function() { alert('✅ Link copiado al portapapeles') })
+  }
+
+  var handleSort = function(field) {
+    if (sortField === field) { setSortDir(function(d) { return d === 'asc' ? 'desc' : 'asc' }) }
+    else { setSortField(field); setSortDir('asc') }
+  }
+
+  if (loading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}>
+      <p style={{color:'var(--text-tertiary)'}}>Cargando dashboard...</p>
+    </div>
+  )
+
+  if (error) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'60vh'}}>
+      <p style={{color:'#B91C1C'}}>{error}</p>
+    </div>
+  )
+
+  // Filtrar y ordenar la tabla
+  var filteredEntries = (data.entries || []).filter(function(e) {
+    if (filterProperty !== 'all' && String(e.property_id) !== filterProperty) return false
+    if (filterStatus !== 'all' && e.status !== filterStatus) return false
+    if (filterCategory !== 'all' && e.category !== filterCategory) return false
+    if (filterSeverity !== 'all' && e.severity !== filterSeverity) return false
+    return true
+  }).sort(function(a, b) {
+    var av = a[sortField] || ''; var bv = b[sortField] || ''
+    var severityOrder = { critico: 0, grave: 1, moderado: 2, leve: 3 }
+    var statusOrder = { pendiente: 0, en_progreso: 1, resuelto: 2 }
+    if (sortField === 'severity') { av = severityOrder[a.severity] ?? 4; bv = severityOrder[b.severity] ?? 4 }
+    if (sortField === 'status') { av = statusOrder[a.status] ?? 3; bv = statusOrder[b.status] ?? 3 }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1
+    if (av > bv) return sortDir === 'asc' ? 1 : -1
+    return 0
+  })
+
+  var total = data.total_entries
+  var bs = data.by_status
+  var pct = function(n) { return total > 0 ? Math.round((n / total) * 100) : 0 }
+
+  var statCard = function(label, value, color, sublabel) {
+    return (
+      <div style={{background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',padding:'1.25rem 1.5rem',minWidth:0}}>
+        <p style={{margin:'0 0 0.25rem',fontSize:'0.75rem',fontWeight:'500',letterSpacing:'0.06em',textTransform:'uppercase',color:'var(--text-tertiary)'}}>{label}</p>
+        <p style={{margin:'0 0 0.25rem',fontSize:'2rem',fontWeight:'700',color: color || 'var(--text-primary)',lineHeight:1}}>{value}</p>
+        {sublabel && <p style={{margin:0,fontSize:'0.75rem',color:'var(--text-tertiary)'}}>{sublabel}</p>}
+      </div>
+    )
+  }
+
+  var sortIcon = function(field) {
+    if (sortField !== field) return <span style={{color:'#CBD5E1',marginLeft:'4px'}}>↕</span>
+    return <span style={{color:'var(--primary-700)',marginLeft:'4px'}}>{sortDir === 'asc' ? '↑' : '↓'}</span>
+  }
+
+  var thStyle = { padding:'0.65rem 1rem', textAlign:'left', fontSize:'0.75rem', fontWeight:'600', color:'var(--text-tertiary)', letterSpacing:'0.06em', textTransform:'uppercase', cursor:'pointer', whiteSpace:'nowrap', userSelect:'none', borderBottom:'1px solid var(--border-subtle)', background:'#F8F9FC' }
+  var tdStyle = { padding:'0.75rem 1rem', fontSize:'0.85rem', color:'var(--text-primary)', borderBottom:'1px solid var(--border-subtle)', verticalAlign:'middle' }
+
+  return (
+    <div style={{maxWidth:'1400px',margin:'0 auto',padding:'0 0 4rem'}}>
+
+      {/* ── MÉTRICAS PRINCIPALES ── */}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:'1rem',marginBottom:'1.5rem'}}>
+        {statCard('Total hallazgos', total, null, data.total_properties + ' propiedades')}
+        {statCard('Pendientes', bs.pendiente || 0, '#B45309', pct(bs.pendiente || 0) + '% del total')}
+        {statCard('En progreso', bs.en_progreso || 0, '#1D4ED8', pct(bs.en_progreso || 0) + '% del total')}
+        {statCard('Resueltos', bs.resuelto || 0, '#15803D', pct(bs.resuelto || 0) + '% del total')}
+        {statCard('Props. completadas', data.progress.completed, '#15803D', 'de ' + data.total_properties + ' propiedades')}
+      </div>
+
+      {/* ── FILA: CATEGORÍAS + SEVERIDADES + BARRA PROGRESO ── */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'1rem',marginBottom:'1.5rem'}}>
+
+        {/* Categorías */}
+        <div style={{background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',padding:'1.25rem 1.5rem'}}>
+          <p style={{margin:'0 0 1rem',fontSize:'0.75rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'var(--text-tertiary)'}}>Por categoría</p>
+          {Object.entries(data.by_category).sort(function(a,b) { return b[1]-a[1] }).map(function(kv) {
+            var cat = CATEGORIES[kv[0]] || { label: kv[0], color: '#6B6F82' }
+            var w = total > 0 ? (kv[1] / total * 100) : 0
+            return (
+              <div key={kv[0]} style={{marginBottom:'0.6rem'}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.2rem'}}>
+                  <span style={{fontSize:'0.8rem',fontWeight:'500',color:cat.color}}>{cat.label}</span>
+                  <span style={{fontSize:'0.8rem',color:'var(--text-tertiary)'}}>{kv[1]}</span>
+                </div>
+                <div style={{height:'6px',background:'#F1F3F9',borderRadius:'3px',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:w+'%',background:cat.color,borderRadius:'3px',transition:'width 0.5s'}} />
+                </div>
+              </div>
+            )
+          })}
+          {Object.keys(data.by_category).length === 0 && <p style={{fontSize:'0.8rem',color:'var(--text-tertiary)'}}>Sin hallazgos aún</p>}
+        </div>
+
+        {/* Severidades */}
+        <div style={{background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',padding:'1.25rem 1.5rem'}}>
+          <p style={{margin:'0 0 1rem',fontSize:'0.75rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'var(--text-tertiary)'}}>Por severidad</p>
+          {['critico','grave','moderado','leve'].map(function(sv) {
+            var def = SEVERITIES[sv]
+            var count = data.by_severity[sv] || 0
+            var w = total > 0 ? (count / total * 100) : 0
+            return (
+              <div key={sv} style={{marginBottom:'0.6rem'}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.2rem'}}>
+                  <span style={{fontSize:'0.8rem',fontWeight:'500',color:def.color}}>{def.label}</span>
+                  <span style={{fontSize:'0.8rem',color:'var(--text-tertiary)'}}>{count}</span>
+                </div>
+                <div style={{height:'6px',background:'#F1F3F9',borderRadius:'3px',overflow:'hidden'}}>
+                  <div style={{height:'100%',width:w+'%',background:def.color,borderRadius:'3px',transition:'width 0.5s'}} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Progreso por propiedad */}
+        <div style={{background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',padding:'1.25rem 1.5rem',overflow:'hidden'}}>
+          <p style={{margin:'0 0 1rem',fontSize:'0.75rem',fontWeight:'600',letterSpacing:'0.06em',textTransform:'uppercase',color:'var(--text-tertiary)'}}>Progreso propiedades</p>
+          <div style={{overflowY:'auto',maxHeight:'220px'}}>
+            {Object.entries(data.by_property).sort(function(a,b) { return a[1].unit_number.localeCompare(b[1].unit_number) }).map(function(kv) {
+              var p = kv[1]
+              var pctResuelto = p.total > 0 ? Math.round(p.resuelto / p.total * 100) : 0
+              var barColor = pctResuelto === 100 ? '#15803D' : pctResuelto > 0 ? '#1D4ED8' : '#B45309'
+              return (
+                <div key={kv[0]} style={{marginBottom:'0.55rem'}}>
+                  <div style={{display:'flex',justifyContent:'space-between',marginBottom:'0.15rem'}}>
+                    <span style={{fontSize:'0.78rem',fontWeight:'500',color:'var(--text-primary)'}}>{p.unit_number}</span>
+                    <span style={{fontSize:'0.75rem',color:'var(--text-tertiary)'}}>{p.resuelto}/{p.total}</span>
+                  </div>
+                  <div style={{height:'5px',background:'#F1F3F9',borderRadius:'3px',overflow:'hidden'}}>
+                    <div style={{height:'100%',width:pctResuelto+'%',background:barColor,borderRadius:'3px',transition:'width 0.5s'}} />
+                  </div>
+                </div>
+              )
+            })}
+            {data.progress.no_entries > 0 && <p style={{fontSize:'0.75rem',color:'var(--text-tertiary)',marginTop:'0.5rem'}}>{data.progress.no_entries} propiedad{data.progress.no_entries !== 1 ? 'es' : ''} sin hallazgos registrados</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* ── ANÁLISIS IA ── */}
+      <div style={{background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',padding:'1.5rem',marginBottom:'1.5rem'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom: aiAnalysis ? '1rem' : 0}}>
+          <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>
+            <div style={{width:'32px',height:'32px',background:'var(--primary-50)',borderRadius:'8px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary-700)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+              <p style={{margin:0,fontWeight:'600',fontSize:'0.9rem',color:'var(--text-primary)'}}>Análisis de patrones con IA</p>
+              <p style={{margin:0,fontSize:'0.78rem',color:'var(--text-tertiary)'}}>Claude analiza los hallazgos y detecta problemas sistémicos</p>
+            </div>
+          </div>
+          <button
+            onClick={handleAiAnalysis}
+            disabled={aiLoading || total === 0}
+            style={{padding:'0.55rem 1.25rem',background: aiLoading || total === 0 ? 'var(--border-subtle)' : 'var(--primary-700)',color: aiLoading || total === 0 ? 'var(--text-tertiary)' : '#fff',border:'none',borderRadius:'8px',fontWeight:'500',fontSize:'0.85rem',cursor: aiLoading || total === 0 ? 'default' : 'pointer',flexShrink:0,transition:'background 0.2s'}}
+          >
+            {aiLoading ? 'Analizando...' : aiDone ? 'Regenerar análisis' : 'Generar análisis'}
+          </button>
+        </div>
+        {aiLoading && (
+          <div style={{padding:'1rem 0',display:'flex',alignItems:'center',gap:'0.75rem'}}>
+            <div style={{width:'16px',height:'16px',border:'2px solid var(--primary-200)',borderTopColor:'var(--primary-700)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
+            <span style={{fontSize:'0.85rem',color:'var(--text-tertiary)'}}>Analizando {total} hallazgos en {data.total_properties} propiedades...</span>
+          </div>
+        )}
+        {aiAnalysis && !aiLoading && (
+          <div style={{background:'var(--primary-50)',border:'1px solid var(--primary-100)',borderRadius:'12px',padding:'1.25rem',whiteSpace:'pre-wrap',fontSize:'0.875rem',color:'var(--text-primary)',lineHeight:'1.75'}}>
+            {aiAnalysis}
+          </div>
+        )}
+        {total === 0 && <p style={{margin:'0.75rem 0 0',fontSize:'0.85rem',color:'var(--text-tertiary)'}}>El proyecto no tiene hallazgos aún.</p>}
+      </div>
+
+      {/* ── TABLA DE GESTIÓN ── */}
+      <div style={{background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',overflow:'hidden'}}>
+        {/* Header tabla */}
+        <div style={{padding:'1.25rem 1.5rem',borderBottom:'1px solid var(--border-subtle)',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'0.75rem'}}>
+          <div>
+            <p style={{margin:0,fontWeight:'600',fontSize:'0.9rem',color:'var(--text-primary)'}}>Gestión de hallazgos</p>
+            <p style={{margin:0,fontSize:'0.78rem',color:'var(--text-tertiary)'}}>{filteredEntries.length} de {total} hallazgos</p>
+          </div>
+          {/* Filtros */}
+          <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
+            <select value={filterProperty} onChange={function(e) { setFilterProperty(e.target.value) }} style={{padding:'0.4rem 0.75rem',border:'1px solid var(--border-subtle)',borderRadius:'6px',fontSize:'0.8rem',color:'var(--text-primary)',background:'var(--surface-1)',cursor:'pointer'}}>
+              <option value="all">Todas las propiedades</option>
+              {(data.properties || []).map(function(p) { return <option key={p.id} value={String(p.id)}>{p.unit_number}</option> })}
+            </select>
+            <select value={filterStatus} onChange={function(e) { setFilterStatus(e.target.value) }} style={{padding:'0.4rem 0.75rem',border:'1px solid var(--border-subtle)',borderRadius:'6px',fontSize:'0.8rem',color:'var(--text-primary)',background:'var(--surface-1)',cursor:'pointer'}}>
+              <option value="all">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="en_progreso">En progreso</option>
+              <option value="resuelto">Resuelto</option>
+            </select>
+            <select value={filterCategory} onChange={function(e) { setFilterCategory(e.target.value) }} style={{padding:'0.4rem 0.75rem',border:'1px solid var(--border-subtle)',borderRadius:'6px',fontSize:'0.8rem',color:'var(--text-primary)',background:'var(--surface-1)',cursor:'pointer'}}>
+              <option value="all">Todas las categorías</option>
+              {Object.entries(CATEGORIES).map(function(kv) { return <option key={kv[0]} value={kv[0]}>{kv[1].label}</option> })}
+            </select>
+            <select value={filterSeverity} onChange={function(e) { setFilterSeverity(e.target.value) }} style={{padding:'0.4rem 0.75rem',border:'1px solid var(--border-subtle)',borderRadius:'6px',fontSize:'0.8rem',color:'var(--text-primary)',background:'var(--surface-1)',cursor:'pointer'}}>
+              <option value="all">Todas las severidades</option>
+              <option value="critico">Crítico</option>
+              <option value="grave">Grave</option>
+              <option value="moderado">Moderado</option>
+              <option value="leve">Leve</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Tabla */}
+        <div style={{overflowX:'auto'}}>
+          <table style={{width:'100%',borderCollapse:'collapse',fontSize:'0.875rem'}}>
+            <thead>
+              <tr>
+                <th style={thStyle} onClick={function() { handleSort('unit_number') }}>Propiedad {sortIcon('unit_number')}</th>
+                <th style={thStyle} onClick={function() { handleSort('title') }}>Hallazgo {sortIcon('title')}</th>
+                <th style={thStyle} onClick={function() { handleSort('category') }}>Categoría {sortIcon('category')}</th>
+                <th style={thStyle} onClick={function() { handleSort('severity') }}>Severidad {sortIcon('severity')}</th>
+                <th style={thStyle} onClick={function() { handleSort('status') }}>Estado {sortIcon('status')}</th>
+                <th style={Object.assign({}, thStyle, {cursor:'default'})}>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredEntries.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{padding:'2.5rem',textAlign:'center',color:'var(--text-tertiary)',fontSize:'0.85rem'}}>
+                    No hay hallazgos con los filtros seleccionados
+                  </td>
+                </tr>
+              )}
+              {filteredEntries.map(function(entry) {
+                var cat = CATEGORIES[entry.category] || { label: entry.category, color: '#6B6F82' }
+                var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
+                var st = STATUSES[entry.status] || STATUSES.pendiente
+                return (
+                  <tr key={entry.id} style={{transition:'background 0.1s'}} onMouseEnter={function(e) { e.currentTarget.style.background='#F8F9FC' }} onMouseLeave={function(e) { e.currentTarget.style.background='' }}>
+                    <td style={tdStyle}>
+                      <span style={{fontWeight:'600',color:'var(--primary-700)'}}>{entry.unit_number}</span>
+                    </td>
+                    <td style={Object.assign({}, tdStyle, {maxWidth:'280px'})}>
+                      <span style={{display:'block',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={entry.title}>{entry.title || '—'}</span>
+                      {entry.location && <span style={{fontSize:'0.75rem',color:'var(--text-tertiary)'}}>{entry.location}</span>}
+                    </td>
+                    <td style={tdStyle}>
+                      <span style={{background:cat.color+'18',color:cat.color,border:'1px solid '+cat.color+'30',padding:'0.2rem 0.6rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500',whiteSpace:'nowrap'}}>{cat.label}</span>
+                    </td>
+                    <td style={tdStyle}>
+                      <span style={{background:sev.bg,color:sev.color,border:'1px solid '+sev.color+'40',padding:'0.2rem 0.6rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500',whiteSpace:'nowrap'}}>{sev.label}</span>
+                    </td>
+                    <td style={tdStyle}>
+                      <select
+                        value={entry.status || 'pendiente'}
+                        onChange={function(e) { handleStatusChange(entry.id, e.target.value) }}
+                        style={{background:st.bg,color:st.color,border:'1px solid '+st.color+'40',padding:'0.25rem 0.5rem',borderRadius:'6px',fontSize:'0.78rem',fontWeight:'500',cursor:'pointer',outline:'none'}}
+                      >
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_progreso">En progreso</option>
+                        <option value="resuelto">Resuelto</option>
+                      </select>
+                    </td>
+                    <td style={tdStyle}>
+                      <button
+                        onClick={function() { copyEntryLink(entry.id) }}
+                        title="Copiar link público"
+                        style={{background:'none',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.25rem 0.5rem',cursor:'pointer',fontSize:'0.75rem',color:'var(--text-tertiary)',transition:'border-color 0.15s,color 0.15s'}}
+                        onMouseEnter={function(e) { e.currentTarget.style.borderColor='var(--primary-700)'; e.currentTarget.style.color='var(--primary-700)' }}
+                        onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
+                      >
+                        🔗 Copiar link
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
 
 export default App

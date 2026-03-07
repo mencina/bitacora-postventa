@@ -789,6 +789,23 @@ html, body {
 .main--no-breadcrumb {
   padding-top: calc(52px + 16px);
 }
+/* Dashboard — ancho completo para desktop */
+.main--dashboard {
+  max-width: 100%;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2rem;
+}
+
+/* Dashboard — header y breadcrumb ocupan todo el ancho */
+@media (min-width: 640px) {
+  .app--dashboard .app-header,
+  .app--dashboard .app-breadcrumb {
+    left: 0;
+    transform: none;
+    width: 100%;
+  }
+}
 
 /* Fix — project card: stretch y border-radius */
 .project-card {
