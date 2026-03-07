@@ -434,14 +434,22 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
 
     if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Se requiere al menos una foto' })
 
-    // Preparar imágenes para IA (desde buffer en memoria)
-    var imagesForAI = req.files.map(function(file) {
-      return { base64: file.buffer.toString('base64'), type: file.mimetype }
-    })
+    // 1. Subir originales a Cloudinary primero (máxima calidad para el registro)
+    var cloudUrls = []
+    for (var k = 0; k < req.files.length; k++) {
+      var cloudUrl = await uploadToCloudinary(req.files[k].buffer, req.files[k].mimetype)
+      cloudUrls.push({ url: cloudUrl, originalName: req.files[k].originalname })
+    }
 
+    // 2. Preparar imágenes para IA usando URL transformada de Cloudinary
+    // c_limit,w_1200,h_1200 reduce a máx 1200px sin recortar, q_auto optimiza calidad
+    // Esto garantiza que cada imagen sea < 4MB para la API de Anthropic
     var content = []
-    for (var j = 0; j < imagesForAI.length; j++) {
-      content.push({ type: 'image', source: { type: 'base64', media_type: imagesForAI[j].type || 'image/jpeg', data: imagesForAI[j].base64 } })
+    for (var j = 0; j < cloudUrls.length; j++) {
+      // Insertar transformación en la URL de Cloudinary: /upload/ → /upload/c_limit,w_1200,h_1200,q_auto/
+      var originalUrl = cloudUrls[j].url
+      var aiUrl = originalUrl.replace('/upload/', '/upload/c_limit,w_1200,h_1200,q_auto:good,f_jpg/')
+      content.push({ type: 'image', source: { type: 'url', url: aiUrl } })
     }
 
     content.push({
@@ -449,6 +457,7 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
       text: 'Eres un inspector experto de post venta inmobiliaria en Chile. Analiza las imagenes de un hallazgo encontrado durante una inspeccion.\n\nProyecto: ' + (projectName || 'No especificado') + '\nPropiedad: ' + (unitNumber || 'No especificada') + '\n' + (inspectorNote ? 'Descripcion del inspector: "' + inspectorNote + '"' : '') + '\n\nBasandote en las imagenes' + (inspectorNote ? ' y la descripcion del inspector' : '') + ', genera un analisis detallado.\n\nResponde SOLO con un JSON valido (sin backticks, sin markdown, solo el JSON puro) con esta estructura:\n{"titulo": "Titulo corto y descriptivo del hallazgo", "descripcion": "Descripcion detallada y tecnica del hallazgo (2-3 oraciones)", "categoria": "Una de: estructural, terminaciones, instalaciones, humedad, electrico, otro", "severidad": "Una de: leve, moderado, grave, critico", "ubicacion_sugerida": "Ubicacion probable dentro de la propiedad", "recomendacion": "Accion correctiva recomendada (1-2 oraciones)", "elementos_afectados": ["lista", "de", "elementos", "afectados"]}',
     })
 
+    // 3. Analizar con Claude
     var message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1024,
@@ -458,16 +467,16 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
     var responseText = message.content.filter(function(b) { return b.type === 'text' }).map(function(b) { return b.text }).join('')
     var analysis = JSON.parse(responseText)
 
+    // 4. Guardar hallazgo en BD
     var entryResult = await pool.query(
       'INSERT INTO entries (property_id, created_by, title, description, inspector_note, category, severity, location, recommendation, affected_elements, ai_generated) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 1) RETURNING *',
       [propertyId, req.user.id, analysis.titulo, analysis.descripcion, inspectorNote, analysis.categoria, analysis.severidad, analysis.ubicacion_sugerida, analysis.recomendacion, JSON.stringify(analysis.elementos_afectados)]
     )
     var entry = entryResult.rows[0]
 
-    // Subir imágenes a Cloudinary y guardar URLs
-    for (var k = 0; k < req.files.length; k++) {
-      var cloudUrl = await uploadToCloudinary(req.files[k].buffer, req.files[k].mimetype)
-      await pool.query('INSERT INTO images (entry_id, filename, original_name) VALUES ($1, $2, $3)', [entry.id, cloudUrl, req.files[k].originalname])
+    // 5. Guardar URLs originales de Cloudinary en BD
+    for (var m = 0; m < cloudUrls.length; m++) {
+      await pool.query('INSERT INTO images (entry_id, filename, original_name) VALUES ($1, $2, $3)', [entry.id, cloudUrls[m].url, cloudUrls[m].originalName])
     }
 
     var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])

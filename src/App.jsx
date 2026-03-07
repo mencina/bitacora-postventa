@@ -2702,70 +2702,28 @@ function AppInterior(props) {
           <AppHeader title={currentProperty ? currentProperty.unit_number : 'Nuevo hallazgo'} user={currentUser} onLogout={handleLogoutAndRedirect} />
           <AppBreadcrumb onBack={goBackToEntries} backLabel={currentProperty ? currentProperty.unit_number : 'Propiedad'} />
           <main className="main">
-            <div className="form-card">
-              <div className="form-header">
-                <h3>Nuevo Hallazgo{currentProperty ? ' — ' + currentProperty.unit_number : ''}</h3>
-              </div>
-              <div className="form-field">
-                <label>Fotos del hallazgo</label>
-                <div className="upload-area" onClick={function() { if (!isAnalyzing) fileInputRef.current.click() }}>
-                  <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} />
-                  {imagePreviews.length === 0 ? (
-                    <div className="upload-placeholder"><span className="upload-icon">📸</span><p>Toca aqui para subir fotos</p><p className="upload-hint">Puedes seleccionar varias a la vez</p></div>
-                  ) : (
-                    <div className="image-grid">
-                      {imagePreviews.map(function(img, index) {
-                        return (<div key={img.id} className="image-thumb"><img src={img.preview} alt="" />{!isAnalyzing && <button className="remove-image" onClick={function(e) { e.stopPropagation(); removeImage(index) }}>X</button>}</div>)
-                      })}
-                      {!isAnalyzing && <div className="add-more-images">+</div>}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="form-field">
-                <label>Descripcion del inspector</label>
-                <div className="audio-section">
-                  <button className={'record-btn' + (isRecording ? ' recording' : '')} onClick={toggleRecording} disabled={isAnalyzing} type="button">
-                    {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content">🎙 Grabar audio</span>}
-                  </button>
-                  <textarea placeholder="Habla o escribe tu descripcion aqui..." value={description} onChange={function(e) { setDescription(e.target.value) }} className="text-area" rows={3} disabled={isAnalyzing} />
-                  {description && <p className="audio-hint">Puedes editar el texto antes de enviar</p>}
-                </div>
-              </div>
-              <div className="form-actions">
-                <button className={'submit-button' + (isAnalyzing ? ' analyzing' : '')} onClick={async function() {
-                  if (imageFiles.length === 0) { alert('Sube al menos una foto'); return }
-                  setIsAnalyzing(true)
-                  try {
-                    var formData = new FormData()
-                    imageFiles.forEach(function(f) { formData.append('photos', f) })
-                    formData.append('inspector_note', description.trim())
-                    formData.append('project_name', currentProject.name)
-                    formData.append('unit_number', currentProperty.unit_number)
-                    var response = await authFetch(API_URL + '/properties/' + currentProperty.id + '/entries', { method: 'POST', body: formData })
-                    var data = await response.json()
-                    if (data.success) {
-                      setEntries(function(prev) { return [data.entry].concat(prev) })
-                      setDescription(''); setImageFiles([]); setImagePreviews([])
-                      if (cameFromAct) {
-                        setCameFromAct(false)
-                        navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id + '/acta', { replace: true })
-                        setActToast('✅ Hallazgo registrado')
-                        setTimeout(function() { setActToast('') }, 2500)
-                      } else {
-                        navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id, { replace: true })
-                      }
-                    } else { alert('Error: ' + data.error) }
-                  } catch (error) { alert('No se pudo conectar con el servidor'); console.error(error) }
-                  setIsAnalyzing(false)
-                }} disabled={isAnalyzing}>
-                  {isAnalyzing ? <span className="analyzing-text"><span className="spinner"></span> Analizando con IA...</span> : 'Analizar y Registrar'}
-                </button>
-                {!isAnalyzing && (
-                  <button className="cancel-button" onClick={goBackToEntries}>Cancelar</button>
-                )}
-              </div>
-            </div>
+            <NuevoHallazgoForm
+              currentProject={currentProject}
+              currentProperty={currentProperty}
+              description={description}
+              setDescription={setDescription}
+              imageFiles={imageFiles}
+              setImageFiles={props.setImageFiles}
+              imagePreviews={imagePreviews}
+              setImagePreviews={props.setImagePreviews}
+              isRecording={isRecording}
+              toggleRecording={toggleRecording}
+              removeImage={removeImage}
+              handleImageUpload={handleImageUpload}
+              fileInputRef={fileInputRef}
+              authFetch={authFetch}
+              setEntries={setEntries}
+              cameFromAct={cameFromAct}
+              setCameFromAct={setCameFromAct}
+              setActToast={setActToast}
+              navigate={navigate}
+              goBackToEntries={goBackToEntries}
+            />
           </main>
         </div>
       )
@@ -3803,6 +3761,128 @@ function ProjectDashboardScreen({ project, authFetch, navigate }) {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
+
+// === FORMULARIO NUEVO HALLAZGO (componente separado para tener su propio estado) ===
+function NuevoHallazgoForm(props) {
+  var [analyzing, setAnalyzing] = useState(false)
+
+  var currentProject = props.currentProject
+  var currentProperty = props.currentProperty
+  var description = props.description
+  var setDescription = props.setDescription
+  var imageFiles = props.imageFiles
+  var imagePreviews = props.imagePreviews
+  var isRecording = props.isRecording
+  var toggleRecording = props.toggleRecording
+  var removeImage = props.removeImage
+  var handleImageUpload = props.handleImageUpload
+  var fileInputRef = props.fileInputRef
+  var authFetch = props.authFetch
+  var setEntries = props.setEntries
+  var cameFromAct = props.cameFromAct
+  var setCameFromAct = props.setCameFromAct
+  var setActToast = props.setActToast
+  var navigate = props.navigate
+  var goBackToEntries = props.goBackToEntries
+  var setImageFiles = props.setImageFiles
+  var setImagePreviews = props.setImagePreviews
+
+  var handleSubmit = async function() {
+    if (imageFiles.length === 0) { alert('Sube al menos una foto'); return }
+    setAnalyzing(true)
+    try {
+      var formData = new FormData()
+      imageFiles.forEach(function(f) { formData.append('photos', f) })
+      formData.append('inspector_note', description.trim())
+      formData.append('project_name', currentProject.name)
+      formData.append('unit_number', currentProperty.unit_number)
+      var response = await authFetch(API_URL + '/properties/' + currentProperty.id + '/entries', { method: 'POST', body: formData })
+      var data = await response.json()
+      if (data.success) {
+        setEntries(function(prev) { return [data.entry].concat(prev) })
+        setDescription(''); setImageFiles([]); setImagePreviews([])
+        if (cameFromAct) {
+          setCameFromAct(false)
+          navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id + '/acta', { replace: true })
+          setActToast('✅ Hallazgo registrado')
+          setTimeout(function() { setActToast('') }, 2500)
+        } else {
+          navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id, { replace: true })
+        }
+      } else { alert('Error: ' + data.error) }
+    } catch (error) { alert('No se pudo conectar con el servidor'); console.error(error) }
+    setAnalyzing(false)
+  }
+
+  return (
+    <div className="form-card">
+      <div className="form-header">
+        <h3>Nuevo Hallazgo{currentProperty ? ' — ' + currentProperty.unit_number : ''}</h3>
+      </div>
+
+      {/* FOTOS */}
+      <div className="form-field">
+        <label>Fotos del hallazgo</label>
+        <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleImageUpload} style={{display:'none'}} />
+        <div style={{display:'flex',flexWrap:'wrap',gap:'0.5rem',padding:'0.5rem',background:'var(--surface-page)',borderRadius:'12px',border:'1.5px dashed var(--border-subtle)',minHeight:'80px',alignItems:'flex-start'}}>
+          {imagePreviews.map(function(img, index) {
+            return (
+              <div key={img.id} style={{position:'relative',width:'80px',height:'80px',flexShrink:0}}>
+                <img src={img.preview} alt="" style={{width:'80px',height:'80px',objectFit:'cover',borderRadius:'8px',border:'1px solid var(--border-subtle)',display:'block'}} />
+                {!analyzing && (
+                  <button
+                    onClick={function(e) { e.stopPropagation(); removeImage(index) }}
+                    style={{position:'absolute',top:'-6px',right:'-6px',width:'20px',height:'20px',background:'#1F2937',color:'#fff',border:'none',borderRadius:'50%',fontSize:'10px',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:'700',lineHeight:1}}
+                  >✕</button>
+                )}
+              </div>
+            )
+          })}
+          {!analyzing && imagePreviews.length > 0 && (
+            <button
+              onClick={function() { fileInputRef.current.click() }}
+              style={{width:'80px',height:'80px',flexShrink:0,background:'var(--surface-1)',border:'1.5px dashed var(--border-subtle)',borderRadius:'8px',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:'4px',color:'var(--text-tertiary)',fontSize:'1.25rem',transition:'border-color 0.15s,color 0.15s'}}
+              onMouseEnter={function(e) { e.currentTarget.style.borderColor='var(--primary-700)'; e.currentTarget.style.color='var(--primary-700)' }}
+              onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
+            >
+              <span>+</span>
+              <span style={{fontSize:'0.65rem',fontWeight:'500'}}>Foto</span>
+            </button>
+          )}
+          {imagePreviews.length === 0 && !analyzing && (
+            <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'1rem',color:'var(--text-tertiary)',gap:'0.25rem',cursor:'pointer'}} onClick={function() { fileInputRef.current.click() }}>
+              <span style={{fontSize:'1.5rem'}}>📸</span>
+              <span style={{fontSize:'0.8rem',fontWeight:'500'}}>Toca para agregar fotos</span>
+              <span style={{fontSize:'0.72rem'}}>Puedes agregar varias</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* AUDIO Y DESCRIPCIÓN */}
+      <div className="form-field">
+        <label>Descripcion del inspector</label>
+        <div className="audio-section">
+          <button className={'record-btn' + (isRecording ? ' recording' : '')} onClick={toggleRecording} disabled={analyzing} type="button">
+            {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content">🎙 Grabar audio</span>}
+          </button>
+          <textarea placeholder="Habla o escribe tu descripcion aqui..." value={description} onChange={function(e) { setDescription(e.target.value) }} className="text-area" rows={3} disabled={analyzing} />
+          {description && <p className="audio-hint">Puedes editar el texto antes de enviar</p>}
+        </div>
+      </div>
+
+      {/* ACCIONES */}
+      <div className="form-actions">
+        <button className={'submit-button' + (analyzing ? ' analyzing' : '')} onClick={handleSubmit} disabled={analyzing}>
+          {analyzing ? <span className="analyzing-text"><span className="spinner"></span> Analizando con IA...</span> : 'Analizar y Registrar'}
+        </button>
+        {!analyzing && (
+          <button className="cancel-button" onClick={goBackToEntries}>Cancelar</button>
+        )}
+      </div>
     </div>
   )
 }
