@@ -1003,3 +1003,11 @@ html, body {
   height: 48px;
   padding: 0 1rem;
 }
+
+/* ============================================================
+   FIX ZOOM MOBILE — inputs nunca menores a 16px
+   Previene zoom automático en Chrome y Safari al enfocar inputs
+   ============================================================ */
+input, textarea, select {
+  font-size: 16px !important;
+}
