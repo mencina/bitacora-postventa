@@ -1271,113 +1271,115 @@ function PublicEntryScreen() {
     return function() { window.removeEventListener('keydown', handleKey) }
   }, [lightbox])
 
-  var CATS = { estructural: { label: 'Estructural', color: '#DC2626', icon: '🏗️' }, humedad: { label: 'Humedad', color: '#2563EB', icon: '💧' }, electrico: { label: 'Eléctrico', color: '#D97706', icon: '⚡' }, terminaciones: { label: 'Terminaciones', color: '#7C3AED', icon: '🎨' }, instalaciones: { label: 'Instalaciones', color: '#059669', icon: '🔧' }, otro: { label: 'Otro', color: '#6B7280', icon: '📋' } }
-  var SEVS = { leve: { label: 'Leve', color: '#16A34A', bg: '#F0FDF4' }, moderado: { label: 'Moderado', color: '#D97706', bg: '#FFFBEB' }, grave: { label: 'Grave', color: '#DC2626', bg: '#FEF2F2' }, critico: { label: 'Crítico', color: '#7C3AED', bg: '#FAF5FF' } }
-  var PUB_STATUSES = { pendiente: { label: 'Pendiente', color: '#B45309', bg: '#FEF3C7', icon: '🔴' }, en_progreso: { label: 'En progreso', color: '#1D4ED8', bg: '#DBEAFE', icon: '🔵' }, resuelto: { label: 'Resuelto', color: '#15803D', bg: '#DCFCE7', icon: '🟢' } }
-
   if (loading) return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
-      <p style={{color:'var(--text-tertiary)'}}>Cargando hallazgo...</p>
+      <p style={{color:'var(--text-tertiary)',fontSize:'var(--text-sm)'}}>Cargando hallazgo...</p>
     </div>
   )
 
   if (error) return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
       <div style={{textAlign:'center'}}>
-        <p style={{fontSize:'2rem',marginBottom:'0.5rem'}}>🔍</p>
-        <p style={{color:'var(--text-primary)',fontWeight:'500',marginBottom:'0.25rem'}}>Hallazgo no encontrado</p>
-        <p style={{color:'var(--text-tertiary)',fontSize:'0.875rem'}}>{error}</p>
+        <p style={{color:'var(--text-primary)',fontWeight:'600',marginBottom:'0.25rem',fontSize:'var(--text-md)'}}>Hallazgo no encontrado</p>
+        <p style={{color:'var(--text-tertiary)',fontSize:'var(--text-sm)'}}>{error}</p>
       </div>
     </div>
   )
 
-  var cat = CATS[entry.category] || CATS.otro
-  var sev = SEVS[entry.severity] || SEVS.leve
-
   return (
     <div style={{minHeight:'100vh',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
-      {/* Header */}
-      <div style={{background:'var(--text-primary)',padding:'1rem 1.5rem',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <span style={{fontFamily:'var(--font-sans)',color:'#fff',fontSize:'1.1rem',fontWeight:'700'}}>BitácoraPro<span style={{color:'var(--primary-300)'}}>.</span></span>
-        <span style={{color:'rgba(255,255,255,0.4)',fontSize:'0.75rem',letterSpacing:'0.05em',textTransform:'uppercase'}}>Vista de hallazgo</span>
+
+      {/* Header — mismo estilo que app-header */}
+      <div style={{background:'var(--surface-1)',borderBottom:'1px solid var(--border-subtle)',padding:'0 16px',height:'52px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:100}}>
+        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+          <img src="/isotipo.svg" alt="BitácoraPro" width={26} height={26} style={{display:'block'}} />
+          <span style={{fontSize:'var(--text-md)',fontWeight:'600',letterSpacing:'-0.02em',color:'var(--text-primary)'}}>BitácoraPro</span>
+        </div>
+        <span style={{fontSize:'var(--text-xs)',color:'var(--text-disabled)',background:'var(--surface-2)',padding:'3px 10px',borderRadius:'var(--radius-full)',border:'1px solid var(--border-subtle)',letterSpacing:'0.04em',textTransform:'uppercase'}}>Vista de hallazgo</span>
       </div>
 
-      {/* Contexto: proyecto / propiedad */}
-      <div style={{background:'#fff',borderBottom:'1px solid var(--border-subtle)',padding:'0.75rem 1.5rem',display:'flex',alignItems:'center',gap:'0.5rem',fontSize:'0.8rem',color:'var(--text-tertiary)',flexWrap:'wrap'}}>
-        <span>📁 {entry.project_name}</span>
-        <span style={{color:'var(--border-subtle)'}}>›</span>
-        <span>🏠 {entry.unit_number}</span>
+      {/* Breadcrumb — proyecto / propiedad */}
+      <div style={{background:'var(--surface-1)',borderBottom:'1px solid var(--border-subtle)',padding:'0 16px',height:'36px',display:'flex',alignItems:'center',gap:'6px',fontSize:'var(--text-sm)',color:'var(--text-tertiary)'}}>
+        <span>{entry.project_name}</span>
+        <span style={{color:'var(--border-default)',fontSize:'12px'}}>›</span>
+        <span>{entry.unit_number}</span>
       </div>
 
       {/* Contenido */}
-      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.5rem 1.25rem'}}>
+      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.25rem 1rem 3rem'}}>
 
-        {/* Tags */}
-        <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap',marginBottom:'0.875rem'}}>
-          <span style={{background:cat.color+'18',color:cat.color,border:'1px solid '+cat.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{cat.icon} {cat.label}</span>
-          <span style={{background:sev.bg,color:sev.color,border:'1px solid '+sev.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{sev.label}</span>
-          {(function() {
-            var st = PUB_STATUSES[entry.status] || PUB_STATUSES.pendiente
-            return <span style={{background:st.bg,color:st.color,border:'1px solid '+st.color+'33',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{st.icon} {st.label}</span>
-          })()}
-          {entry.ai_generated === 1 && <span style={{background:'#EEF2FF',color:'#4F46E5',border:'1px solid #C7D2FE',padding:'0.25rem 0.75rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>🤖 Generado con IA</span>}
-        </div>
+        {/* Card principal */}
+        <div className="entry-card" style={{marginBottom:'1rem'}}>
 
-        {/* Título */}
-        <h1 style={{fontFamily:'var(--font-sans)',fontSize:'1.4rem',fontWeight:'700',color:'var(--text-primary)',lineHeight:1.25,marginBottom:'0.5rem'}}>{entry.title}</h1>
-
-        {/* Meta */}
-        <div style={{display:'flex',gap:'1rem',fontSize:'0.8rem',color:'var(--text-tertiary)',marginBottom:'1.25rem',flexWrap:'wrap'}}>
-          {entry.location && <span>📍 {entry.location}</span>}
-          <span>🗓 {new Date(entry.created_at).toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' })}</span>
-        </div>
-
-        {/* Fotos */}
-        {entry.images && entry.images.length > 0 && (
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(160px,1fr))',gap:'0.5rem',marginBottom:'1.25rem'}}>
-            {entry.images.map(function(img, idx) {
-              return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',borderRadius:'8px',cursor:'zoom-in',border:'1px solid var(--border-subtle)'}} />
-            })}
-          </div>
-        )}
-
-        {/* Nota del inspector */}
-        {entry.inspector_note && (
-          <div style={{background:'#EFF6FF',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid #BFDBFE'}}>
-            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#3B82F6',marginBottom:'0.4rem'}}>🎙️ Nota del inspector</p>
-            <p style={{fontSize:'0.9rem',color:'#1E3A5F',lineHeight:1.6}}>{entry.inspector_note}</p>
-          </div>
-        )}
-
-        {/* Descripción */}
-        {entry.description && (
-          <div style={{background:'#fff',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid var(--border-subtle)'}}>
-            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-tertiary)',marginBottom:'0.4rem'}}>Descripción técnica</p>
-            <p style={{fontSize:'0.9rem',color:'var(--text-primary)',lineHeight:1.7}}>{entry.description}</p>
-          </div>
-        )}
-
-        {/* Recomendación */}
-        {entry.recommendation && (
-          <div style={{background:'#FFFBEB',borderRadius:'10px',padding:'1rem',marginBottom:'1rem',border:'1px solid #FDE68A'}}>
-            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#D97706',marginBottom:'0.4rem'}}>💡 Recomendación</p>
-            <p style={{fontSize:'0.9rem',color:'#78350F',lineHeight:1.7}}>{entry.recommendation}</p>
-          </div>
-        )}
-
-        {/* Elementos afectados */}
-        {entry.affected_elements && entry.affected_elements.length > 0 && (
-          <div style={{marginBottom:'1rem'}}>
-            <p style={{fontSize:'0.72rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--text-tertiary)',marginBottom:'0.5rem'}}>Elementos afectados</p>
-            <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
-              {entry.affected_elements.map(function(el, i) { return <span key={i} style={{background:'#F3F4F6',color:'#374151',padding:'0.25rem 0.65rem',borderRadius:'100px',fontSize:'0.8rem',border:'1px solid #E5E7EB'}}>{el}</span> })}
+          {/* Tags */}
+          <div className="entry-header" style={{paddingBottom:'8px'}}>
+            <div>
+              <div className="entry-tags">
+                <span className={'tag severity-tag ' + (entry.severity || 'leve')}>{(entry.severity || 'leve').charAt(0).toUpperCase() + (entry.severity || 'leve').slice(1)}</span>
+                {entry.category && <span className="tag category-tag" style={{textTransform:'capitalize'}}>{entry.category}</span>}
+                {(function() {
+                  var statusMap = { pendiente: 'active-pendiente', en_progreso: 'active-en_progreso', resuelto: 'active-resuelto' }
+                  var statusLabel = { pendiente: 'Pendiente', en_progreso: 'En progreso', resuelto: 'Resuelto' }
+                  var s = entry.status || 'pendiente'
+                  return <span className={'tag ' + (statusMap[s] || 'active-pendiente')} style={{borderRadius:'var(--radius-full)',padding:'2px 8px',fontSize:'var(--text-xs)',fontWeight:'600'}}>{statusLabel[s] || 'Pendiente'}</span>
+                })()}
+                {entry.ai_generated === 1 && <span className="tag ai-tag">IA</span>}
+              </div>
+              <h1 className="entry-title" style={{fontSize:'var(--text-lg)',marginTop:'4px'}}>{entry.title}</h1>
+              <div style={{display:'flex',gap:'12px',flexWrap:'wrap',marginTop:'4px'}}>
+                {entry.location && <span style={{fontSize:'var(--text-xs)',color:'var(--text-tertiary)'}}>{entry.location}</span>}
+                <span style={{fontSize:'var(--text-xs)',color:'var(--text-disabled)'}}>{new Date(entry.created_at).toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' })}</span>
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Fotos */}
+          {entry.images && entry.images.length > 0 && (
+            <div className="entry-images">
+              {entry.images.map(function(img, idx) {
+                return <img key={img.id} src={img.filename} alt="" className="entry-image" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{cursor:'zoom-in',aspectRatio:'4/3'}} />
+              })}
+            </div>
+          )}
+
+          {/* Nota del inspector */}
+          {entry.inspector_note && (
+            <div className="inspector-note">
+              <strong style={{display:'block',fontSize:'var(--text-xs)',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:'4px'}}>Nota del inspector</strong>
+              {entry.inspector_note}
+            </div>
+          )}
+
+          {/* Descripción */}
+          {entry.description && (
+            <div className="entry-description-box">
+              <p style={{fontSize:'var(--text-xs)',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text-tertiary)',marginBottom:'6px'}}>Descripción técnica</p>
+              <p className="entry-description" style={{marginBottom:0}}>{entry.description}</p>
+            </div>
+          )}
+
+          {/* Recomendación */}
+          {entry.recommendation && (
+            <div className="entry-description-box">
+              <div className="entry-recommendation">
+                <strong>Recomendación</strong>
+                <p>{entry.recommendation}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Elementos afectados */}
+          {entry.affected_elements && entry.affected_elements.length > 0 && (
+            <div className="entry-elements">
+              <p style={{fontSize:'var(--text-xs)',fontWeight:'600',textTransform:'uppercase',letterSpacing:'0.06em',color:'var(--text-tertiary)',marginBottom:'6px'}}>Elementos afectados</p>
+              <div>{entry.affected_elements.map(function(el, i) { return <span key={i} className="element-chip">{el}</span> })}</div>
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
-        <div style={{marginTop:'2rem',paddingTop:'1.25rem',borderTop:'1px solid var(--border-subtle)',textAlign:'center'}}>
-          <p style={{fontSize:'0.75rem',color:'var(--text-tertiary)'}}>Generado con <strong style={{color:'var(--primary-700)'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
+        <div style={{textAlign:'center',paddingTop:'1rem',borderTop:'1px solid var(--border-subtle)'}}>
+          <p style={{fontSize:'var(--text-xs)',color:'var(--text-disabled)'}}>Generado con <strong style={{color:'var(--primary-700)'}}>BitácoraPro</strong></p>
         </div>
       </div>
 
@@ -1386,10 +1388,13 @@ function PublicEntryScreen() {
         <div onClick={function() { setLightbox(null) }} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
           <img src={lightbox.images[lightbox.index].filename} alt="" onClick={function(e) { e.stopPropagation() }} style={{maxWidth:'92vw',maxHeight:'85vh',objectFit:'contain',borderRadius:'8px'}} />
           {lightbox.images.length > 1 && <>
-            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer'}}>‹</button>
-            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer'}}>›</button>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
+            <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
           </>}
-          <button onClick={function() { setLightbox(null) }} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer'}}>✕</button>
+          {lightbox.images.length > 1 && (
+            <span style={{position:'absolute',bottom:'1.5rem',left:'50%',transform:'translateX(-50%)',color:'rgba(255,255,255,0.5)',fontSize:'var(--text-xs)'}}>{lightbox.index + 1} / {lightbox.images.length}</span>
+          )}
+          <button onClick={function() { setLightbox(null) }} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
         </div>
       )}
     </div>
@@ -1425,33 +1430,20 @@ function PublicPropertyScreen() {
     return function() { window.removeEventListener('keydown', handler) }
   }, [lightbox])
 
-  var severityColor = function(s) {
-    if (s === 'critico') return { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B', label: 'Crítico' }
-    if (s === 'grave') return { bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412', label: 'Grave' }
-    if (s === 'moderado') return { bg: '#FEFCE8', border: '#FDE68A', text: '#92400E', label: 'Moderado' }
-    return { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534', label: 'Leve' }
-  }
-
-  var statusLabel = function(s) {
-    if (s === 'resuelto') return { label: 'Resuelto', bg: '#F0FDF4', color: '#166534', border: '#BBF7D0', dot: '#22C55E' }
-    if (s === 'en_progreso') return { label: 'En progreso', bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE', dot: '#3B82F6' }
-    return { label: 'Pendiente', bg: '#FFF7ED', color: '#9A3412', border: '#FED7AA', dot: '#F97316' }
-  }
-
   if (loading) return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)'}}>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
       <div style={{textAlign:'center'}}>
-        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'var(--text-primary)',marginBottom:'0.5rem'}}>BitácoraPro<span style={{color:'var(--primary-700)'}}>.</span></div>
-        <p style={{color:'var(--text-tertiary)',fontSize:'0.9rem'}}>Cargando información...</p>
+        <img src="/isotipo.svg" alt="BitácoraPro" width={32} height={32} style={{display:'block',margin:'0 auto 0.75rem'}} />
+        <p style={{color:'var(--text-tertiary)',fontSize:'var(--text-sm)'}}>Cargando información...</p>
       </div>
     </div>
   )
 
   if (error) return (
-    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)'}}>
+    <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'var(--surface-page)',fontFamily:'var(--font-sans)'}}>
       <div style={{textAlign:'center',padding:'2rem'}}>
-        <div style={{fontFamily:'Georgia,serif',fontSize:'1.2rem',fontWeight:'700',color:'var(--text-primary)',marginBottom:'1rem'}}>BitácoraPro<span style={{color:'var(--primary-700)'}}>.</span></div>
-        <p style={{color:'#B91C1C'}}>{error}</p>
+        <img src="/isotipo.svg" alt="BitácoraPro" width={32} height={32} style={{display:'block',margin:'0 auto 0.75rem'}} />
+        <p style={{color:'var(--danger-700)',fontSize:'var(--text-sm)'}}>{error}</p>
       </div>
     </div>
   )
@@ -1461,100 +1453,99 @@ function PublicPropertyScreen() {
 
   return (
     <div style={{minHeight:'100vh',background:'var(--surface-page)',fontFamily:'var(--font-sans)',color:'var(--text-primary)'}}>
+
       {/* Header */}
-      <div style={{background:'#fff',borderBottom:'1px solid var(--border-subtle)',padding:'1rem 1.25rem',position:'sticky',top:0,zIndex:10}}>
-        <div style={{maxWidth:'680px',margin:'0 auto',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-          <div style={{fontFamily:'Georgia,serif',fontSize:'1.1rem',fontWeight:'700',color:'var(--text-primary)'}}>BitácoraPro<span style={{color:'var(--primary-700)'}}>.</span></div>
-          <div style={{fontSize:'0.75rem',color:'var(--text-tertiary)',background:'var(--surface-page)',padding:'0.3rem 0.75rem',borderRadius:'100px',border:'1px solid var(--border-subtle)'}}>Vista propietario</div>
+      <div style={{background:'var(--surface-1)',borderBottom:'1px solid var(--border-subtle)',padding:'0 16px',height:'52px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:100}}>
+        <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+          <img src="/isotipo.svg" alt="BitácoraPro" width={26} height={26} style={{display:'block'}} />
+          <span style={{fontSize:'var(--text-md)',fontWeight:'600',letterSpacing:'-0.02em',color:'var(--text-primary)'}}>BitácoraPro</span>
         </div>
+        <span style={{fontSize:'var(--text-xs)',color:'var(--text-disabled)',background:'var(--surface-2)',padding:'3px 10px',borderRadius:'var(--radius-full)',border:'1px solid var(--border-subtle)',letterSpacing:'0.04em',textTransform:'uppercase'}}>Vista propietario</span>
       </div>
 
-      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.5rem 1.25rem 4rem'}}>
+      <div style={{maxWidth:'680px',margin:'0 auto',padding:'1.25rem 1rem 4rem'}}>
 
         {/* Info propiedad */}
-        <div style={{background:'#fff',borderRadius:'14px',border:'1px solid var(--border-subtle)',padding:'1.5rem',marginBottom:'1.25rem'}}>
-          <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--primary-700)',marginBottom:'0.25rem'}}>{data.project_name}</p>
-          <h1 style={{fontFamily:'Georgia,serif',fontSize:'1.5rem',fontWeight:'700',margin:'0 0 0.25rem'}}>{data.unit_number}</h1>
-          {data.owner_name && <p style={{color:'var(--text-tertiary)',fontSize:'0.9rem',margin:0}}>{data.owner_name}</p>}
+        <div style={{background:'var(--surface-1)',borderRadius:'var(--radius-xl)',border:'1px solid var(--border-subtle)',padding:'1.25rem',marginBottom:'1rem',boxShadow:'var(--shadow-sm)'}}>
+          <p style={{fontSize:'var(--text-xs)',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'var(--primary-700)',marginBottom:'4px'}}>{data.project_name}</p>
+          <h1 style={{fontFamily:'var(--font-sans)',fontSize:'var(--text-2xl)',fontWeight:'700',letterSpacing:'-0.02em',margin:'0 0 4px',color:'var(--text-primary)'}}>{data.unit_number}</h1>
+          {data.owner_name && <p style={{color:'var(--text-tertiary)',fontSize:'var(--text-sm)',margin:0}}>{data.owner_name}</p>}
         </div>
 
         {/* Dashboard resumen */}
-        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'0.75rem',marginBottom:'1.5rem'}}>
-          <div style={{background:'#F0FDF4',borderRadius:'12px',border:'1px solid #BBF7D0',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#166534'}}>{summary.resueltos}</div>
-            <div style={{fontSize:'0.72rem',color:'#166534',marginTop:'0.15rem'}}>Resuelto{summary.resueltos !== 1 ? 's' : ''}</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'0.625rem',marginBottom:'1rem'}}>
+          <div style={{background:'var(--success-50)',borderRadius:'var(--radius-lg)',border:'1px solid #BBF7D0',padding:'0.875rem',textAlign:'center'}}>
+            <div style={{fontSize:'var(--text-2xl)',fontWeight:'700',color:'var(--success-700)',letterSpacing:'-0.02em'}}>{summary.resueltos}</div>
+            <div style={{fontSize:'var(--text-xs)',color:'var(--success-700)',marginTop:'2px',fontWeight:'500'}}>Resuelto{summary.resueltos !== 1 ? 's' : ''}</div>
           </div>
-          <div style={{background:'#EFF6FF',borderRadius:'12px',border:'1px solid #BFDBFE',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#1D4ED8'}}>{summary.en_progreso}</div>
-            <div style={{fontSize:'0.72rem',color:'#1D4ED8',marginTop:'0.15rem'}}>En progreso</div>
+          <div style={{background:'var(--primary-50)',borderRadius:'var(--radius-lg)',border:'1px solid var(--primary-200)',padding:'0.875rem',textAlign:'center'}}>
+            <div style={{fontSize:'var(--text-2xl)',fontWeight:'700',color:'var(--primary-700)',letterSpacing:'-0.02em'}}>{summary.en_progreso}</div>
+            <div style={{fontSize:'var(--text-xs)',color:'var(--primary-700)',marginTop:'2px',fontWeight:'500'}}>En progreso</div>
           </div>
-          <div style={{background:'#FFF7ED',borderRadius:'12px',border:'1px solid #FED7AA',padding:'1rem',textAlign:'center'}}>
-            <div style={{fontSize:'1.5rem',fontWeight:'700',color:'#9A3412'}}>{summary.pendientes}</div>
-            <div style={{fontSize:'0.72rem',color:'#9A3412',marginTop:'0.15rem'}}>Pendiente{summary.pendientes !== 1 ? 's' : ''}</div>
+          <div style={{background:'var(--warning-50)',borderRadius:'var(--radius-lg)',border:'1px solid var(--warning-100)',padding:'0.875rem',textAlign:'center'}}>
+            <div style={{fontSize:'var(--text-2xl)',fontWeight:'700',color:'var(--warning-700)',letterSpacing:'-0.02em'}}>{summary.pendientes}</div>
+            <div style={{fontSize:'var(--text-xs)',color:'var(--warning-700)',marginTop:'2px',fontWeight:'500'}}>Pendiente{summary.pendientes !== 1 ? 's' : ''}</div>
           </div>
         </div>
 
         {/* Barra de progreso */}
         {summary.total > 0 && (
-          <div style={{background:'#fff',borderRadius:'12px',border:'1px solid var(--border-subtle)',padding:'1rem 1.25rem',marginBottom:'1.5rem'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.6rem'}}>
-              <span style={{fontSize:'0.8rem',color:'var(--text-tertiary)'}}>Progreso de resolución</span>
-              <span style={{fontSize:'0.8rem',fontWeight:'600',color:'#166534'}}>{summary.resueltos} de {summary.total} resueltos</span>
+          <div style={{background:'var(--surface-1)',borderRadius:'var(--radius-lg)',border:'1px solid var(--border-subtle)',padding:'0.875rem 1rem',marginBottom:'1.25rem'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+              <span style={{fontSize:'var(--text-sm)',color:'var(--text-tertiary)'}}>Progreso de resolución</span>
+              <span style={{fontSize:'var(--text-sm)',fontWeight:'600',color:'var(--success-700)'}}>{summary.resueltos} de {summary.total}</span>
             </div>
-            <div style={{height:'8px',background:'var(--border-subtle)',borderRadius:'100px',overflow:'hidden'}}>
-              <div style={{height:'100%',background:'#22C55E',borderRadius:'100px',width:(summary.resueltos / summary.total * 100) + '%',transition:'width 0.5s ease'}} />
+            <div style={{height:'6px',background:'var(--border-subtle)',borderRadius:'var(--radius-full)',overflow:'hidden'}}>
+              <div style={{height:'100%',background:'var(--success-500)',borderRadius:'var(--radius-full)',width:(summary.resueltos / summary.total * 100) + '%',transition:'width 0.5s ease'}} />
             </div>
           </div>
         )}
 
         {/* Lista hallazgos */}
         {entries.length === 0 ? (
-          <div style={{textAlign:'center',padding:'3rem 1rem',color:'var(--text-tertiary)'}}>
-            <p style={{fontSize:'2rem',marginBottom:'0.5rem'}}>✅</p>
+          <div className="welcome-message">
+            <h2>Sin hallazgos registrados</h2>
             <p>No hay hallazgos registrados para esta propiedad.</p>
           </div>
         ) : (
-          <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
+          <div style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
             {entries.map(function(entry) {
-              var sev = severityColor(entry.severity)
-              var st = statusLabel(entry.status)
+              var statusMap = { pendiente: 'active-pendiente', en_progreso: 'active-en_progreso', resuelto: 'active-resuelto' }
+              var statusLabel = { pendiente: 'Pendiente', en_progreso: 'En progreso', resuelto: 'Resuelto' }
+              var s = entry.status || 'pendiente'
               return (
-                <div key={entry.id} style={{background:'#fff',borderRadius:'14px',border:'1px solid var(--border-subtle)',overflow:'hidden'}}>
-                  {/* Header hallazgo */}
-                  <div style={{padding:'1rem 1.25rem 0.75rem',borderBottom:'1px solid #F3F0EB'}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'0.75rem',marginBottom:'0.5rem'}}>
-                      <h3 style={{fontSize:'0.95rem',fontWeight:'600',margin:0,lineHeight:1.4}}>{entry.title}</h3>
-                      <span style={{flexShrink:0,fontSize:'0.7rem',fontWeight:'600',padding:'0.2rem 0.6rem',borderRadius:'100px',background:st.bg,color:st.color,border:'1px solid '+st.border,display:'flex',alignItems:'center',gap:'0.3rem'}}>
-                        <span style={{width:'6px',height:'6px',borderRadius:'50%',background:st.dot,flexShrink:0}} />
-                        {st.label}
-                      </span>
-                    </div>
-                    <div style={{display:'flex',gap:'0.5rem',flexWrap:'wrap'}}>
-                      <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:sev.bg,color:sev.text,border:'1px solid '+sev.border,fontWeight:'500'}}>{sev.label}</span>
-                      {entry.category && <span style={{fontSize:'0.7rem',padding:'0.15rem 0.5rem',borderRadius:'100px',background:'#F3F4F6',color:'#374151',border:'1px solid #E5E7EB',textTransform:'capitalize'}}>{entry.category}</span>}
-                      {entry.location && <span style={{fontSize:'0.7rem',color:'var(--text-tertiary)'}}>📍 {entry.location}</span>}
-                    </div>
-                  </div>
-                  {/* Fotos */}
-                  {entry.images && entry.images.length > 0 && (
-                    <div style={{padding:'0.75rem 1.25rem 0'}}>
-                      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(110px,1fr))',gap:'0.4rem'}}>
-                        {entry.images.map(function(img, idx) {
-                          return <img key={img.id} src={img.filename} alt="" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{width:'100%',aspectRatio:'4/3',objectFit:'cover',cursor:'zoom-in',borderRadius:'8px',border:'1px solid var(--border-subtle)'}} />
-                        })}
+                <div key={entry.id} className="entry-card">
+                  <div className="entry-header">
+                    <div style={{flex:1,minWidth:0}}>
+                      <div className="entry-tags">
+                        <span className={'tag severity-tag ' + (entry.severity || 'leve')}>{(entry.severity || 'leve').charAt(0).toUpperCase() + (entry.severity || 'leve').slice(1)}</span>
+                        {entry.category && <span className="tag category-tag" style={{textTransform:'capitalize'}}>{entry.category}</span>}
                       </div>
+                      <h3 className="entry-title">{entry.title}</h3>
+                      {entry.location && <div className="entry-unit">{entry.location}</div>}
+                    </div>
+                    <span className={'tag ' + (statusMap[s] || 'active-pendiente')} style={{flexShrink:0,borderRadius:'var(--radius-full)',padding:'2px 8px',fontSize:'var(--text-xs)',fontWeight:'600'}}>{statusLabel[s] || 'Pendiente'}</span>
+                  </div>
+
+                  {entry.images && entry.images.length > 0 && (
+                    <div className="entry-images">
+                      {entry.images.map(function(img, idx) {
+                        return <img key={img.id} src={img.filename} alt="" className="entry-image" onClick={function() { setLightbox({ images: entry.images, index: idx }) }} style={{cursor:'zoom-in',aspectRatio:'4/3'}} />
+                      })}
                     </div>
                   )}
-                  {/* Cuerpo */}
-                  <div style={{padding:'1rem 1.25rem',display:'flex',flexDirection:'column',gap:'0.75rem'}}>
-                    {entry.description && <p style={{fontSize:'0.875rem',color:'#374151',lineHeight:1.7,margin:0}}>{entry.description}</p>}
-                    {entry.recommendation && (
-                      <div style={{background:'#FFFBEB',borderRadius:'8px',padding:'0.75rem',border:'1px solid #FDE68A'}}>
-                        <p style={{fontSize:'0.7rem',fontWeight:'600',letterSpacing:'0.08em',textTransform:'uppercase',color:'#D97706',marginBottom:'0.3rem'}}>💡 Recomendación</p>
-                        <p style={{fontSize:'0.85rem',color:'#78350F',lineHeight:1.6,margin:0}}>{entry.recommendation}</p>
-                      </div>
-                    )}
-                  </div>
+
+                  {(entry.description || entry.recommendation) && (
+                    <div className="entry-description-box">
+                      {entry.description && <p className="entry-description">{entry.description}</p>}
+                      {entry.recommendation && (
+                        <div className="entry-recommendation">
+                          <strong>Recomendación</strong>
+                          <p>{entry.recommendation}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -1562,8 +1553,8 @@ function PublicPropertyScreen() {
         )}
 
         {/* Footer */}
-        <div style={{textAlign:'center',marginTop:'3rem',paddingTop:'1.5rem',borderTop:'1px solid var(--border-subtle)'}}>
-          <p style={{fontSize:'0.75rem',color:'#C0BBB5'}}>Generado con <strong style={{color:'var(--primary-700)'}}>BitácoraPro</strong> — Gestión de postventa inmobiliaria</p>
+        <div style={{textAlign:'center',marginTop:'2.5rem',paddingTop:'1.25rem',borderTop:'1px solid var(--border-subtle)'}}>
+          <p style={{fontSize:'var(--text-xs)',color:'var(--text-disabled)'}}>Generado con <strong style={{color:'var(--primary-700)'}}>BitácoraPro</strong></p>
         </div>
       </div>
 
@@ -1575,13 +1566,15 @@ function PublicPropertyScreen() {
             <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
             <button onClick={function(e) { e.stopPropagation(); setLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.5rem',width:'44px',height:'44px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
           </>}
+          {lightbox.images.length > 1 && (
+            <span style={{position:'absolute',bottom:'1.5rem',left:'50%',transform:'translateX(-50%)',color:'rgba(255,255,255,0.5)',fontSize:'var(--text-xs)'}}>{lightbox.index + 1} / {lightbox.images.length}</span>
+          )}
           <button onClick={function() { setLightbox(null) }} style={{position:'absolute',top:'1rem',right:'1rem',background:'rgba(255,255,255,0.12)',border:'none',color:'white',fontSize:'1.1rem',width:'36px',height:'36px',borderRadius:'50%',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
         </div>
       )}
     </div>
   )
 }
-
 function ResetPasswordScreen({ onLogin }) {
   var navigate = useNavigate()
   var params = useParams()
@@ -1671,11 +1664,13 @@ function App() {
 
   // App state
   var [projects, setProjects] = useState([])
+  var [loadingProjects, setLoadingProjects] = useState(false)
   var [currentProject, setCurrentProject] = useState(null)
   var [properties, setProperties] = useState([])
   var [loadingProperties, setLoadingProperties] = useState(false)
   var [currentProperty, setCurrentProperty] = useState(null)
   var [entries, setEntries] = useState([])
+  var [loadingEntries, setLoadingEntries] = useState(true)
   var [showForm, setShowForm] = useState(false)
   var [isAnalyzing, setIsAnalyzing] = useState(false)
 
@@ -1710,6 +1705,7 @@ function App() {
 
   // Acta de entrega
   var [deliveryAct, setDeliveryAct] = useState(null)
+  var [loadingAct, setLoadingAct] = useState(true)
   var deliveryActRef = useRef(null)
   var entriesRef = useRef([])
   // Sync deliveryActRef with deliveryAct so useCallback closures stay fresh
@@ -1781,7 +1777,8 @@ var handleLogin = function(newToken, user) {
   // Load projects
   useEffect(function() {
     if (!token) return
-    authFetch(API_URL + '/projects').then(function(r) { return r.json() }).then(setProjects).catch(console.error)
+    setLoadingProjects(true)
+    authFetch(API_URL + '/projects').then(function(r) { return r.json() }).then(function(data) { setProjects(data); setLoadingProjects(false) }).catch(function(e) { console.error(e); setLoadingProjects(false) })
   }, [token])
 
   // Load properties when project changes
@@ -1795,9 +1792,11 @@ var handleLogin = function(newToken, user) {
   // Load entries when property changes
   useEffect(function() {
     if (currentProperty && token) {
-      authFetch(API_URL + '/properties/' + currentProperty.id + '/entries').then(function(r) { return r.json() }).then(setEntries).catch(console.error)
-      loadDeliveryAct(currentProperty.id)
-    } else { setEntries([]); setDeliveryAct(null) }
+      setLoadingEntries(true)
+      setLoadingAct(true)
+      authFetch(API_URL + '/properties/' + currentProperty.id + '/entries').then(function(r) { return r.json() }).then(function(data) { setEntries(data); setLoadingEntries(false) }).catch(function(e) { console.error(e); setLoadingEntries(false) })
+      authFetch(API_URL + '/properties/' + currentProperty.id + '/delivery-act').then(function(r) { return r.json() }).then(function(data) { setDeliveryAct(data); setLoadingAct(false) }).catch(function(e) { console.error(e); setDeliveryAct(null); setLoadingAct(false) })
+    } else { setEntries([]); setLoadingEntries(false); setDeliveryAct(null); setLoadingAct(false) }
   }, [currentProperty])
 
   // Project handlers
@@ -2048,9 +2047,9 @@ var handleLogin = function(newToken, user) {
   // === PROPS COMUNES PARA AppInterior ===
   var interiorProps = {
     token, currentUser, setCurrentUser, handleLogout,
-    projects, setProjects, currentProject, setCurrentProject,
+    projects, setProjects, loadingProjects, currentProject, setCurrentProject,
     properties, setProperties, loadingProperties, currentProperty, setCurrentProperty,
-    entries, setEntries,
+    entries, setEntries, loadingEntries,
     showForm, setShowForm, isAnalyzing, setIsAnalyzing,
     showTeam, setShowTeam, team, setTeam,
     inviteEmail, setInviteEmail, inviteLoading, setInviteLoading, inviteMsg, setInviteMsg,
@@ -2063,7 +2062,7 @@ var handleLogin = function(newToken, user) {
     lightbox, setLightbox,
     handleCreateProject, handleDeleteProject,
     handleCreateProperty, handleDeleteProperty, handleCopyPropertyLink,
-    deliveryAct, setDeliveryAct, showAct, setShowAct, actToast, setActToast,
+    deliveryAct, setDeliveryAct, loadingAct, showAct, setShowAct, actToast, setActToast,
     actFormData, setActFormData: stableSetActFormData,
     cameFromAct, setCameFromAct,
     loadDeliveryAct, saveDeliveryAct,
@@ -2220,6 +2219,7 @@ function AppInterior(props) {
   var handleLogout = props.handleLogout
   var projects = props.projects
   var setProjects = props.setProjects
+  var loadingProjects = props.loadingProjects
   var currentProject = props.currentProject
   var setCurrentProject = props.setCurrentProject
   var properties = props.properties
@@ -2229,6 +2229,7 @@ function AppInterior(props) {
   var setCurrentProperty = props.setCurrentProperty
   var entries = props.entries
   var setEntries = props.setEntries
+  var loadingEntries = props.loadingEntries
   var showForm = props.showForm
   var setShowForm = props.setShowForm
   var isAnalyzing = props.isAnalyzing
@@ -2269,6 +2270,7 @@ function AppInterior(props) {
   var handleCopyPropertyLink = props.handleCopyPropertyLink
   var deliveryAct = props.deliveryAct
   var setDeliveryAct = props.setDeliveryAct
+  var loadingAct = props.loadingAct
   var showAct = props.showAct
   var setShowAct = props.setShowAct
   var actToast = props.actToast
@@ -2433,7 +2435,7 @@ function AppInterior(props) {
             onLogout={handleLogoutAndRedirect}
           />
           <main className="main main--no-breadcrumb" id="app-scroll">
-            {projects.length === 0 && (
+            {!loadingProjects && projects.length === 0 && (
               <div className="welcome-message"><h2>Sin proyectos aún</h2><p>Crea tu primer proyecto para comenzar a registrar propiedades y hallazgos.</p></div>
             )}
             <div className="projects-grid">
@@ -2788,7 +2790,7 @@ function AppInterior(props) {
           )}
 
           {/* BOTÓN INICIAR ACTA */}
-          {!deliveryAct && (
+          {!loadingAct && !deliveryAct && (
             <div style={{marginBottom:'12px'}}>
               <button onClick={function() { navigate(actaUrl) }} className="acta-btn-iniciar">
                 Iniciar acta de entrega
@@ -2929,7 +2931,7 @@ function AppInterior(props) {
             </div>
           )}
 
-          {entries.length === 0 && (
+          {!loadingEntries && entries.length === 0 && (
             <div className="welcome-message"><h2>Sin hallazgos</h2><p>Registra el primer hallazgo con fotos y nota de voz.</p></div>
           )}
         </main>
