@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import jsPDF from 'jspdf'
-import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic } from 'lucide-react'
+import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye } from 'lucide-react'
 import './App.css'
 
 // === PANTALLA HOME ===
@@ -3408,6 +3408,11 @@ function ProjectDashboardScreen({ project, authFetch, navigate, currentUser }) {
   var [sortField, setSortField] = useState('unit_number')
   var [sortDir, setSortDir] = useState('asc')
 
+  // Vista de hallazgo completo desde el dashboard
+  var [viewingEntry, setViewingEntry] = useState(null)
+  var [viewingLoading, setViewingLoading] = useState(false)
+  var [viewLightbox, setViewLightbox] = useState(null)
+
   // Edición de hallazgos desde el dashboard
   var [editingEntry, setEditingEntry] = useState(null)
   var [editEntryForm, setEditEntryForm] = useState({})
@@ -3496,6 +3501,21 @@ function ProjectDashboardScreen({ project, authFetch, navigate, currentUser }) {
     if (sortField === field) { setSortDir(function(d) { return d === 'asc' ? 'desc' : 'asc' }) }
     else { setSortField(field); setSortDir('asc') }
   }
+
+  var handleViewEntry = function(entry) {
+    setViewLightbox(null)
+    setViewingEntry({ id: entry.id, unit_number: entry.unit_number, title: entry.title })
+    setViewingLoading(true)
+    fetch(API_URL + '/public/entries/' + entry.id)
+      .then(function(r) { return r.json() })
+      .then(function(d) {
+        if (!d.error) setViewingEntry(Object.assign({}, d, { unit_number: entry.unit_number }))
+        setViewingLoading(false)
+      })
+      .catch(function() { setViewingLoading(false) })
+  }
+
+  var closeViewModal = function() { setViewingEntry(null); setViewingLoading(false); setViewLightbox(null) }
 
   var handleEditEntry = function(entry) {
     setEditEntryForm({
@@ -3826,6 +3846,15 @@ function ProjectDashboardScreen({ project, authFetch, navigate, currentUser }) {
                           <Link size={12} strokeWidth={1.5} style={{marginRight:'4px',verticalAlign:'middle'}} />Link
                         </button>
                         <button
+                          onClick={function() { handleViewEntry(entry) }}
+                          title="Ver hallazgo completo"
+                          style={{background:'none',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.25rem 0.5rem',cursor:'pointer',fontSize:'0.75rem',color:'var(--text-tertiary)',transition:'border-color 0.15s,color 0.15s'}}
+                          onMouseEnter={function(e) { e.currentTarget.style.borderColor='var(--primary-700)'; e.currentTarget.style.color='var(--primary-700)' }}
+                          onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
+                        >
+                          <Eye size={12} strokeWidth={1.5} style={{marginRight:'4px',verticalAlign:'middle'}} />Ver
+                        </button>
+                        <button
                           onClick={function() { handleEditEntry(entry) }}
                           title="Editar hallazgo"
                           style={{background:'none',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.25rem 0.5rem',cursor:'pointer',fontSize:'0.75rem',color:'var(--text-tertiary)',transition:'border-color 0.15s,color 0.15s'}}
@@ -3856,6 +3885,129 @@ function ProjectDashboardScreen({ project, authFetch, navigate, currentUser }) {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+      {/* ── MODAL VER HALLAZGO ── */}
+      {viewingEntry && (
+        <div
+          onClick={function(e) { if (e.target === e.currentTarget) closeViewModal() }}
+          style={{position:'fixed',inset:0,background:'rgba(15,17,26,0.5)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}
+        >
+          <div style={{background:'var(--surface-1)',borderRadius:'var(--radius-xl)',width:'100%',maxWidth:'600px',maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(15,17,26,0.2)'}}>
+            {/* Header */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'1.25rem 1.5rem',borderBottom:'1px solid var(--border-subtle)',position:'sticky',top:0,background:'var(--surface-1)',zIndex:1}}>
+              <div style={{minWidth:0}}>
+                <p style={{margin:0,fontSize:'0.72rem',color:'var(--text-tertiary)',fontWeight:'500',letterSpacing:'0.04em',textTransform:'uppercase'}}>{viewingEntry.unit_number}</p>
+                <h3 style={{margin:0,fontSize:'0.95rem',fontWeight:'600',color:'var(--text-primary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{viewingEntry.title || '—'}</h3>
+              </div>
+              <button onClick={closeViewModal} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-tertiary)',fontSize:'1.1rem',lineHeight:1,padding:'0.25rem',flexShrink:0,marginLeft:'1rem'}}>✕</button>
+            </div>
+
+            {/* Contenido */}
+            <div style={{padding:'1.5rem',display:'flex',flexDirection:'column',gap:'1.25rem'}}>
+              {viewingLoading ? (
+                <div style={{display:'flex',alignItems:'center',justifyContent:'center',padding:'3rem 0',gap:'0.75rem'}}>
+                  <div style={{width:'18px',height:'18px',border:'2px solid var(--primary-200)',borderTopColor:'var(--primary-700)',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
+                  <span style={{fontSize:'0.85rem',color:'var(--text-tertiary)'}}>Cargando hallazgo...</span>
+                </div>
+              ) : (
+                <>
+                  {/* Tags + ubicación + fecha */}
+                  <div style={{display:'flex',flexDirection:'column',gap:'0.6rem'}}>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:'0.4rem'}}>
+                      {(function() {
+                        var cat = CATEGORIES[viewingEntry.category] || { label: viewingEntry.category, color: '#6B6F82' }
+                        var sev = SEVERITIES[viewingEntry.severity] || SEVERITIES.leve
+                        var st = STATUSES[viewingEntry.status] || STATUSES.pendiente
+                        return (
+                          <>
+                            <span style={{background:cat.color+'18',color:cat.color,border:'1px solid '+cat.color+'30',padding:'0.2rem 0.65rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{cat.label}</span>
+                            <span style={{background:sev.bg,color:sev.color,border:'1px solid '+sev.color+'40',padding:'0.2rem 0.65rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{sev.label}</span>
+                            <span style={{background:st.bg,color:st.color,border:'1px solid '+st.color+'40',padding:'0.2rem 0.65rem',borderRadius:'100px',fontSize:'0.75rem',fontWeight:'500'}}>{st.label}</span>
+                          </>
+                        )
+                      })()}
+                    </div>
+                    {(viewingEntry.location || viewingEntry.created_at) && (
+                      <p style={{margin:0,fontSize:'0.8rem',color:'var(--text-tertiary)'}}>
+                        {viewingEntry.location && <span>{viewingEntry.location}</span>}
+                        {viewingEntry.location && viewingEntry.created_at && <span> · </span>}
+                        {viewingEntry.created_at && <span>{new Date(viewingEntry.created_at).toLocaleDateString('es-CL', {day:'numeric',month:'short',year:'numeric'})}</span>}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Fotos */}
+                  {viewingEntry.images && viewingEntry.images.length > 0 && (
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(100px,1fr))',gap:'0.5rem'}}>
+                      {viewingEntry.images.map(function(img, idx) {
+                        return (
+                          <div key={img.id} onClick={function() { setViewLightbox({ images: viewingEntry.images, index: idx }) }} style={{aspectRatio:'1',borderRadius:'10px',overflow:'hidden',cursor:'pointer',background:'#F1F3F9'}}>
+                            <img src={img.filename} alt="" style={{width:'100%',height:'100%',objectFit:'cover',transition:'transform 0.2s'}} onMouseEnter={function(e) { e.currentTarget.style.transform='scale(1.04)' }} onMouseLeave={function(e) { e.currentTarget.style.transform='scale(1)' }} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {/* Nota del inspector */}
+                  {viewingEntry.inspector_note && (
+                    <div>
+                      <p style={{margin:'0 0 0.35rem',fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Nota del inspector</p>
+                      <p style={{margin:0,fontSize:'0.875rem',color:'var(--text-primary)',lineHeight:'1.6'}}>{viewingEntry.inspector_note}</p>
+                    </div>
+                  )}
+
+                  {/* Descripción técnica */}
+                  {viewingEntry.description && (
+                    <div>
+                      <p style={{margin:'0 0 0.35rem',fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Descripción técnica</p>
+                      <p style={{margin:0,fontSize:'0.875rem',color:'var(--text-primary)',lineHeight:'1.6'}}>{viewingEntry.description}</p>
+                    </div>
+                  )}
+
+                  {/* Recomendación */}
+                  {viewingEntry.recommendation && (
+                    <div>
+                      <p style={{margin:'0 0 0.35rem',fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Recomendación</p>
+                      <p style={{margin:0,fontSize:'0.875rem',color:'var(--text-primary)',lineHeight:'1.6'}}>{viewingEntry.recommendation}</p>
+                    </div>
+                  )}
+
+                  {/* Elementos afectados */}
+                  {viewingEntry.affected_elements && viewingEntry.affected_elements.length > 0 && (
+                    <div>
+                      <p style={{margin:'0 0 0.35rem',fontSize:'0.72rem',fontWeight:'600',color:'var(--text-tertiary)',letterSpacing:'0.06em',textTransform:'uppercase'}}>Elementos afectados</p>
+                      <div style={{display:'flex',flexWrap:'wrap',gap:'0.35rem'}}>
+                        {viewingEntry.affected_elements.map(function(el, i) {
+                          return <span key={i} style={{background:'var(--gray-50)',border:'1px solid var(--border-subtle)',borderRadius:'100px',padding:'0.2rem 0.65rem',fontSize:'0.75rem',color:'var(--text-primary)'}}>{el}</span>
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Lightbox dentro del modal */}
+          {viewLightbox && (
+            <div
+              onClick={function(e) { if (e.target === e.currentTarget) setViewLightbox(null) }}
+              style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.92)',zIndex:1100,display:'flex',alignItems:'center',justifyContent:'center'}}
+            >
+              <img src={viewLightbox.images[viewLightbox.index].filename} alt="" style={{maxWidth:'90vw',maxHeight:'90vh',objectFit:'contain',borderRadius:'8px'}} />
+              {viewLightbox.images.length > 1 && (
+                <>
+                  <button onClick={function(e) { e.stopPropagation(); setViewLightbox(function(lb) { return { images: lb.images, index: (lb.index - 1 + lb.images.length) % lb.images.length } }) }} style={{position:'absolute',left:'1.5rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.15)',border:'none',borderRadius:'50%',width:'44px',height:'44px',fontSize:'1.4rem',color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>‹</button>
+                  <button onClick={function(e) { e.stopPropagation(); setViewLightbox(function(lb) { return { images: lb.images, index: (lb.index + 1) % lb.images.length } }) }} style={{position:'absolute',right:'1.5rem',top:'50%',transform:'translateY(-50%)',background:'rgba(255,255,255,0.15)',border:'none',borderRadius:'50%',width:'44px',height:'44px',fontSize:'1.4rem',color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>›</button>
+                  <span style={{position:'absolute',bottom:'1.5rem',left:'50%',transform:'translateX(-50%)',color:'rgba(255,255,255,0.6)',fontSize:'0.8rem'}}>{viewLightbox.index + 1} / {viewLightbox.images.length}</span>
+                </>
+              )}
+              <button onClick={function() { setViewLightbox(null) }} style={{position:'absolute',top:'1.25rem',right:'1.25rem',background:'rgba(255,255,255,0.15)',border:'none',borderRadius:'50%',width:'36px',height:'36px',color:'#fff',fontSize:'1.1rem',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>✕</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── MODAL EDITAR HALLAZGO ── */}
       {editingEntry && (
