@@ -2505,7 +2505,7 @@ function AppInterior(props) {
               </div>
               <div className="form-field">
                 <label>RUT</label>
-                <input type="text" inputMode="numeric" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
+                <input type="text" inputMode="text" placeholder="12.345.678-9" value={propForm.owner_rut} onChange={function(e) { setPropForm(Object.assign({}, propForm, { owner_rut: e.target.value })) }} className="text-input" />
               </div>
               <div className="form-field">
                 <label>Correo electronico</label>
@@ -2646,7 +2646,7 @@ function AppInterior(props) {
                       </div>
                       <div className="form-field">
                         <label>RUT</label>
-                        <input type="text" inputMode="numeric" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
+                        <input type="text" inputMode="text" className="text-input" value={editPropForm.owner_rut} onChange={function(e) { setEditPropForm(Object.assign({}, editPropForm, { owner_rut: e.target.value })) }} />
                       </div>
                       <div className="form-field">
                           <label>Correo</label>
