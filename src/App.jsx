@@ -2473,7 +2473,7 @@ function AppInterior(props) {
           <AppHeader title={currentProject ? currentProject.name : 'Dashboard'} user={currentUser} onLogout={handleLogoutAndRedirect} onTeam={currentUser && currentUser.role === 'admin' ? handleOpenTeam : null} />
           <AppBreadcrumb onBack={function() { navigate('/proyectos/' + (currentProject ? currentProject.id : '')) }} backLabel={currentProject ? currentProject.name : 'Proyecto'} />
           <main className="main main--dashboard" id="app-scroll">
-            {currentProject && <ProjectDashboardScreen project={currentProject} authFetch={authFetch} navigate={navigate} />}
+            {currentProject && <ProjectDashboardScreen project={currentProject} authFetch={authFetch} navigate={navigate} currentUser={currentUser} />}
           </main>
         </div>
       )
@@ -3392,7 +3392,7 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
 
 
 // === DASHBOARD DE PROYECTO ===
-function ProjectDashboardScreen({ project, authFetch, navigate }) {
+function ProjectDashboardScreen({ project, authFetch, navigate, currentUser }) {
   var [data, setData] = useState(null)
   var [loading, setLoading] = useState(true)
   var [error, setError] = useState('')
@@ -3407,6 +3407,10 @@ function ProjectDashboardScreen({ project, authFetch, navigate }) {
   var [filterSeverity, setFilterSeverity] = useState('all')
   var [sortField, setSortField] = useState('unit_number')
   var [sortDir, setSortDir] = useState('asc')
+
+  // Edición de hallazgos desde el dashboard
+  var [editingEntry, setEditingEntry] = useState(null)
+  var [editEntryForm, setEditEntryForm] = useState({})
 
   var CATEGORIES = {
     estructural: { label: 'Estructural', color: '#B91C1C' },
@@ -3491,6 +3495,70 @@ function ProjectDashboardScreen({ project, authFetch, navigate }) {
   var handleSort = function(field) {
     if (sortField === field) { setSortDir(function(d) { return d === 'asc' ? 'desc' : 'asc' }) }
     else { setSortField(field); setSortDir('asc') }
+  }
+
+  var handleEditEntry = function(entry) {
+    setEditEntryForm({
+      title: entry.title || '',
+      category: entry.category || 'otro',
+      severity: entry.severity || 'leve',
+      location: entry.location || '',
+      description: entry.description || '',
+      recommendation: entry.recommendation || ''
+    })
+    setEditingEntry(entry.id)
+  }
+
+  var handleSaveEntry = async function() {
+    var entry = data.entries.find(function(e) { return e.id === editingEntry })
+    if (!entry) return
+    try {
+      var r = await authFetch(API_URL + '/entries/' + editingEntry, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editEntryForm.title || '',
+          description: editEntryForm.description || '',
+          recommendation: editEntryForm.recommendation || '',
+          category: editEntryForm.category || 'otro',
+          severity: editEntryForm.severity || 'leve',
+          location: editEntryForm.location || '',
+          status: entry.status || 'pendiente'
+        })
+      })
+      if (r.ok) {
+        var updated = await r.json()
+        setData(function(prev) {
+          var newEntries = prev.entries.map(function(e) { return e.id === editingEntry ? Object.assign({}, e, updated) : e })
+          var byCategory = {}
+          var bySeverity = { leve: 0, moderado: 0, grave: 0, critico: 0 }
+          newEntries.forEach(function(e) {
+            var cat = e.category || 'otro'; byCategory[cat] = (byCategory[cat] || 0) + 1
+            var sv = e.severity || 'leve'; bySeverity[sv] = (bySeverity[sv] || 0) + 1
+          })
+          return Object.assign({}, prev, { entries: newEntries, by_category: byCategory, by_severity: bySeverity })
+        })
+        setEditingEntry(null)
+      }
+    } catch(e) { alert('Error al guardar') }
+  }
+
+  var handleDeleteEntry = function(entryId) {
+    if (!window.confirm('¿Eliminar este hallazgo? Esta acción no se puede deshacer.')) return
+    authFetch(API_URL + '/entries/' + entryId, { method: 'DELETE' }).then(function() {
+      setData(function(prev) {
+        var newEntries = prev.entries.filter(function(e) { return e.id !== entryId })
+        var byStatus = { pendiente: 0, en_progreso: 0, resuelto: 0 }
+        var byCategory = {}
+        var bySeverity = { leve: 0, moderado: 0, grave: 0, critico: 0 }
+        newEntries.forEach(function(e) {
+          var st = e.status || 'pendiente'; byStatus[st] = (byStatus[st] || 0) + 1
+          var cat = e.category || 'otro'; byCategory[cat] = (byCategory[cat] || 0) + 1
+          var sv = e.severity || 'leve'; bySeverity[sv] = (bySeverity[sv] || 0) + 1
+        })
+        return Object.assign({}, prev, { entries: newEntries, total_entries: newEntries.length, by_status: byStatus, by_category: byCategory, by_severity: bySeverity })
+      })
+    })
   }
 
   if (loading) return (
@@ -3746,16 +3814,38 @@ function ProjectDashboardScreen({ project, authFetch, navigate }) {
                         <option value="resuelto">Resuelto</option>
                       </select>
                     </td>
-                    <td style={tdStyle}>
-                      <button
-                        onClick={function() { copyEntryLink(entry.id) }}
-                        title="Copiar link público"
-                        style={{background:'none',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.25rem 0.5rem',cursor:'pointer',fontSize:'0.75rem',color:'var(--text-tertiary)',transition:'border-color 0.15s,color 0.15s'}}
-                        onMouseEnter={function(e) { e.currentTarget.style.borderColor='var(--primary-700)'; e.currentTarget.style.color='var(--primary-700)' }}
-                        onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
-                      >
-                        <Link size={12} strokeWidth={1.5} style={{marginRight:'4px',verticalAlign:'middle'}} />Copiar link
-                      </button>
+                    <td style={Object.assign({}, tdStyle, {whiteSpace:'nowrap'})}>
+                      <div style={{display:'flex',gap:'0.35rem',alignItems:'center'}}>
+                        <button
+                          onClick={function() { copyEntryLink(entry.id) }}
+                          title="Copiar link público"
+                          style={{background:'none',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.25rem 0.5rem',cursor:'pointer',fontSize:'0.75rem',color:'var(--text-tertiary)',transition:'border-color 0.15s,color 0.15s'}}
+                          onMouseEnter={function(e) { e.currentTarget.style.borderColor='var(--primary-700)'; e.currentTarget.style.color='var(--primary-700)' }}
+                          onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
+                        >
+                          <Link size={12} strokeWidth={1.5} style={{marginRight:'4px',verticalAlign:'middle'}} />Link
+                        </button>
+                        <button
+                          onClick={function() { handleEditEntry(entry) }}
+                          title="Editar hallazgo"
+                          style={{background:'none',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.25rem 0.5rem',cursor:'pointer',fontSize:'0.75rem',color:'var(--text-tertiary)',transition:'border-color 0.15s,color 0.15s'}}
+                          onMouseEnter={function(e) { e.currentTarget.style.borderColor='var(--primary-700)'; e.currentTarget.style.color='var(--primary-700)' }}
+                          onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
+                        >
+                          <Pencil size={12} strokeWidth={1.5} style={{marginRight:'4px',verticalAlign:'middle'}} />Editar
+                        </button>
+                        {currentUser && currentUser.role === 'admin' && (
+                          <button
+                            onClick={function() { handleDeleteEntry(entry.id) }}
+                            title="Eliminar hallazgo"
+                            style={{background:'none',border:'1px solid var(--border-subtle)',borderRadius:'6px',padding:'0.25rem 0.5rem',cursor:'pointer',fontSize:'0.75rem',color:'var(--text-tertiary)',transition:'border-color 0.15s,color 0.15s'}}
+                            onMouseEnter={function(e) { e.currentTarget.style.borderColor='#B91C1C'; e.currentTarget.style.color='#B91C1C' }}
+                            onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
+                          >
+                            <Trash2 size={12} strokeWidth={1.5} style={{marginRight:'4px',verticalAlign:'middle'}} />Eliminar
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )
@@ -3766,6 +3856,59 @@ function ProjectDashboardScreen({ project, authFetch, navigate }) {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+
+      {/* ── MODAL EDITAR HALLAZGO ── */}
+      {editingEntry && (
+        <div
+          onClick={function(e) { if (e.target === e.currentTarget) setEditingEntry(null) }}
+          style={{position:'fixed',inset:0,background:'rgba(15,17,26,0.5)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}
+        >
+          <div style={{background:'var(--surface-1)',borderRadius:'var(--radius-xl)',width:'100%',maxWidth:'540px',maxHeight:'90vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(15,17,26,0.2)'}}>
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'1.25rem 1.5rem',borderBottom:'1px solid var(--border-subtle)'}}>
+              <h3 style={{margin:0,fontSize:'0.95rem',fontWeight:'600',color:'var(--text-primary)',display:'flex',alignItems:'center',gap:'0.5rem'}}>
+                <Pencil size={15} strokeWidth={1.5} />Editar hallazgo
+              </h3>
+              <button onClick={function() { setEditingEntry(null) }} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-tertiary)',fontSize:'1.1rem',lineHeight:1,padding:'0.25rem'}}>✕</button>
+            </div>
+            <div style={{padding:'1.5rem',display:'flex',flexDirection:'column',gap:'1rem'}}>
+              <div className="form-field">
+                <label>Título</label>
+                <input type="text" inputMode="text" className="text-input" value={editEntryForm.title || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { title: e.target.value })) }} />
+              </div>
+              <div className="form-row">
+                <div className="form-field form-field-half">
+                  <label>Categoría</label>
+                  <select className="text-input" value={editEntryForm.category || 'otro'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { category: e.target.value })) }}>
+                    {Object.entries(CATEGORIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].label}</option> })}
+                  </select>
+                </div>
+                <div className="form-field form-field-half">
+                  <label>Severidad</label>
+                  <select className="text-input" value={editEntryForm.severity || 'leve'} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { severity: e.target.value })) }}>
+                    {Object.entries(SEVERITIES).map(function(pair) { return <option key={pair[0]} value={pair[0]}>{pair[1].label}</option> })}
+                  </select>
+                </div>
+              </div>
+              <div className="form-field">
+                <label>Ubicación</label>
+                <input type="text" className="text-input" value={editEntryForm.location || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { location: e.target.value })) }} />
+              </div>
+              <div className="form-field">
+                <label>Descripción técnica</label>
+                <textarea className="text-area" rows={4} value={editEntryForm.description || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { description: e.target.value })) }} />
+              </div>
+              <div className="form-field">
+                <label>Recomendación</label>
+                <textarea className="text-area" rows={3} value={editEntryForm.recommendation || ''} onChange={function(e) { setEditEntryForm(Object.assign({}, editEntryForm, { recommendation: e.target.value })) }} />
+              </div>
+              <div className="form-actions">
+                <button className="submit-button" onClick={handleSaveEntry}>Guardar cambios</button>
+                <button className="cancel-button" onClick={function() { setEditingEntry(null) }}>Cancelar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
