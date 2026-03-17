@@ -369,7 +369,7 @@ select.text-input {
 .form-row {
   display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
 }
-.form-field.form-field-half { padding: 0; border: none; }
+.form-field.form-field-half { padding: 14px 20px; border: none; }
 
 .new-project-form, .new-property-form {
   background: var(--surface-1);

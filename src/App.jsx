@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import jsPDF from 'jspdf'
+import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic } from 'lucide-react'
 import './App.css'
 
 // === PANTALLA HOME ===
@@ -227,7 +228,7 @@ function HomeScreen() {
         <h2 className="hp-section-title hp-reveal">Inspecciona. Documenta. Gestiona.</h2>
         <div className="hp-hflow">
           <div className="hp-hstep hp-reveal">
-            <div className="hp-hstep-icon">📱</div>
+            <div className="hp-hstep-icon"><Smartphone size={22} strokeWidth={1.5} /></div>
             <div className="hp-hstep-text">
               <span className="hp-hstep-num">01</span>
               <h4 className="hp-hstep-title">Llegas a terreno</h4>
@@ -236,7 +237,7 @@ function HomeScreen() {
           </div>
           <div className="hp-hflow-arrow hp-reveal">→</div>
           <div className="hp-hstep hp-reveal">
-            <div className="hp-hstep-icon">📸</div>
+            <div className="hp-hstep-icon"><Camera size={22} strokeWidth={1.5} /></div>
             <div className="hp-hstep-text">
               <span className="hp-hstep-num">02</span>
               <h4 className="hp-hstep-title">Fotos y nota de voz</h4>
@@ -254,7 +255,7 @@ function HomeScreen() {
           </div>
           <div className="hp-hflow-arrow hp-reveal">→</div>
           <div className="hp-hstep hp-reveal">
-            <div className="hp-hstep-icon">📄</div>
+            <div className="hp-hstep-icon"><FileText size={22} strokeWidth={1.5} /></div>
             <div className="hp-hstep-text">
               <span className="hp-hstep-num">04</span>
               <h4 className="hp-hstep-title">Hallazgos listos para gestionar</h4>
@@ -715,7 +716,7 @@ function LoginScreen({ onLogin }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: forgotEmail.trim() })
     })
-    setForgotMsg('✅ Si ese email existe, recibirás un link en los próximos minutos.')
+    setForgotMsg('Si ese email existe, recibirás un link en los próximos minutos.')
   } catch (err) {
     setForgotMsg('Error al enviar. Intenta de nuevo.')
   }
@@ -754,7 +755,7 @@ function LoginScreen({ onLogin }) {
             <label>Email</label>
             <input type="email" inputMode="email" className="text-input" value={forgotEmail} onChange={function(e) { setForgotEmail(e.target.value) }} placeholder="tu@email.com" />
           </div>
-          {forgotMsg && <p style={{fontSize:'0.875rem', color: forgotMsg.startsWith('✅') ? 'var(--primary-700)' : '#B91C1C', marginBottom:'1rem'}}>{forgotMsg}</p>}
+          {forgotMsg && <p style={{fontSize:'0.875rem', color: forgotMsg.startsWith('Si') ? 'var(--primary-700)' : '#B91C1C', marginBottom:'1rem'}}>{forgotMsg}</p>}
           <button className="submit-button" onClick={handleForgot} disabled={forgotLoading}>
             {forgotLoading ? 'Enviando...' : 'Enviar link →'}
           </button>
@@ -819,7 +820,7 @@ function RegisterScreen({ onLogin }) {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-logo">
-          <span className="header-icon">📋</span>
+          <span className="header-icon"><ClipboardList size={20} strokeWidth={1.5} /></span>
           <h1>BitacoraPro</h1>
           <p>Crea tu cuenta de empresa</p>
         </div>
@@ -902,7 +903,7 @@ function InviteRegisterScreen({ onLogin }) {
   if (error && !inviteData) return (
     <div className="auth-screen">
       <div className="auth-card">
-        <div className="auth-logo"><span className="header-icon">⚠️</span><h1>Invitación inválida</h1><p>{error}</p></div>
+        <div className="auth-logo"><span className="header-icon" style={{display:'flex',alignItems:'center',justifyContent:'center'}}><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--warning-700)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span><h1>Invitación inválida</h1><p>{error}</p></div>
         <button className="submit-button" onClick={onGoLogin}>Ir al inicio de sesión</button>
       </div>
     </div>
@@ -968,7 +969,7 @@ function ChangePasswordScreen({ token, user, onDone }) {
     <div className="auth-screen">
       <div className="auth-card">
         <div className="auth-logo">
-          <span style={{fontSize:'2rem'}}>🔑</span>
+          <span style={{fontSize:'2rem'}}><KeyRound size={32} strokeWidth={1.5} color="var(--primary-600)" /></span>
           <h1>Crea tu contraseña</h1>
           <p>Hola {user.name}, es tu primer acceso. Elige una contraseña para tu cuenta.</p>
         </div>
@@ -1042,7 +1043,7 @@ function AdminScreen() {
   }
 
   function handleDelete(c) {
-    var msg1 = '⚠️ Eliminar "' + c.company_name + '" y TODOS sus datos?\n\nEsto borrará ' + c.projects + ' proyectos, ' + c.properties + ' propiedades y ' + c.entries + ' hallazgos. Esta acción es irreversible.'
+    var msg1 = 'liminar "' + c.company_name + '" y TODOS sus datos?\n\nEsto borrará ' + c.projects + ' proyectos, ' + c.properties + ' propiedades y ' + c.entries + ' hallazgos. Esta acción es irreversible.'
     var msg2 = 'Última confirmación: ¿estás seguro de eliminar "' + c.company_name + '" para siempre?'
     if (!window.confirm(msg1)) return
     if (!window.confirm(msg2)) return
@@ -1059,10 +1060,10 @@ function AdminScreen() {
     adminFetch('/admin/create-company', { method: 'POST', body: JSON.stringify(createForm) })
       .then(function(r) { return r.json() })
       .then(function(data) {
-        if (data.error) { setCreateMsg('❌ ' + data.error) }
-        else { setCreateMsg('✅ Cliente creado: ' + data.company.name); setCreateForm({ company_name: '', name: '', email: '', password: '' }); setShowCreate(false); refreshStats() }
+        if (data.error) { setCreateMsg('Error: ' + data.error) }
+        else { setCreateMsg('Cliente creado: ' + data.company.name); setCreateForm({ company_name: '', name: '', email: '', password: '' }); setShowCreate(false); refreshStats() }
         setCreating(false)
-      }).catch(function() { setCreateMsg('❌ Error de conexión'); setCreating(false) })
+      }).catch(function() { setCreateMsg('Error de conexión'); setCreating(false) })
   }
 
   if (!authed) {
@@ -1103,14 +1104,14 @@ function AdminScreen() {
         {/* Stats globales */}
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'1rem',marginBottom:'2rem'}}>
           {[
-            { label: 'Clientes', value: companies.length, icon: '🏢' },
-            { label: 'Proyectos', value: totalProjects, icon: '📁' },
-            { label: 'Propiedades', value: totalProperties, icon: '🏠' },
-            { label: 'Hallazgos', value: totalEntries, icon: '📋' },
+            { label: 'Clientes', value: companies.length, icon: <Building2 size={22} strokeWidth={1.5} color="var(--primary-600)" /> },
+            { label: 'Proyectos', value: totalProjects, icon: <FolderOpen size={22} strokeWidth={1.5} color="var(--primary-600)" /> },
+            { label: 'Propiedades', value: totalProperties, icon: <Home size={22} strokeWidth={1.5} color="var(--primary-600)" /> },
+            { label: 'Hallazgos', value: totalEntries, icon: <ClipboardList size={22} strokeWidth={1.5} color="var(--primary-600)" /> },
           ].map(function(stat) {
             return (
               <div key={stat.label} style={{background:'#fff',borderRadius:'12px',padding:'1.25rem 1.5rem',boxShadow:'0 1px 4px rgba(0,0,0,0.06)'}}>
-                <div style={{fontSize:'1.5rem',marginBottom:'0.4rem'}}>{stat.icon}</div>
+                <div style={{marginBottom:'0.4rem',display:'flex',alignItems:'center'}}>{stat.icon}</div>
                 <div style={{fontSize:'1.75rem',fontWeight:'700',color:'var(--text-primary)',lineHeight:1}}>{stat.value}</div>
                 <div style={{fontSize:'0.8rem',color:'var(--text-tertiary)',marginTop:'0.25rem'}}>{stat.label}</div>
               </div>
@@ -1134,7 +1135,7 @@ function AdminScreen() {
               <input placeholder="Email del admin" type="email" value={createForm.email} onChange={function(e) { setCreateForm(Object.assign({},createForm,{email:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none'}} />
               <input placeholder="Contraseña temporal" type="text" value={createForm.password} onChange={function(e) { setCreateForm(Object.assign({},createForm,{password:e.target.value})) }} style={{padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none'}} />
             </div>
-            {createMsg && <p style={{color: createMsg.startsWith('✅') ? 'var(--primary-700)' : '#E74C3C',fontSize:'0.85rem',margin:'0 0 0.75rem'}}>{createMsg}</p>}
+            {createMsg && <p style={{color: createMsg.startsWith('Cliente creado') ? 'var(--primary-700)' : '#E74C3C',fontSize:'0.85rem',margin:'0 0 0.75rem'}}>{createMsg}</p>}
             <div style={{display:'flex',gap:'0.75rem'}}>
               <button onClick={handleCreate} disabled={creating} style={{background:'var(--text-primary)',color:'#fff',border:'none',borderRadius:'8px',padding:'0.7rem 1.5rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>{creating ? 'Creando...' : 'Crear cliente'}</button>
               <button onClick={function() { setShowCreate(false); setCreateMsg('') }} style={{background:'none',border:'1.5px solid var(--border-subtle)',borderRadius:'8px',padding:'0.7rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',color:'var(--text-tertiary)'}}>Cancelar</button>
@@ -1198,7 +1199,7 @@ function AdminScreen() {
                             <button
                               onClick={function() { setOpenMenu(null); handleDelete(c) }}
                               style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color:'#E74C3C',fontWeight:'500'}}
-                            >🗑 Eliminar empresa</button>
+                            ><Trash2 size={14} strokeWidth={1.5} style={{marginRight:'4px'}} /> Eliminar empresa</button>
                           </div>
                         )}
                       </div>
@@ -1312,9 +1313,9 @@ function PublicEntryScreen() {
         <div className="entry-card" style={{marginBottom:'1rem'}}>
 
           {/* Tags */}
-          <div className="entry-header" style={{paddingBottom:'8px'}}>
+          <div className="entry-header" style={{paddingTop:'14px', paddingBottom:'8px'}}>
             <div>
-              <div className="entry-tags">
+              <div style={{display:'flex',gap:'5px',flexWrap:'wrap',marginBottom:'6px'}}>
                 <span className={'tag severity-tag ' + (entry.severity || 'leve')}>{(entry.severity || 'leve').charAt(0).toUpperCase() + (entry.severity || 'leve').slice(1)}</span>
                 {entry.category && <span className="tag category-tag" style={{textTransform:'capitalize'}}>{entry.category}</span>}
                 {(function() {
@@ -1325,7 +1326,7 @@ function PublicEntryScreen() {
                 })()}
                 {entry.ai_generated === 1 && <span className="tag ai-tag">IA</span>}
               </div>
-              <h1 className="entry-title" style={{fontSize:'var(--text-lg)',marginTop:'4px'}}>{entry.title}</h1>
+              <h1 style={{fontSize:'var(--text-lg)',fontWeight:'600',letterSpacing:'-0.02em',color:'var(--text-primary)',lineHeight:'var(--leading-snug)',marginTop:'4px'}}>{entry.title}</h1>
               <div style={{display:'flex',gap:'12px',flexWrap:'wrap',marginTop:'4px'}}>
                 {entry.location && <span style={{fontSize:'var(--text-xs)',color:'var(--text-tertiary)'}}>{entry.location}</span>}
                 <span style={{fontSize:'var(--text-xs)',color:'var(--text-disabled)'}}>{new Date(entry.created_at).toLocaleDateString('es-CL', { day:'2-digit', month:'long', year:'numeric' })}</span>
@@ -1360,11 +1361,9 @@ function PublicEntryScreen() {
 
           {/* Recomendación */}
           {entry.recommendation && (
-            <div className="entry-description-box">
-              <div className="entry-recommendation">
-                <strong>Recomendación</strong>
-                <p>{entry.recommendation}</p>
-              </div>
+            <div className="entry-recommendation">
+              <strong>Recomendación</strong>
+              <p>{entry.recommendation}</p>
             </div>
           )}
 
@@ -1515,13 +1514,13 @@ function PublicPropertyScreen() {
               var s = entry.status || 'pendiente'
               return (
                 <div key={entry.id} className="entry-card">
-                  <div className="entry-header">
+                  <div className="entry-header" style={{paddingTop:'14px', paddingBottom:'8px'}}>
                     <div style={{flex:1,minWidth:0}}>
-                      <div className="entry-tags">
+                      <div style={{display:'flex',gap:'5px',flexWrap:'wrap',marginBottom:'6px'}}>
                         <span className={'tag severity-tag ' + (entry.severity || 'leve')}>{(entry.severity || 'leve').charAt(0).toUpperCase() + (entry.severity || 'leve').slice(1)}</span>
                         {entry.category && <span className="tag category-tag" style={{textTransform:'capitalize'}}>{entry.category}</span>}
                       </div>
-                      <h3 className="entry-title">{entry.title}</h3>
+                      <h3 style={{fontSize:'var(--text-base)',fontWeight:'600',letterSpacing:'-0.01em',color:'var(--text-primary)',lineHeight:'var(--leading-snug)'}}>{entry.title}</h3>
                       {entry.location && <div className="entry-unit">{entry.location}</div>}
                     </div>
                     <span className={'tag ' + (statusMap[s] || 'active-pendiente')} style={{flexShrink:0,borderRadius:'var(--radius-full)',padding:'2px 8px',fontSize:'var(--text-xs)',fontWeight:'600'}}>{statusLabel[s] || 'Pendiente'}</span>
@@ -1536,15 +1535,19 @@ function PublicPropertyScreen() {
                   )}
 
                   {(entry.description || entry.recommendation) && (
-                    <div className="entry-description-box">
-                      {entry.description && <p className="entry-description">{entry.description}</p>}
+                    <>
+                      {entry.description && (
+                        <div className="entry-description-box">
+                          <p className="entry-description">{entry.description}</p>
+                        </div>
+                      )}
                       {entry.recommendation && (
                         <div className="entry-recommendation">
                           <strong>Recomendación</strong>
                           <p>{entry.recommendation}</p>
                         </div>
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
               )
@@ -1863,7 +1866,7 @@ var handleLogin = function(newToken, user) {
       var data = await r.json()
       if (data.token) {
         var url = window.location.origin + '/p/' + data.token
-        copyToClipboard(url, function() { alert('✅ Link copiado al portapapeles') })
+        copyToClipboard(url, function() { alert('Link copiado al portapapeles') })
       }
     } catch(e) { alert('Error al obtener el link') }
   }
@@ -1930,7 +1933,7 @@ var handleLogin = function(newToken, user) {
         if (cameFromAct) {
           setCameFromAct(false)
           setShowAct(true)
-          setActToast('✅ Hallazgo registrado')
+          setActToast('Hallazgo registrado')
           setTimeout(function() { setActToast('') }, 2500)
         }
       } else { alert('Error: ' + data.error) }
@@ -2024,12 +2027,12 @@ var handleLogin = function(newToken, user) {
         body: JSON.stringify({ email: inviteEmail.trim() })
       })
       var data = await r.json()
-      if (!r.ok) { setInviteMsg('❌ ' + data.error) } else {
-        setInviteMsg('✅ Invitación enviada a ' + inviteEmail.trim())
+      if (!r.ok) { setInviteMsg('Error: ' + data.error) } else {
+        setInviteMsg('Invitación enviada a ' + inviteEmail.trim())
         setInviteEmail('')
         loadTeam(currentProject.id)
       }
-    } catch(e) { setInviteMsg('❌ Error al enviar') }
+    } catch(e) { setInviteMsg('Error al enviar') }
     setInviteLoading(false)
   }
 
@@ -2447,7 +2450,7 @@ function AppInterior(props) {
                       <p className="project-date">{project.property_count || 0} propiedades | Creado: {new Date(project.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                     </div>
                     {currentUser && currentUser.role === 'admin' && (
-                      <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProject(project.id) }}>🗑</button>
+                      <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProject(project.id) }}><Trash2 size={15} strokeWidth={1.5} /></button>
                     )}
                   </div>
                 )
@@ -2566,7 +2569,7 @@ function AppInterior(props) {
                       {inviteLoading ? 'Enviando...' : 'Enviar'}
                     </button>
                   </div>
-                  {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('✅') ? 'var(--primary-700)' : '#B91C1C'}}>{inviteMsg}</p>}
+                  {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('Invitación') ? 'var(--primary-700)' : '#B91C1C'}}>{inviteMsg}</p>}
                 </div>
                 {team.members && team.members.length > 0 && (
                   <div className="form-field">
@@ -2668,10 +2671,10 @@ function AppInterior(props) {
                       <p className="project-date">{prop.entry_count || 0} hallazgo{(prop.entry_count || 0) !== 1 ? 's' : ''}</p>
                     </div>
                     <div className="property-card-actions">
-                      <button className="delete-project-button" title="Compartir vista propietario" onClick={function(e) { e.stopPropagation(); handleCopyPropertyLink(prop.id) }}>🔗</button>
-                      <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}>✏️</button>
+                      <button className="delete-project-button" title="Compartir vista propietario" onClick={function(e) { e.stopPropagation(); handleCopyPropertyLink(prop.id) }}><Link size={15} strokeWidth={1.5} /></button>
+                      <button className="delete-project-button" title="Editar" onClick={function(e) { e.stopPropagation(); setEditingProperty(prop); setEditPropForm({ unit_number: prop.unit_number || '', owner_name: prop.owner_name || '', owner_rut: prop.owner_rut || '', owner_email: prop.owner_email || '', owner_phone: prop.owner_phone || '' }) }}><Pencil size={15} strokeWidth={1.5} /></button>
                       {currentUser && currentUser.role === 'admin' && (
-                        <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}>🗑</button>
+                        <button className="delete-project-button" onClick={function(e) { e.stopPropagation(); handleDeleteProperty(prop.id) }}><Trash2 size={15} strokeWidth={1.5} /></button>
                       )}
                     </div>
                   </div>
@@ -2829,7 +2832,7 @@ function AppInterior(props) {
                   return (
                     <div key={entry.id} className="form-card" style={{marginBottom:'0.875rem'}}>
                       <div className="form-header">
-                        <h3>✏️ Editar hallazgo</h3>
+                        <h3><Pencil size={15} strokeWidth={1.5} style={{marginRight:'6px',verticalAlign:'middle'}} />Editar hallazgo</h3>
                         <button className="close-button" onClick={function() { setEditingEntry(null) }}>X</button>
                       </div>
                       <div className="form-field">
@@ -2875,11 +2878,11 @@ function AppInterior(props) {
                     <div style={{position:'absolute', top:'0.875rem', right:'0.875rem', display:'flex', gap:'0.25rem'}}>
                       <button className="delete-button" style={{position:'static', opacity:0.35}} title="Copiar link" onClick={function() {
                         var url = window.location.origin + '/h/' + entry.id
-                        copyToClipboard(url, function() { alert('✅ Link copiado al portapapeles') })
-                      }}>🔗</button>
-                      <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}>✏️</button>
+                        copyToClipboard(url, function() { alert('Link copiado al portapapeles') })
+                      }}><Link size={15} strokeWidth={1.5} /></button>
+                      <button className="delete-button" style={{position:'static', opacity:0.35}} title="Editar" onClick={function() { setEditingEntry(entry.id); setEditEntryForm({ title: entry.title || '', category: entry.category || 'otro', severity: entry.severity || 'leve', location: entry.location || '', description: entry.description || '', recommendation: entry.recommendation || '' }) }}><Pencil size={15} strokeWidth={1.5} /></button>
                       {currentUser && currentUser.role === 'admin' && (
-                        <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}>🗑</button>
+                        <button className="delete-button" style={{position:'static', opacity:0.25}} onClick={function() { handleDeleteEntry(entry.id) }}><Trash2 size={15} strokeWidth={1.5} /></button>
                       )}
                     </div>
                     <div className="entry-tags">
@@ -3121,7 +3124,7 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
     }, true, snapshot)
     setSigning(false)
     onClose()
-    setActToast('✅ Acta firmada correctamente')
+    setActToast('Acta firmada correctamente')
     setTimeout(function() { setActToast('') }, 3000)
   }
 
@@ -3136,7 +3139,7 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
           <div style={{fontWeight:'700',fontSize:'0.95rem',color:'var(--text-primary)'}}>{property.unit_number}{property.owner_name ? ' — ' + property.owner_name : ''}</div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
-          {isSigned && <span style={{fontSize:'0.7rem',background:'#F0FDF4',color:'#166534',border:'1px solid #BBF7D0',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>✅ Firmada</span>}
+          {isSigned && <span style={{fontSize:'0.7rem',background:'#F0FDF4',color:'#166534',border:'1px solid #BBF7D0',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>Firmada</span>}
           {!isSigned && <span style={{fontSize:'0.7rem',background:'#FFFBEB',color:'#92400E',border:'1px solid #FDE68A',padding:'0.2rem 0.6rem',borderRadius:'100px',fontWeight:'600'}}>En progreso</span>}
           <button onClick={onClose} style={{background:'none',border:'none',fontSize:'1.1rem',cursor:'pointer',color:'var(--text-tertiary)',padding:'0.25rem',lineHeight:1}}>✕</button>
         </div>
@@ -3292,7 +3295,7 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
             <ActSigCanvas label={'Firma del inspector (' + (form.inspector_nombre || currentUser.name) + ')'} value={inspectorSigData} onChange={setInspectorSigData} disabled={false} />
             <button onClick={handleSign} disabled={signing || !ownerSigData || !inspectorSigData}
               style={{width:'100%',padding:'0.875rem',background: (ownerSigData && inspectorSigData) ? 'var(--text-primary)' : 'var(--border-subtle)',color: (ownerSigData && inspectorSigData) ? '#fff' : 'var(--text-tertiary)',border:'none',borderRadius:'10px',fontWeight:'600',fontSize:'0.95rem',cursor:(ownerSigData && inspectorSigData)?'pointer':'default',marginTop:'0.5rem'}}>
-              {signing ? 'Firmando...' : '✅ Firmar y cerrar acta'}
+              {signing ? 'Firmando...' : 'Firmar y cerrar acta'}
             </button>
           </div>
         )}
@@ -3300,10 +3303,10 @@ var DeliveryActScreen = React.memo(function DeliveryActScreen({ property, projec
         {/* Vista firmas si ya está firmada */}
         {isSigned && (
           <div style={{background:'#fff',borderRadius:'12px',border:'1px solid #BBF7D0',padding:'1.25rem',marginBottom:'1rem'}}>
-            <h3 style={{margin:'0 0 1rem',fontSize:'0.875rem',fontWeight:'700',color:'#166534'}}>✅ Acta firmada el {new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', {day:'2-digit',month:'long',year:'numeric'})}</h3>
+            <h3 style={{margin:'0 0 1rem',fontSize:'0.875rem',fontWeight:'700',color:'#166534'}}>Acta firmada el {new Date(deliveryAct.signed_at).toLocaleDateString('es-CL', {day:'2-digit',month:'long',year:'numeric'})}</h3>
             {deliveryAct.edited_after_signing && (
               <div style={{background:'#FFFBEB',border:'1px solid #FDE68A',borderRadius:'8px',padding:'0.6rem 0.875rem',marginBottom:'1rem',fontSize:'0.8rem',color:'#92400E'}}>
-                ⚠️ Este acta fue modificada después de ser firmada.
+                Este acta fue modificada después de ser firmada.
               </div>
             )}
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1rem'}}>
@@ -3482,7 +3485,7 @@ function ProjectDashboardScreen({ project, authFetch, navigate }) {
 
   var copyEntryLink = function(entryId) {
     var url = window.location.origin + '/h/' + entryId
-    copyToClipboard(url, function() { alert('✅ Link copiado al portapapeles') })
+    copyToClipboard(url, function() { alert('Link copiado al portapapeles') })
   }
 
   var handleSort = function(field) {
@@ -3751,7 +3754,7 @@ function ProjectDashboardScreen({ project, authFetch, navigate }) {
                         onMouseEnter={function(e) { e.currentTarget.style.borderColor='var(--primary-700)'; e.currentTarget.style.color='var(--primary-700)' }}
                         onMouseLeave={function(e) { e.currentTarget.style.borderColor='var(--border-subtle)'; e.currentTarget.style.color='var(--text-tertiary)' }}
                       >
-                        🔗 Copiar link
+                        <Link size={12} strokeWidth={1.5} style={{marginRight:'4px',verticalAlign:'middle'}} />Copiar link
                       </button>
                     </td>
                   </tr>
@@ -3809,7 +3812,7 @@ function NuevoHallazgoForm(props) {
         if (cameFromAct) {
           setCameFromAct(false)
           navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id + '/acta', { replace: true })
-          setActToast('✅ Hallazgo registrado')
+          setActToast('Hallazgo registrado')
           setTimeout(function() { setActToast('') }, 2500)
         } else {
           navigate('/proyectos/' + currentProject.id + '/propiedades/' + currentProperty.id, { replace: true })
@@ -3856,7 +3859,7 @@ function NuevoHallazgoForm(props) {
           )}
           {imagePreviews.length === 0 && !analyzing && (
             <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'1rem',color:'var(--text-tertiary)',gap:'0.25rem',cursor:'pointer'}} onClick={function() { fileInputRef.current.click() }}>
-              <span style={{fontSize:'1.5rem'}}>📸</span>
+              <span style={{display:'flex',alignItems:'center',justifyContent:'center'}}><Camera size={28} strokeWidth={1.5} color="var(--text-tertiary)" /></span>
               <span style={{fontSize:'0.8rem',fontWeight:'500'}}>Toca para agregar fotos</span>
               <span style={{fontSize:'0.72rem'}}>Puedes agregar varias</span>
             </div>
@@ -3869,7 +3872,7 @@ function NuevoHallazgoForm(props) {
         <label>Descripcion del inspector</label>
         <div className="audio-section">
           <button className={'record-btn' + (isRecording ? ' recording' : '')} onClick={toggleRecording} disabled={analyzing} type="button">
-            {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content">🎙 Grabar audio</span>}
+            {isRecording ? <span className="record-content"><span className="pulse-dot"></span> Grabando... toca para detener</span> : <span className="record-content"><Mic size={15} strokeWidth={1.5} style={{marginRight:'6px',verticalAlign:'middle'}} />Grabar audio</span>}
           </button>
           <textarea placeholder="Habla o escribe tu descripcion aqui..." value={description} onChange={function(e) { setDescription(e.target.value) }} className="text-area" rows={3} disabled={analyzing} />
           {description && <p className="audio-hint">Puedes editar el texto antes de enviar</p>}
