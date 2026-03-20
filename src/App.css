@@ -203,7 +203,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .delete-button:hover, .delete-project-button:hover {
-  color: var(--danger-700); background: var(--danger-50);
+  color: var(--text-secondary); background: var(--gray-100);
 }
 
 .back-button {
