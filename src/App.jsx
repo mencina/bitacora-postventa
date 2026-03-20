@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import jsPDF from 'jspdf'
-import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye } from 'lucide-react'
+import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye, Users } from 'lucide-react'
 import './App.css'
 
 // === PANTALLA HOME ===
@@ -2122,7 +2122,6 @@ function AppHeader(props) {
   var title = props.title
   var user = props.user
   var onLogout = props.onLogout
-  var onTeam = props.onTeam
   var [open, setOpen] = useState(false)
 
   useEffect(function() {
@@ -2156,20 +2155,6 @@ function AppHeader(props) {
               <div style={{fontSize:'var(--text-xs)',color:'var(--text-tertiary)',marginTop:'2px'}}>{user && user.company_name}</div>
             </div>
             <div style={{padding:'4px 0'}}>
-              {onTeam && (
-                <>
-                  <button
-                    onClick={function() { setOpen(false); onTeam() }}
-                    style={{width:'100%',display:'flex',alignItems:'center',gap:'10px',padding:'10px 16px',background:'none',border:'none',cursor:'pointer',fontSize:'var(--text-base)',color:'var(--text-primary)',fontFamily:'var(--font-sans)',textAlign:'left'}}
-                    onMouseOver={function(e) { e.currentTarget.style.background='var(--surface-2)' }}
-                    onMouseOut={function(e) { e.currentTarget.style.background='none' }}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    Equipo del proyecto
-                  </button>
-                  <div style={{height:'1px',background:'var(--border-subtle)',margin:'2px 16px'}} />
-                </>
-              )}
               <button
                 onClick={function() { setOpen(false); onLogout() }}
                 style={{width:'100%',display:'flex',alignItems:'center',gap:'10px',padding:'10px 16px',background:'none',border:'none',cursor:'pointer',fontSize:'var(--text-base)',color:'var(--danger-700)',fontFamily:'var(--font-sans)',textAlign:'left'}}
@@ -2475,7 +2460,7 @@ function AppInterior(props) {
     if (vista === 'dashboard') {
       return (
         <div className="app app--dashboard">
-          <AppHeader title={currentProject ? currentProject.name : 'Dashboard'} user={currentUser} onLogout={handleLogoutAndRedirect} onTeam={currentUser && currentUser.role === 'admin' ? function() { navigate('/proyectos/' + currentProject.id + '/equipo') } : null} />
+          <AppHeader title={currentProject ? currentProject.name : 'Dashboard'} user={currentUser} onLogout={handleLogoutAndRedirect} />
           <AppBreadcrumb onBack={function() { navigate('/proyectos/' + (currentProject ? currentProject.id : '')) }} backLabel={currentProject ? currentProject.name : 'Proyecto'} />
           <main className="main main--dashboard" id="app-scroll">
             {currentProject && <ProjectDashboardScreen project={currentProject} authFetch={authFetch} navigate={navigate} currentUser={currentUser} />}
@@ -2611,7 +2596,6 @@ function AppInterior(props) {
             title={currentProject.name}
             user={currentUser}
             onLogout={handleLogoutAndRedirect}
-            onTeam={currentUser && currentUser.role === 'admin' ? function() { navigate('/proyectos/' + currentProject.id + '/equipo') } : null}
           />
           <AppBreadcrumb onBack={goBackToProjects} backLabel="Proyectos" />
           <main className="main" id="app-scroll">
@@ -2619,24 +2603,47 @@ function AppInterior(props) {
             {!loadingProperties && properties.length === 0 && (
               <div className="welcome-message"><h2>Sin propiedades</h2><p>Agrega las propiedades del proyecto para comenzar la inspección.</p></div>
             )}
-            {/* Botón Dashboard — primer elemento de la lista */}
-            {properties.length > 0 && (
-              <div
-                onClick={function() { navigate('/proyectos/' + currentProject.id + '/dashboard') }}
-                style={{display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--surface-1)',border:'1px solid var(--border-subtle)',borderRadius:'var(--radius-xl)',padding:'1rem 1.25rem',marginBottom:'0.75rem',cursor:'pointer',transition:'box-shadow 0.15s,border-color 0.15s'}}
-                onMouseEnter={function(e) { e.currentTarget.style.boxShadow='var(--shadow-md)'; e.currentTarget.style.borderColor='var(--primary-200)' }}
-                onMouseLeave={function(e) { e.currentTarget.style.boxShadow='none'; e.currentTarget.style.borderColor='var(--border-subtle)' }}
-              >
-                <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>
-                  <div style={{width:'36px',height:'36px',background:'var(--primary-50)',borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-700)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            {/* Cards Dashboard + Gestionar Equipo */}
+            {(properties.length > 0 || (currentUser && currentUser.role === 'admin')) && (
+              <div style={{display:'flex',gap:'0.75rem',marginBottom:'0.75rem'}}>
+                {properties.length > 0 && (
+                  <div
+                    className="nav-card"
+                    onClick={function() { navigate('/proyectos/' + currentProject.id + '/dashboard') }}
+                    onMouseEnter={function(e) { e.currentTarget.style.boxShadow='var(--shadow-md)'; e.currentTarget.style.borderColor='var(--primary-200)' }}
+                    onMouseLeave={function(e) { e.currentTarget.style.boxShadow='none'; e.currentTarget.style.borderColor='var(--border-subtle)' }}
+                  >
+                    <div className="nav-card__inner">
+                      <div style={{width:'36px',height:'36px',background:'var(--primary-50)',borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary-700)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                      </div>
+                      <div>
+                        <p style={{margin:0,fontWeight:'600',fontSize:'0.9rem',color:'var(--text-primary)'}}>Dashboard</p>
+                        <p style={{margin:0,fontSize:'0.8rem',color:'var(--text-tertiary)'}}>Métricas y hallazgos</p>
+                      </div>
+                    </div>
+                    <svg className="nav-card__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                   </div>
-                  <div>
-                    <p style={{margin:0,fontWeight:'600',fontSize:'0.9rem',color:'var(--text-primary)'}}>Dashboard del proyecto</p>
-                    <p style={{margin:0,fontSize:'0.8rem',color:'var(--text-tertiary)'}}>Métricas, análisis IA y gestión de hallazgos</p>
+                )}
+                {currentUser && currentUser.role === 'admin' && (
+                  <div
+                    className="nav-card"
+                    onClick={function() { navigate('/proyectos/' + currentProject.id + '/equipo') }}
+                    onMouseEnter={function(e) { e.currentTarget.style.boxShadow='var(--shadow-md)'; e.currentTarget.style.borderColor='var(--primary-200)' }}
+                    onMouseLeave={function(e) { e.currentTarget.style.boxShadow='none'; e.currentTarget.style.borderColor='var(--border-subtle)' }}
+                  >
+                    <div className="nav-card__inner">
+                      <div style={{width:'36px',height:'36px',background:'var(--primary-50)',borderRadius:'10px',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                        <Users size={18} color="var(--primary-700)" />
+                      </div>
+                      <div>
+                        <p style={{margin:0,fontWeight:'600',fontSize:'0.9rem',color:'var(--text-primary)'}}>Gestionar Equipo</p>
+                        <p style={{margin:0,fontSize:'0.8rem',color:'var(--text-tertiary)'}}>Miembros e invitaciones</p>
+                      </div>
+                    </div>
+                    <svg className="nav-card__chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                   </div>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                )}
               </div>
             )}
             <div className="projects-grid">
