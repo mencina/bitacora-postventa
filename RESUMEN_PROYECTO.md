@@ -39,6 +39,7 @@ Los inspectores suben fotos y graban audio de hallazgos, y la IA (Claude) genera
 - `/proyectos/:projectId/propiedades/:propertyId/nuevo-hallazgo` → Formulario registrar hallazgo (pantalla independiente)
 - `/proyectos/:projectId/propiedades/:propertyId/acta` → Acta de entrega (pantalla independiente)
 - `/proyectos/:projectId/dashboard` → Dashboard del proyecto — métricas, análisis IA y gestión de hallazgos (ancho completo desktop)
+- `/proyectos/:projectId/equipo` → Gestión de equipo del proyecto (solo admin) — pantalla independiente
 - `/h/:entryId` → Vista pública de un hallazgo (sin login, solo lectura)
 - `/p/:token` → Vista pública de propiedad completa para el propietario (sin login, solo lectura)
 - `/reset-password/:token` → Restablecer contraseña desde email
@@ -121,7 +122,7 @@ Necesario para que las URLs de React Router funcionen al acceder directamente (e
 
 ## Arquitectura de componentes React
 - `App()` — maneja todo el estado global y las rutas. Incluye objeto `interiorProps` que pasa todos los props a AppInterior con spread (`{...interiorProps}`)
-- `AppHeader(props)` — header **fixed** de 52px con isotipo + título centrado + menú `⋯`. El menú abre un dropdown con nombre/empresa del usuario, opción de equipo (solo admin) y cerrar sesión
+- `AppHeader(props)` — header **fixed** de 52px con isotipo + título centrado + menú `⋯`. El menú abre un dropdown con nombre/empresa del usuario y cerrar sesión
 - `AppBreadcrumb(props)` — barra **fixed** de 36px en `top: 52px` con flecha para volver + contexto. Aparece solo en vistas con subniveles. El `.main` tiene `padding-top: 104px` para no quedar tapado
 - `IsotipoSVG` — wrapper del isotipo (`/isotipo.svg`) usado en el header
 - `AppInterior(props)` — componente separado (fuera de App) que recibe todo como props. Usa `useParams()` y el prop `vista` ('proyectos' | 'propiedades' | 'hallazgos') para decidir qué renderizar. Importante: debe estar fuera de App() para evitar re-montaje en cada render, lo que causaba bugs de teclado en mobile
@@ -243,7 +244,7 @@ Inter (reemplaza Playfair Display + DM Sans). Importada desde Google Fonts en Ap
 ### Arquitectura de navegación mobile
 - **Header fijo (52px):** isotipo izquierda + título centrado + botón `⋯` derecha
 - **Breadcrumb (32px):** solo en vistas 2 y 3. `← Proyecto · Propietario`
-- **Menú `⋯`:** dropdown con usuario + empresa + equipo (admin) + cerrar sesión
+- **Menú `⋯`:** dropdown con usuario + empresa + cerrar sesión
 - Sin botón cerrar sesión visible en el header
 
 ### CTAs sticky
@@ -256,7 +257,7 @@ Se ocultan cuando el formulario correspondiente está abierto. Usan `position: f
 ### Íconos (Lucide React)
 Instalado con `npm install lucide-react` en la raíz del proyecto. Importados en App.jsx:
 ```js
-import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic } from 'lucide-react'
+import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye, Users } from 'lucide-react'
 ```
 Mapeo principal:
 | Contexto | Ícono |
@@ -265,6 +266,8 @@ Mapeo principal:
 | Editar (propiedad, hallazgo) | `Pencil` |
 | Copiar link público | `Link` |
 | Grabar audio | `Mic` |
+| Ver hallazgo (dashboard) | `Eye` |
+| Gestionar Equipo (nav-card) | `Users` |
 | Cambio de contraseña | `KeyRound` |
 | Stat Clientes (admin) | `Building2` |
 | Stat Proyectos (admin) | `FolderOpen` |
@@ -339,7 +342,8 @@ Mario abre `bitacorapro.cl/admin` → crea empresa + admin → sistema envía em
 - ✅ Multi-empresa (cada empresa ve solo sus datos)
 - ✅ Invitar inspectores por email (Resend)
 - ✅ Inspectores solo ven proyectos asignados
-- ✅ Panel de equipo por proyecto (ver miembros, invitaciones pendientes, quitar inspector)
+- ✅ Pantalla de equipo del proyecto (`/proyectos/:id/equipo`) — pantalla independiente con miembros, invitar por email e invitaciones pendientes (solo admin)
+- ✅ Nav-cards "Dashboard" y "Gestionar Equipo" en la vista de propiedades — lado a lado, responsive: columna centrada en mobile, horizontal en desktop (>= 640px)
 - ✅ Lightbox de fotos (click en thumbnail → foto grande, navegación con flechas, teclado y swipe)
 - ✅ Design system v2 completo — Inter, tokens CSS, referente Linear, sin emojis funcionales
 - ✅ Íconos con Lucide React (reemplazó todos los emojis funcionales de la UI)
@@ -399,6 +403,7 @@ Mario abre `bitacorapro.cl/admin` → crea empresa + admin → sistema envía em
 - ✅ Fix botón "Iniciar acta" aparecía siempre primero — `loadingAct` se maneja directamente en el `useEffect` de la propiedad (no dentro del `useCallback`) para evitar cierre de scope; los fetches de entries y acta arrancan en paralelo y resetean sus flags al cambiar de propiedad
 - ✅ Vistas públicas (`/h/:entryId` y `/p/:token`) actualizadas al design system v2 — isotipo SVG real, Inter, tokens CSS, clases de componentes, sin colores hexadecimales hardcodeados ni emojis funcionales
 - ✅ Fix layout vistas públicas — caja de recomendación y tags/título de cards con padding correcto (eliminado doble padding generado por clases CSS con padding propio dentro de entry-header)
+- ✅ Fix hover rojo en botones de acción de cards (borrar, editar, compartir) → cambiado a gris claro (`var(--gray-100)`) acorde al design system
 
 ## Backlog — Bugs
 - 🐛 Scroll en Chrome iOS no resetea al tope al cambiar de pantalla
