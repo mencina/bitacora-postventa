@@ -2012,10 +2012,7 @@ var handleLogin = function(newToken, user) {
       .catch(console.error)
   }
 
-  var handleOpenTeam = function() {
-    setShowTeam(true)
-    loadTeam(currentProject.id)
-  }
+  var handleOpenTeam = function() { /* navegación manejada en AppInterior */ }
 
   var handleInvite = async function() {
     if (!inviteEmail.trim()) return
@@ -2099,6 +2096,7 @@ var handleLogin = function(newToken, user) {
         <Route path="/proyectos/:projectId/propiedades/:propertyId/nuevo-hallazgo" element={<AppInterior {...interiorProps} vista="nuevo-hallazgo" />} />
         <Route path="/proyectos/:projectId/propiedades/:propertyId/acta" element={<AppInterior {...interiorProps} vista="acta" />} />
         <Route path="/proyectos/:projectId/dashboard" element={<AppInterior {...interiorProps} vista="dashboard" />} />
+        <Route path="/proyectos/:projectId/equipo" element={<AppInterior {...interiorProps} vista="equipo" />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
@@ -2295,6 +2293,7 @@ function AppInterior(props) {
   var handleSaveProperty = props.handleSaveProperty
   var handleSaveEntry = props.handleSaveEntry
   var handleUpdateEntryStatus = props.handleUpdateEntryStatus
+  var loadTeam = props.loadTeam
   var handleOpenTeam = props.handleOpenTeam
   var handleInvite = props.handleInvite
   var handleRemoveMember = props.handleRemoveMember
@@ -2309,7 +2308,7 @@ function AppInterior(props) {
   // cargar el proyecto desde la API si aún no está en estado
   useEffect(function() {
     if (!token) return
-    if (vista === 'propiedades' || vista === 'hallazgos' || vista === 'nueva-propiedad' || vista === 'nuevo-hallazgo' || vista === 'acta' || vista === 'dashboard') {
+    if (vista === 'propiedades' || vista === 'hallazgos' || vista === 'nueva-propiedad' || vista === 'nuevo-hallazgo' || vista === 'acta' || vista === 'dashboard' || vista === 'equipo') {
       var projectId = parseInt(params.projectId)
       if (!currentProject || currentProject.id !== projectId) {
         authFetch(API_URL + '/projects').then(function(r) { return r.json() }).then(function(list) {
@@ -2342,6 +2341,12 @@ function AppInterior(props) {
   useLayoutEffect(function() {
     scrollToTop()
   }, [vista, params.projectId, params.propertyId])
+
+  useEffect(function() {
+    if (vista === 'equipo' && currentProject) {
+      loadTeam(currentProject.id)
+    }
+  }, [vista, currentProject && currentProject.id])
 
 
 
@@ -2470,7 +2475,7 @@ function AppInterior(props) {
     if (vista === 'dashboard') {
       return (
         <div className="app app--dashboard">
-          <AppHeader title={currentProject ? currentProject.name : 'Dashboard'} user={currentUser} onLogout={handleLogoutAndRedirect} onTeam={currentUser && currentUser.role === 'admin' ? handleOpenTeam : null} />
+          <AppHeader title={currentProject ? currentProject.name : 'Dashboard'} user={currentUser} onLogout={handleLogoutAndRedirect} onTeam={currentUser && currentUser.role === 'admin' ? function() { navigate('/proyectos/' + currentProject.id + '/equipo') } : null} />
           <AppBreadcrumb onBack={function() { navigate('/proyectos/' + (currentProject ? currentProject.id : '')) }} backLabel={currentProject ? currentProject.name : 'Proyecto'} />
           <main className="main main--dashboard" id="app-scroll">
             {currentProject && <ProjectDashboardScreen project={currentProject} authFetch={authFetch} navigate={navigate} currentUser={currentUser} />}
@@ -2541,6 +2546,63 @@ function AppInterior(props) {
       )
     }
 
+    // === VISTA: EQUIPO DEL PROYECTO ===
+    if (vista === 'equipo') {
+      return (
+        <div className="app">
+          <AppHeader title={currentProject.name} user={currentUser} onLogout={handleLogoutAndRedirect} />
+          <AppBreadcrumb onBack={function() { navigate('/proyectos/' + currentProject.id) }} backLabel={currentProject.name} />
+          <main className="main" id="app-scroll">
+            <div className="form-card">
+              <div className="form-header">
+                <h3>Equipo del Proyecto</h3>
+              </div>
+              <div className="form-field">
+                <label>Invitar inspector por email</label>
+                <div style={{display:'flex',gap:'0.5rem'}}>
+                  <input type="email" inputMode="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
+                  <button className="submit-button" onClick={handleInvite} disabled={inviteLoading} style={{width:'auto',padding:'0 1.25rem',flexShrink:0}}>
+                    {inviteLoading ? 'Enviando...' : 'Enviar'}
+                  </button>
+                </div>
+                {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('Invitación') ? 'var(--primary-700)' : '#B91C1C'}}>{inviteMsg}</p>}
+              </div>
+              {team.members && team.members.length > 0 && (
+                <div className="form-field">
+                  <label>Miembros activos</label>
+                  {team.members.map(function(m) {
+                    return (
+                      <div key={m.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'var(--surface-2)',borderRadius:'8px',marginBottom:'0.4rem'}}>
+                        <div>
+                          <span style={{fontWeight:'500',fontSize:'0.875rem'}}>{m.name}</span>
+                          <span style={{color:'var(--text-tertiary)',fontSize:'0.8rem',marginLeft:'0.5rem'}}>{m.email}</span>
+                          <span style={{background: m.role==='admin'?'var(--text-primary)':'var(--primary-50)',color:m.role==='admin'?'#fff':'var(--primary-700)',fontSize:'0.65rem',padding:'0.15rem 0.5rem',borderRadius:'100px',marginLeft:'0.5rem',fontWeight:'500'}}>{m.role}</span>
+                        </div>
+                        {m.role !== 'admin' && <button onClick={function() { handleRemoveMember(m.id, m.name) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B91C1C',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Quitar</button>}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              {team.pending_invitations && team.pending_invitations.length > 0 && (
+                <div className="form-field">
+                  <label>Invitaciones pendientes</label>
+                  {team.pending_invitations.map(function(inv) {
+                    return (
+                      <div key={inv.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#FEF3E2',borderRadius:'8px',marginBottom:'0.4rem'}}>
+                        <span style={{fontSize:'0.875rem',color:'#92400E'}}>{inv.email} — esperando respuesta</span>
+                        <button onClick={function() { handleCancelInvite(inv.id) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B45309',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Cancelar</button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      )
+    }
+
     // === VISTA 2: PROPIEDADES ===
     if (vista === 'propiedades') {
       return (
@@ -2549,60 +2611,10 @@ function AppInterior(props) {
             title={currentProject.name}
             user={currentUser}
             onLogout={handleLogoutAndRedirect}
-            onTeam={currentUser && currentUser.role === 'admin' ? handleOpenTeam : null}
+            onTeam={currentUser && currentUser.role === 'admin' ? function() { navigate('/proyectos/' + currentProject.id + '/equipo') } : null}
           />
           <AppBreadcrumb onBack={goBackToProjects} backLabel="Proyectos" />
           <main className="main" id="app-scroll">
-
-            {/* PANEL DE EQUIPO */}
-            {showTeam && (
-              <div className="form-card" style={{marginBottom:'1.5rem'}}>
-                <div className="form-header">
-                  <h3>👥 Equipo del Proyecto</h3>
-                  <button className="close-button" onClick={function() { setShowTeam(false); setInviteMsg('') }}>X</button>
-                </div>
-                <div className="form-field">
-                  <label>Invitar inspector por email</label>
-                  <div style={{display:'flex',gap:'0.5rem'}}>
-                    <input type="email" inputMode="email" className="text-input" placeholder="inspector@empresa.com" value={inviteEmail} onChange={function(e) { setInviteEmail(e.target.value) }} onKeyDown={function(e) { if(e.key==='Enter') handleInvite() }} style={{flex:1}} />
-                    <button className="submit-button" onClick={handleInvite} disabled={inviteLoading} style={{width:'auto',padding:'0 1.25rem',flexShrink:0}}>
-                      {inviteLoading ? 'Enviando...' : 'Enviar'}
-                    </button>
-                  </div>
-                  {inviteMsg && <p style={{marginTop:'0.5rem',fontSize:'0.875rem',color: inviteMsg.startsWith('Invitación') ? 'var(--primary-700)' : '#B91C1C'}}>{inviteMsg}</p>}
-                </div>
-                {team.members && team.members.length > 0 && (
-                  <div className="form-field">
-                    <label>Miembros activos</label>
-                    {team.members.map(function(m) {
-                      return (
-                        <div key={m.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'var(--surface-2)',borderRadius:'8px',marginBottom:'0.4rem'}}>
-                          <div>
-                            <span style={{fontWeight:'500',fontSize:'0.875rem'}}>{m.name}</span>
-                            <span style={{color:'var(--text-tertiary)',fontSize:'0.8rem',marginLeft:'0.5rem'}}>{m.email}</span>
-                            <span style={{background: m.role==='admin'?'var(--text-primary)':'var(--primary-50)',color:m.role==='admin'?'#fff':'var(--primary-700)',fontSize:'0.65rem',padding:'0.15rem 0.5rem',borderRadius:'100px',marginLeft:'0.5rem',fontWeight:'500'}}>{m.role}</span>
-                          </div>
-                          {m.role !== 'admin' && <button onClick={function() { handleRemoveMember(m.id, m.name) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B91C1C',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Quitar</button>}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-                {team.pending_invitations && team.pending_invitations.length > 0 && (
-                  <div className="form-field">
-                    <label>Invitaciones pendientes</label>
-                    {team.pending_invitations.map(function(inv) {
-                      return (
-                        <div key={inv.id} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.6rem 0.75rem',background:'#FEF3E2',borderRadius:'8px',marginBottom:'0.4rem'}}>
-                          <span style={{fontSize:'0.875rem',color:'#92400E'}}>{inv.email} — esperando respuesta</span>
-                          <button onClick={function() { handleCancelInvite(inv.id) }} style={{background:'none',border:'none',cursor:'pointer',color:'#B45309',fontSize:'0.8rem',padding:'0.25rem 0.5rem'}}>Cancelar</button>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )}
 
             {!loadingProperties && properties.length === 0 && (
               <div className="welcome-message"><h2>Sin propiedades</h2><p>Agrega las propiedades del proyecto para comenzar la inspección.</p></div>
