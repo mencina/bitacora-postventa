@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom'
 import jsPDF from 'jspdf'
-import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye, Users } from 'lucide-react'
+import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye, Users, MapPin, ChevronDown, Check } from 'lucide-react'
 import './App.css'
 
 // === PANTALLA HOME ===
@@ -2289,6 +2289,12 @@ function AppInterior(props) {
   var lightboxNext = props.lightboxNext
   var fileInputRef = props.fileInputRef
 
+  // Filtros pantalla de propiedad (estado local de UI)
+  var [filterEntryStatus,   setFilterEntryStatus]   = useState('all')
+  var [filterEntrySeverity, setFilterEntrySeverity] = useState('all')
+  var [filterEntryCategory, setFilterEntryCategory] = useState('all')
+  var [openFilterDropdown, setOpenFilterDropdown] = useState(null) // null | 'status' | 'severity' | 'category'
+
   // Cuando se accede a /proyectos/:projectId directamente (ej: refresh o link compartido),
   // cargar el proyecto desde la API si aún no está en estado
   useEffect(function() {
@@ -2604,7 +2610,7 @@ function AppInterior(props) {
               <div className="welcome-message"><h2>Sin propiedades</h2><p>Agrega las propiedades del proyecto para comenzar la inspección.</p></div>
             )}
             {/* Cards Dashboard + Gestionar Equipo */}
-            {(properties.length > 0 || (currentUser && currentUser.role === 'admin')) && (
+            {!loadingProperties && (properties.length > 0 || (currentUser && currentUser.role === 'admin')) && (
               <div style={{display:'flex',gap:'0.75rem',marginBottom:'0.75rem'}}>
                 {properties.length > 0 && (
                   <div
@@ -2841,9 +2847,102 @@ function AppInterior(props) {
           )}
 
           {entries.length > 0 && (
+            <div className="entries-filter-bar">
+              {/* Backdrop para cerrar dropdown */}
+              {openFilterDropdown && (
+                <div className="filter-backdrop" onClick={() => setOpenFilterDropdown(null)} />
+              )}
+
+              {/* Estado */}
+              <div className="filter-pill-wrap">
+                <button
+                  className={'filter-pill' + (filterEntryStatus !== 'all' ? ' filter-pill--active' : '') + (openFilterDropdown === 'status' ? ' filter-pill--open' : '')}
+                  onClick={() => setOpenFilterDropdown(openFilterDropdown === 'status' ? null : 'status')}
+                >
+                  {filterEntryStatus === 'all' ? 'Estado' : STATUSES[filterEntryStatus].label}
+                  <ChevronDown size={11} strokeWidth={2} />
+                </button>
+                {openFilterDropdown === 'status' && (
+                  <div className="filter-dropdown">
+                    <button className={'filter-option' + (filterEntryStatus === 'all' ? ' filter-option--active' : '')} onClick={() => { setFilterEntryStatus('all'); setOpenFilterDropdown(null) }}>
+                      {filterEntryStatus === 'all' && <Check size={12} strokeWidth={2.5} />}
+                      Todos
+                    </button>
+                    {Object.entries(STATUSES).map(([key, val]) => (
+                      <button key={key} className={'filter-option' + (filterEntryStatus === key ? ' filter-option--active' : '')} onClick={() => { setFilterEntryStatus(key); setOpenFilterDropdown(null) }}>
+                        {filterEntryStatus === key && <Check size={12} strokeWidth={2.5} />}
+                        {val.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Severidad */}
+              <div className="filter-pill-wrap">
+                <button
+                  className={'filter-pill' + (filterEntrySeverity !== 'all' ? ' filter-pill--active' : '') + (openFilterDropdown === 'severity' ? ' filter-pill--open' : '')}
+                  onClick={() => setOpenFilterDropdown(openFilterDropdown === 'severity' ? null : 'severity')}
+                >
+                  {filterEntrySeverity === 'all' ? 'Severidad' : SEVERITIES[filterEntrySeverity].label}
+                  <ChevronDown size={11} strokeWidth={2} />
+                </button>
+                {openFilterDropdown === 'severity' && (
+                  <div className="filter-dropdown">
+                    <button className={'filter-option' + (filterEntrySeverity === 'all' ? ' filter-option--active' : '')} onClick={() => { setFilterEntrySeverity('all'); setOpenFilterDropdown(null) }}>
+                      {filterEntrySeverity === 'all' && <Check size={12} strokeWidth={2.5} />}
+                      Todas
+                    </button>
+                    {Object.entries(SEVERITIES).map(([key, val]) => (
+                      <button key={key} className={'filter-option' + (filterEntrySeverity === key ? ' filter-option--active' : '')} onClick={() => { setFilterEntrySeverity(key); setOpenFilterDropdown(null) }}>
+                        {filterEntrySeverity === key && <Check size={12} strokeWidth={2.5} />}
+                        {val.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Categoría */}
+              <div className="filter-pill-wrap">
+                <button
+                  className={'filter-pill' + (filterEntryCategory !== 'all' ? ' filter-pill--active' : '') + (openFilterDropdown === 'category' ? ' filter-pill--open' : '')}
+                  onClick={() => setOpenFilterDropdown(openFilterDropdown === 'category' ? null : 'category')}
+                >
+                  {filterEntryCategory === 'all' ? 'Tipo' : CATEGORIES[filterEntryCategory].label}
+                  <ChevronDown size={11} strokeWidth={2} />
+                </button>
+                {openFilterDropdown === 'category' && (
+                  <div className="filter-dropdown">
+                    <button className={'filter-option' + (filterEntryCategory === 'all' ? ' filter-option--active' : '')} onClick={() => { setFilterEntryCategory('all'); setOpenFilterDropdown(null) }}>
+                      {filterEntryCategory === 'all' && <Check size={12} strokeWidth={2.5} />}
+                      Todos
+                    </button>
+                    {Object.entries(CATEGORIES).map(([key, val]) => (
+                      <button key={key} className={'filter-option' + (filterEntryCategory === key ? ' filter-option--active' : '')} onClick={() => { setFilterEntryCategory(key); setOpenFilterDropdown(null) }}>
+                        {filterEntryCategory === key && <Check size={12} strokeWidth={2.5} />}
+                        {val.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {entries.length > 0 && (() => {
+            var filteredEntries = entries.filter(function(e) {
+              if (filterEntryStatus   !== 'all' && e.status   !== filterEntryStatus)   return false
+              if (filterEntrySeverity !== 'all' && e.severity !== filterEntrySeverity) return false
+              if (filterEntryCategory !== 'all' && e.category !== filterEntryCategory) return false
+              return true
+            })
+            return (
             <div className="entries-section">
-              <h3 className="entries-title">Hallazgos Registrados</h3>
-              {entries.map(function(entry) {
+              {filteredEntries.length === 0 && (
+                <p style={{color:'var(--text-secondary)',fontSize:'var(--text-sm)',textAlign:'center',padding:'1.5rem 0'}}>No hay hallazgos con los filtros seleccionados.</p>
+              )}
+              {filteredEntries.map(function(entry) {
                 var cat = CATEGORIES[entry.category] || CATEGORIES.otro
                 var sev = SEVERITIES[entry.severity] || SEVERITIES.leve
 
@@ -2914,7 +3013,7 @@ function AppInterior(props) {
                       var st = STATUSES[entryStatus] || STATUSES.pendiente
                       return (
                         <div className="entry-status-row">
-                          <span className="entry-status-label">Estado:</span>
+
                           <div className="entry-status-buttons">
                             {Object.entries(STATUSES).map(function(pair) {
                               var key = pair[0]
@@ -2933,9 +3032,9 @@ function AppInterior(props) {
                         </div>
                       )
                     })()}
-                    <h4 className="entry-title">{entry.title}</h4>
+                    <h4 className="entry-title" style={{fontSize:'1rem'}}>{entry.title}</h4>
                     <div className="entry-header">
-                      <span className="entry-unit">{entry.location || 'Sin ubicación'}</span>
+                      <span className="entry-unit" style={{display:'flex', alignItems:'center', gap:'0.25rem'}}><MapPin size={13} strokeWidth={1.5} />{entry.location || 'Sin ubicación'}</span>
                       <span className="entry-date">{new Date(entry.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
                     {entry.images && entry.images.length > 0 && (
@@ -2951,7 +3050,8 @@ function AppInterior(props) {
                 )
               })}
             </div>
-          )}
+            )
+          })()}
 
           {!loadingEntries && entries.length === 0 && (
             <div className="welcome-message"><h2>Sin hallazgos</h2><p>Registra el primer hallazgo con fotos y nota de voz.</p></div>
