@@ -165,6 +165,7 @@ Si el usuario accede directamente a `/proyectos/42` o `/proyectos/42/propiedades
 ### Funcionalidades del panel
 - Ver todas las empresas con métricas: proyectos, propiedades, hallazgos, inspectores, última actividad
 - Crear empresa + usuario admin → envía email de bienvenida automáticamente
+- Editar nombre de empresa y datos del representante (nombre y email del admin)
 - Desactivar/reactivar empresas (bloquea login de sus usuarios)
 - Eliminar empresas con todos sus datos en cascada
 
@@ -257,7 +258,7 @@ Se ocultan cuando el formulario correspondiente está abierto. Usan `position: f
 ### Íconos (Lucide React)
 Instalado con `npm install lucide-react` en la raíz del proyecto. Importados en App.jsx:
 ```js
-import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye, Users } from 'lucide-react'
+import { Smartphone, Camera, FileText, ClipboardList, Building2, FolderOpen, Home, KeyRound, Trash2, Link, Pencil, Mic, Eye, Users, MapPin, ChevronDown, Check } from 'lucide-react'
 ```
 Mapeo principal:
 | Contexto | Ícono |
@@ -398,6 +399,10 @@ Mario abre `bitacorapro.cl/admin` → crea empresa + admin → sistema envía em
 - ✅ Fix padding del header en mobile (safe-area sobreescribía los 16px base)
 - ✅ Fix card "Sin proyectos aún" aparecía siempre por condicional JSX mal cerrado
 - ✅ Fix parpadeo de "Sin propiedades" al cargar — estado `loadingProperties` evita mostrar empty state durante el fetch
+- ✅ Fix flash de card "Gestionar Equipo" a ancho completo al cargar pantalla de proyecto — cards se renderizan solo cuando `loadingProperties` es false
+- ✅ Filtros de hallazgos rediseñados como pill-dropdowns (Linear style) — 3 pills compactas (Estado, Severidad, Tipo) con ancho completo, dropdown por dimensión, backdrop para cerrar, pill activa muestra valor con color primario
+- ✅ Título "Mis Proyectos" reemplazado por el nombre real de la empresa (tomado de `currentUser.company_name`)
+- ✅ Panel admin: editar nombre de empresa y datos del representante (nombre y email) desde menú contextual
 - ✅ Fix botones de compartir link (propiedad y hallazgo) — reemplazado `navigator.clipboard` por helper con fallback `execCommand` compatible con HTTP, Safari iOS y Android
 - ✅ Fix placeholders aparecían siempre al cargar — estados `loadingProjects`, `loadingEntries` y `loadingAct` evitan mostrar empty states durante el fetch inicial
 - ✅ Fix botón "Iniciar acta" aparecía siempre primero — `loadingAct` se maneja directamente en el `useEffect` de la propiedad (no dentro del `useCallback`) para evitar cierre de scope; los fetches de entries y acta arrancan en paralelo y resetean sus flags al cambiar de propiedad
@@ -457,6 +462,7 @@ Mario abre `bitacorapro.cl/admin` → crea empresa + admin → sistema envía em
 ### Panel superadmin (requiere header `x-admin-secret`)
 - `GET /admin/stats` — todas las empresas con métricas de uso
 - `POST /admin/create-company` — crear empresa + admin + enviar email de bienvenida
+- `PUT /admin/companies/:id` — editar nombre de empresa y datos del admin (nombre y email)
 - `PUT /admin/companies/:id/toggle` — activar/desactivar empresa
 - `DELETE /admin/companies/:id` — eliminar empresa y todos sus datos
 
