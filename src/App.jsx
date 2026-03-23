@@ -2493,7 +2493,7 @@ function AppInterior(props) {
       return (
         <div className="app">
           <AppHeader
-            title="Mis Proyectos"
+            title={currentUser && currentUser.company_name ? currentUser.company_name : 'Mis Proyectos'}
             user={currentUser}
             onLogout={handleLogoutAndRedirect}
           />
