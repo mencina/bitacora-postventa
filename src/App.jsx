@@ -1002,6 +1002,10 @@ function AdminScreen() {
   var [createMsg, setCreateMsg] = useState('')
   var [creating, setCreating] = useState(false)
   var [openMenu, setOpenMenu] = useState(null)
+  var [editingCompany, setEditingCompany] = useState(null)
+  var [editForm, setEditForm] = useState({ company_name: '', admin_name: '', admin_email: '' })
+  var [editMsg, setEditMsg] = useState('')
+  var [saving, setSaving] = useState(false)
 
   useEffect(function() {
     if (!openMenu) return
@@ -1064,6 +1068,20 @@ function AdminScreen() {
         else { setCreateMsg('Cliente creado: ' + data.company.name); setCreateForm({ company_name: '', name: '', email: '', password: '' }); setShowCreate(false); refreshStats() }
         setCreating(false)
       }).catch(function() { setCreateMsg('Error de conexión'); setCreating(false) })
+  }
+
+  function handleSaveEdit() {
+    if (!editForm.company_name || !editForm.admin_name || !editForm.admin_email) {
+      setEditMsg('Todos los campos son requeridos'); return
+    }
+    setSaving(true); setEditMsg('')
+    adminFetch('/admin/companies/' + editingCompany.id, { method: 'PUT', body: JSON.stringify(editForm) })
+      .then(function(r) { return r.json() })
+      .then(function(data) {
+        if (data.error) { setEditMsg('Error: ' + data.error) }
+        else { setEditingCompany(null); refreshStats() }
+        setSaving(false)
+      }).catch(function() { setEditMsg('Error de conexión'); setSaving(false) })
   }
 
   if (!authed) {
@@ -1192,6 +1210,11 @@ function AdminScreen() {
                         {openMenu === c.id && (
                           <div onClick={function(e) { e.stopPropagation() }} style={{position:'absolute',right:0,bottom:'calc(100% + 4px)', top:'auto',background:'#fff',border:'1px solid var(--border-subtle)',borderRadius:'10px',boxShadow:'0 4px 16px rgba(0,0,0,0.1)',zIndex:100,minWidth:'160px',overflow:'hidden'}}>
                             <button
+                              onClick={function() { setOpenMenu(null); setEditingCompany(c); setEditForm({ company_name: c.company_name, admin_name: c.admin_name, admin_email: c.admin_email }); setEditMsg('') }}
+                              style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color:'var(--text-primary)',fontWeight:'500'}}
+                            ><Pencil size={14} strokeWidth={1.5} style={{marginRight:'4px'}} /> Editar datos</button>
+                            <div style={{height:'1px',background:'var(--border-subtle)',margin:'0'}}/>
+                            <button
                               onClick={function() { setOpenMenu(null); handleToggle(c) }}
                               style={{display:'block',width:'100%',padding:'0.75rem 1rem',background:'none',border:'none',cursor:'pointer',fontSize:'0.875rem',textAlign:'left',color: c.active ? '#F39C12' : 'var(--primary-700)',fontWeight:'500'}}
                             >{c.active ? '⏸ Desactivar' : '▶ Reactivar'}</button>
@@ -1214,6 +1237,47 @@ function AdminScreen() {
           )}
         </div>
       </div>
+
+      {/* Modal editar empresa */}
+      {editingCompany && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.4)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'1rem'}}>
+          <div style={{background:'#fff',borderRadius:'14px',padding:'1.75rem',width:'100%',maxWidth:'420px',boxShadow:'0 8px 32px rgba(0,0,0,0.15)'}}>
+            <h4 style={{margin:'0 0 1.25rem',fontFamily:'var(--font-sans)',fontSize:'1.1rem',color:'var(--text-primary)'}}>Editar datos</h4>
+            <div style={{display:'flex',flexDirection:'column',gap:'0.75rem',marginBottom:'1rem'}}>
+              <div>
+                <label style={{display:'block',fontSize:'0.75rem',fontWeight:'600',color:'var(--text-tertiary)',marginBottom:'0.3rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>Nombre de la empresa</label>
+                <input
+                  value={editForm.company_name}
+                  onChange={function(e) { setEditForm(Object.assign({},editForm,{company_name:e.target.value})) }}
+                  style={{width:'100%',padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:'0.75rem',fontWeight:'600',color:'var(--text-tertiary)',marginBottom:'0.3rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>Nombre del representante</label>
+                <input
+                  value={editForm.admin_name}
+                  onChange={function(e) { setEditForm(Object.assign({},editForm,{admin_name:e.target.value})) }}
+                  style={{width:'100%',padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:'0.75rem',fontWeight:'600',color:'var(--text-tertiary)',marginBottom:'0.3rem',textTransform:'uppercase',letterSpacing:'0.05em'}}>Email del representante</label>
+                <input
+                  type="email"
+                  value={editForm.admin_email}
+                  onChange={function(e) { setEditForm(Object.assign({},editForm,{admin_email:e.target.value})) }}
+                  style={{width:'100%',padding:'0.7rem 1rem',borderRadius:'8px',border:'1.5px solid var(--border-subtle)',fontSize:'0.9rem',outline:'none',boxSizing:'border-box'}}
+                />
+              </div>
+            </div>
+            {editMsg && <p style={{color:'#E74C3C',fontSize:'0.85rem',margin:'0 0 0.75rem'}}>{editMsg}</p>}
+            <div style={{display:'flex',gap:'0.75rem'}}>
+              <button onClick={handleSaveEdit} disabled={saving} style={{background:'var(--text-primary)',color:'#fff',border:'none',borderRadius:'8px',padding:'0.7rem 1.5rem',cursor:'pointer',fontSize:'0.9rem',fontWeight:'500'}}>{saving ? 'Guardando...' : 'Guardar'}</button>
+              <button onClick={function() { setEditingCompany(null) }} style={{background:'none',border:'1.5px solid var(--border-subtle)',borderRadius:'8px',padding:'0.7rem 1.25rem',cursor:'pointer',fontSize:'0.9rem',color:'var(--text-tertiary)'}}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

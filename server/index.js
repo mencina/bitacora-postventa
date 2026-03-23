@@ -970,6 +970,21 @@ app.get('/admin/stats', superadminMiddleware, async function(req, res) {
   }
 })
 
+// PUT /admin/companies/:id — editar nombre de empresa y datos del admin
+app.put('/admin/companies/:id', superadminMiddleware, async function(req, res) {
+  try {
+    var { company_name, admin_name, admin_email } = req.body
+    if (!company_name || !admin_name || !admin_email) return res.status(400).json({ error: 'Todos los campos son requeridos' })
+    var companyCheck = await pool.query('SELECT id FROM companies WHERE id = $1', [req.params.id])
+    if (companyCheck.rows.length === 0) return res.status(404).json({ error: 'Empresa no encontrada' })
+    await pool.query('UPDATE companies SET name = $1 WHERE id = $2', [company_name, req.params.id])
+    await pool.query('UPDATE users SET name = $1, email = $2 WHERE company_id = $3 AND role = $4', [admin_name, admin_email, req.params.id, 'admin'])
+    res.json({ success: true })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
+
 // PUT /admin/companies/:id/toggle — desactivar o reactivar empresa
 app.put('/admin/companies/:id/toggle', superadminMiddleware, async function(req, res) {
   try {
