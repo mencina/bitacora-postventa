@@ -1193,22 +1193,36 @@ app.post('/projects/:id/dashboard/ai-analysis', authMiddleware, async function(r
     var sevSummary = Object.entries(by_severity || {}).map(function(kv) { return kv[0] + ': ' + kv[1] }).join(', ')
     var stSummary = Object.entries(by_status || {}).map(function(kv) { return kv[0] + ': ' + kv[1] }).join(', ')
 
-    var prompt = 'Eres un experto en gestión de calidad y postventa inmobiliaria en Chile. Analiza los siguientes hallazgos de inspección del proyecto "' + project_name + '" y detecta patrones que indiquen problemas sistémicos con subcontratistas o la constructora.\n\n' +
-      'RESUMEN DE MÉTRICAS:\n' +
-      '- Total hallazgos: ' + total_entries + '\n' +
-      '- Por categoría: ' + catSummary + '\n' +
-      '- Por severidad: ' + sevSummary + '\n' +
-      '- Por estado: ' + stSummary + '\n\n' +
-      'DETALLE DE HALLAZGOS (formato: categoría|severidad|ubicación|propiedad):\n' + ai_context + '\n\n' +
-      'Genera un análisis ejecutivo breve con:\n' +
-      '1. Los 2-3 patrones más preocupantes (categorías o ubicaciones que se repiten en múltiples propiedades)\n' +
-      '2. Posibles causas sistémicas (subcontratista específico, material, proceso)\n' +
-      '3. Recomendaciones concretas para el equipo de gestión\n\n' +
-      'Sé directo, usa lenguaje de negocios. Máximo 250 palabras. Sin markdown, solo texto plano con saltos de línea.'
+    var prompt = `Eres un experto en gestión de calidad y postventa inmobiliaria en Chile. Analiza los hallazgos del proyecto "${project_name}".
+
+      MÉTRICAS GENERALES:
+      - Total hallazgos: ${total_entries}
+      - Por categoría: ${catSummary}
+      - Por severidad: ${sevSummary}
+      - Por estado: ${stSummary}
+
+      DETALLE DE HALLAZGOS (categoría|severidad|ubicación|unidad):
+      ${ai_context}
+
+      Genera un análisis ejecutivo con estas secciones exactas:
+
+      PATRONES CRÍTICOS IDENTIFICADOS:
+      Identifica los 2-3 problemas más frecuentes y graves. Para cada uno indica cuántos casos, qué porcentaje del total, en qué ubicaciones se concentran y si hay correlación entre categorías.
+
+      RANKING DE PROPIEDADES MÁS AFECTADAS:
+      Lista las 5 propiedades con mayor concentración de hallazgos graves o críticos. Formato: "Unidad XXX — N hallazgos (X graves/críticos)". Si hay propiedades con múltiples categorías distintas, destácalas como casos prioritarios.
+
+      CAUSAS SISTÉMICAS PROBABLES:
+      Identifica si los patrones apuntan a fallas de subcontratistas específicos, materiales defectuosos o procesos de construcción deficientes. Sé específico.
+
+      RECOMENDACIONES INMEDIATAS:
+      3 acciones concretas priorizadas por impacto, con responsable sugerido (constructora, subcontratista, inmobiliaria).
+
+      Usa lenguaje ejecutivo directo. Sin markdown. Máximo 400 palabras.`
 
     var message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 600,
+      max_tokens: 900,
       messages: [{ role: 'user', content: prompt }]
     })
 
