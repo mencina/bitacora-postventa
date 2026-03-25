@@ -916,7 +916,7 @@ app.get('/public/entries/:entryId', async function(req, res) {
     // Imágenes
     var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
     entry.images = imgs.rows
-    entry.affected_elements = entry.affected_elements ? JSON.parse(entry.affected_elements) : []
+    entry.affected_elements = entry.affected_elements || ''
     // Omitir datos sensibles del propietario
     delete entry.property_id
     res.json(entry)
