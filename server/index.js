@@ -42,6 +42,13 @@ var pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 })
 
+// Parsea affected_elements de forma segura: soporta JSON array, texto plano y null
+function parseAffectedElements(val) {
+  if (!val) return []
+  if (Array.isArray(val)) return val
+  try { return JSON.parse(val) } catch (e) { return [val] }
+}
+
 async function initDB() {
   // Empresas
   await pool.query(`
@@ -481,7 +488,7 @@ app.post('/properties/:propertyId/entries', authMiddleware, upload.array('photos
 
     var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
     entry.images = imgs.rows
-    entry.affected_elements = JSON.parse(entry.affected_elements)
+    entry.affected_elements = parseAffectedElements(entry.affected_elements)
 
     res.json({ success: true, entry: entry })
   } catch (error) {
@@ -504,7 +511,7 @@ app.put('/entries/:id', authMiddleware, async function(req, res) {
       [req.params.id]
     )
     var entry = result.rows[0]
-    entry.affected_elements = entry.affected_elements ? JSON.parse(entry.affected_elements) : []
+    entry.affected_elements = parseAffectedElements(entry.affected_elements)
     // Re-fetch images properly
     var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
     entry.images = imgs.rows
@@ -916,7 +923,7 @@ app.get('/public/entries/:entryId', async function(req, res) {
     // Imágenes
     var imgs = await pool.query('SELECT * FROM images WHERE entry_id = $1', [entry.id])
     entry.images = imgs.rows
-    entry.affected_elements = entry.affected_elements || ''
+    entry.affected_elements = parseAffectedElements(entry.affected_elements)
     // Omitir datos sensibles del propietario
     delete entry.property_id
     res.json(entry)
