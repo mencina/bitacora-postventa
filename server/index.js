@@ -1259,7 +1259,7 @@ app.get('/projects/:id/dashboard', authMiddleware, async function(req, res) {
 
     // Todos los hallazgos del proyecto (datos suficientes, sin imágenes ni texto largo)
     var entriesResult = await pool.query(
-      `SELECT e.id, e.title, e.category, e.severity, e.status, e.location, e.property_id, p.unit_number
+      `SELECT e.id, e.title, e.category, e.severity, e.status, e.location, e.property_id, p.unit_number, e.description, e.recommendation, e.affected_elements
        FROM entries e
        JOIN properties p ON e.property_id = p.id
        WHERE p.project_id = $1
